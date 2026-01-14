@@ -2397,13 +2397,15 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           return;
         }
 
-        const researchPrompt = `You are a B2B sales research assistant helping prepare for a cold call to a potential Salesforce implementation client in Australia.
+        const researchPrompt = `You are a B2B sales research assistant helping prepare for a cold call to a potential Salesforce implementation client.
 
 COMPANY TO RESEARCH:
 - Company Name: ${lead.company}
-- Contact: ${lead.contact}, ${lead.title}
+- Contact: ${lead.contact || 'Unknown'}${lead.title ? ', ' + lead.title : ''}
 - Industry/Vertical: ${vertical.name}
-- Location: Sydney/Australia region
+- Location: ASSUME AUSTRALIA unless the company name clearly indicates otherwise (e.g., "UK", "USA" in name)
+- Phone: ${lead.phone || 'Not provided'}
+- Email: ${lead.email || 'Not provided'}
 - Existing Notes: ${lead.notes || 'None'}
 
 CONTEXT - WHAT WE SELL:
@@ -2420,24 +2422,31 @@ Based on the company name and industry, provide a pre-call research brief with:
 
 1. **Company Overview** (2-3 sentences): What does this company likely do? Approximate size? Market position?
 
-2. **Salesforce Likelihood**: Are they likely using Salesforce already? What signals suggest this? (Check for: job postings mentioning Salesforce, industry norms, company size)
+2. **Key Contacts** (IMPORTANT): Search for and provide contact details for key decision makers. Look for:
+   - CEO/Managing Director: name, phone, email if findable
+   - CIO/CTO/IT Director: name, phone, email if findable
+   - Any other relevant C-suite or VP-level contacts
+   For Australian companies, phone numbers typically start with 02 (NSW), 03 (VIC), 07 (QLD), 08 (SA/WA), or 04 (mobile).
+   Return as array of objects with: name, title, phone (if found), email (if found)
 
-3. **AI Readiness Signals** (3 bullet points): What signals suggest they might be ready for AI/Agentforce? Consider industry trends, digital transformation pressure, competitive dynamics.
+3. **Salesforce Likelihood**: Are they likely using Salesforce already? What signals suggest this? (Check for: job postings mentioning Salesforce, industry norms, company size)
 
-4. **Potential Pain Points** (3 bullet points): Based on their industry and likely situation, what specific pain points from our list might resonate most?
+4. **AI Readiness Signals** (3 bullet points): What signals suggest they might be ready for AI/Agentforce? Consider industry trends, digital transformation pressure, competitive dynamics.
 
-5. **Trigger Events to Investigate** (3 bullet points): What specific things should the caller look for or ask about? Recent news, leadership changes, growth, etc.
+5. **Potential Pain Points** (3 bullet points): Based on their industry and likely situation, what specific pain points from our list might resonate most?
 
-6. **Recommended Opening**: Which of these openings would work best and why?
+6. **Trigger Events to Investigate** (3 bullet points): What specific things should the caller look for or ask about? Recent news, leadership changes, growth, etc.
+
+7. **Recommended Opening**: Which of these openings would work best and why?
    - AI Pressure Question: "Are you seeing pressure to do more with AI in your Salesforce environment?"
    - Support Cost Question: "Is reducing customer support costs on your priority list this year?"
    - Sales Performance Question: "Are you getting everything you need out of Salesforce right now?"
 
-7. **Personalized Talking Points** (3 bullet points): Specific things to mention that would resonate with this contact based on their role and industry.
+8. **Personalized Talking Points** (3 bullet points): Specific things to mention that would resonate with this contact based on their role and industry.
 
-8. **Priority Level**: HIGH (strong signals, call immediately), MEDIUM (good potential, worth pursuing), or NURTURE (early stage, lead with value/deck)
+9. **Priority Level**: HIGH (strong signals, call immediately), MEDIUM (good potential, worth pursuing), or NURTURE (early stage, lead with value/deck)
 
-Format your response as JSON with these keys: companyOverview, salesforceLikelihood, aiReadinessSignals (array), potentialPainPoints (array), triggerEvents (array), recommendedOpening, talkingPoints (array), priorityLevel, priorityReason`;
+Format your response as JSON with these keys: companyOverview, keyContacts (array of {name, title, phone, email}), salesforceLikelihood, aiReadinessSignals (array), potentialPainPoints (array), triggerEvents (array), recommendedOpening, talkingPoints (array), priorityLevel, priorityReason`;
 
         try {
           const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2480,6 +2489,7 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
             // If JSON parsing fails, create structured response from text
             parsed = {
               companyOverview: content.substring(0, 500),
+              keyContacts: [],
               salesforceLikelihood: "See full response",
               aiReadinessSignals: ["AI research completed - see details"],
               potentialPainPoints: vertical.painPoints.slice(0, 3),
@@ -2520,7 +2530,8 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
       // Fallback research when no API key or error
       const generateFallbackResearch = (lead, vertical) => {
         return {
-          companyOverview: `${lead.company} is a ${vertical.name.toLowerCase()} organisation in the Sydney/NSW region. Based on the vertical, they likely fall within the ${vertical.idealCompanySize} range.`,
+          companyOverview: `${lead.company} is a ${vertical.name.toLowerCase()} organisation in Australia. Based on the vertical, they likely fall within the ${vertical.idealCompanySize} range.`,
+          keyContacts: [],
           salesforceLikelihood: "Unable to determine without API. Check LinkedIn job postings and company website for Salesforce mentions.",
           aiReadinessSignals: [
             "Industry peers are adopting AI at increasing rates",
@@ -3481,110 +3492,141 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
 
       // ==================== MODALS ====================
       const addLeadModalContent = (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="add-lead-modal">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-6">➕ Add New Lead</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
-                  <input type="text" value={newLead.company} onChange={(e) => setNewLead({...newLead, company: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                  <select value={newLead.source} onChange={(e) => setNewLead({...newLead, source: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {Object.entries(LEAD_SOURCES).map(([key, src]) => (
-                      <option key={key} value={key}>{src.icon} {src.name}</option>
-                    ))}
-                  </select>
-                </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden" key="add-lead-modal" onClick={() => setShowAddLead(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
+              <h3 className="text-xl font-bold">➕ Add New Lead</h3>
+              <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-6 pt-4 overflow-y-auto flex-1 space-y-4 overscroll-contain">
+              {/* Essential Fields */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                <input type="text" value={newLead.company} onChange={(e) => setNewLead({...newLead, company: e.target.value})} placeholder="e.g., Acme Corp" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
-                  <input type="text" value={newLead.contact} onChange={(e) => setNewLead({...newLead, contact: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <input type="text" value={newLead.title} onChange={(e) => setNewLead({...newLead, title: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+                <input type="text" value={newLead.contact} onChange={(e) => setNewLead({...newLead, contact: e.target.value})} placeholder="e.g., John Smith" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                  <input type="text" value={newLead.phone} onChange={(e) => setNewLead({...newLead, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={newLead.phone} onChange={(e) => setNewLead({...newLead, phone: e.target.value})} placeholder="02 9555 1234" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input type="email" value={newLead.email} onChange={(e) => setNewLead({...newLead, email: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vertical</label>
-                  <select value={newLead.vertical} onChange={(e) => setNewLead({...newLead, vertical: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {Object.entries(verticalData).map(([key, data]) => (
-                      <option key={key} value={key}>{data.icon} {data.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
-                  <select value={newLead.companySize} onChange={(e) => setNewLead({...newLead, companySize: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="1-50">1-50 employees</option>
-                    <option value="51-200">51-200 employees</option>
-                    <option value="201-500">201-500 employees</option>
-                    <option value="501-1000">501-1000 employees</option>
-                    <option value="1000+">1000+ employees</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
-                  <select value={newLead.revenue} onChange={(e) => setNewLead({...newLead, revenue: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="Under $5M">Under $5M</option>
-                    <option value="$5M-$20M">$5M-$20M</option>
-                    <option value="$20M-$50M">$20M-$50M</option>
-                    <option value="$50M-$200M">$50M-$200M</option>
-                    <option value="$200M+">$200M+</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                  <input type="url" value={newLead.website} onChange={(e) => setNewLead({...newLead, website: e.target.value})} placeholder="https://..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn URL</label>
-                  <input type="url" value={newLead.linkedinUrl} onChange={(e) => setNewLead({...newLead, linkedinUrl: e.target.value})} placeholder="https://linkedin.com/in/..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="email" value={newLead.email} onChange={(e) => setNewLead({...newLead, email: e.target.value})} placeholder="john@acme.com" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea value={newLead.notes} onChange={(e) => setNewLead({...newLead, notes: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <textarea value={newLead.notes} onChange={(e) => setNewLead({...newLead, notes: e.target.value})} placeholder="Any initial notes..." className="w-full px-4 py-2 border border-gray-200 rounded-lg h-16 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              {/* Calculated Score Preview */}
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-blue-900">Calculated Lead Score:</span>
-                  <span className="text-2xl font-bold text-blue-600">{calculateLeadScore(newLead).score}</span>
+
+              {/* Expandable Additional Details */}
+              <details className="border border-gray-200 rounded-lg">
+                <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                  + More details (for better scoring)
+                </summary>
+                <div className="p-4 pt-2 space-y-4 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                      <input type="text" value={newLead.title} onChange={(e) => setNewLead({...newLead, title: e.target.value})} placeholder="e.g., CEO" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                      <select value={newLead.source} onChange={(e) => setNewLead({...newLead, source: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {Object.entries(LEAD_SOURCES).map(([key, src]) => (
+                          <option key={key} value={key}>{src.icon} {src.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Vertical</label>
+                      <select value={newLead.vertical} onChange={(e) => setNewLead({...newLead, vertical: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {Object.entries(verticalData).map(([key, data]) => (
+                          <option key={key} value={key}>{data.icon} {data.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
+                      <select value={newLead.companySize} onChange={(e) => setNewLead({...newLead, companySize: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1-50">1-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="501-1000">501-1000 employees</option>
+                        <option value="1000+">1000+ employees</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
+                    <select value={newLead.revenue} onChange={(e) => setNewLead({...newLead, revenue: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="Under $5M">Under $5M</option>
+                      <option value="$5M-$20M">$5M-$20M</option>
+                      <option value="$20M-$50M">$20M-$50M</option>
+                      <option value="$50M-$200M">$50M-$200M</option>
+                      <option value="$200M+">$200M+</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                      <input type="url" value={newLead.website} onChange={(e) => setNewLead({...newLead, website: e.target.value})} placeholder="https://..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                      <input type="url" value={newLead.linkedinUrl} onChange={(e) => setNewLead({...newLead, linkedinUrl: e.target.value})} placeholder="https://linkedin.com/..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-blue-700 mt-1">Score is calculated from company size, revenue, title, vertical, and intent signals</p>
+              </details>
+
+              {/* Score Preview */}
+              <div className="p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+                <span className="text-sm font-medium text-blue-900">Lead Score:</span>
+                <span className="text-xl font-bold text-blue-600">{calculateLeadScore(newLead).score}</span>
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowAddLead(false)} className="flex-1 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
-              <button onClick={addNewLead} disabled={!newLead.company || !newLead.contact} className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium disabled:bg-gray-300">Add Lead</button>
+            <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 shrink-0">
+              <button onClick={() => setShowAddLead(false)} className="py-3 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
+              <button onClick={() => { addNewLead(); setNewLead({ company: '', contact: '', title: '', phone: '', email: '', vertical: 'healthcare', notes: '', source: 'manual', companySize: '51-200', revenue: '$5M-$20M', website: '', linkedinUrl: '', intentSignals: [] }); }} disabled={!newLead.company || !newLead.contact} className="py-3 px-4 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium disabled:bg-gray-300" title="Add and keep form open for another">Quick Add +</button>
+              <button onClick={() => { addNewLead(); setShowAddLead(false); }} disabled={!newLead.company || !newLead.contact} className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium disabled:bg-gray-300">Add & Close</button>
             </div>
           </div>
         </div>
       );
 
+      const downloadCsvTemplate = () => {
+        const csvContent = `company,contact,title,phone,email,vertical,notes,source,companySize,revenue,website,linkedinUrl
+"Acme Manufacturing Pty Ltd","John Smith","CEO","02 9555 1234","john@acme.com","manufacturing","Met at conference","referral","201-500","$50M-$200M","https://acme.com.au","https://linkedin.com/in/johnsmith"
+"Brisbane Health Services","Sarah Johnson","CIO","07 3555 5678","sarah@brisbanehealth.com.au","healthcare","Interested in digital transformation","linkedin","501-1000","$200M+","https://brisbanehealth.com.au",""
+"Sydney Logistics Co","Mike Chen","Operations Director","02 8555 9012","mike@sydneylogistics.com.au","logistics","Currently using spreadsheets","coldOutreach","51-200","$20M-$50M","",""`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'fexle_leads_template.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showNotification('CSV template downloaded');
+      };
+
       const importModalContent = (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="import-modal">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
-            <h3 className="text-xl font-bold mb-4">📥 Import Leads from CSV</h3>
-            <p className="text-gray-600 mb-4">Upload a CSV file with columns: company, contact, title, phone, email, vertical, notes</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="import-modal" onClick={() => setShowImportModal(false)}>
+          <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">📥 Import Leads from CSV</h3>
+              <button onClick={() => setShowImportModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <p className="text-gray-600 mb-4">Upload a CSV file with your leads. Minimum required: company and contact columns.</p>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
               <input type="file" accept=".csv" onChange={handleFileImport} ref={fileInputRef} className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
@@ -3592,9 +3634,14 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
               </button>
             </div>
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm font-medium text-gray-700 mb-2">Example CSV format:</div>
-              <code className="text-xs text-gray-600 block whitespace-pre">company,contact,title,phone,email,vertical,notes
-Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at conference</code>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">CSV Format:</span>
+                <button onClick={downloadCsvTemplate} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                  ⬇️ Download Template
+                </button>
+              </div>
+              <code className="text-xs text-gray-600 block whitespace-pre-wrap">company,contact,title,phone,email,vertical,notes</code>
+              <p className="text-xs text-gray-500 mt-2">Optional columns: source, companySize, revenue, website, linkedinUrl</p>
             </div>
             <button onClick={() => setShowImportModal(false)} className="mt-6 w-full py-3 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Close</button>
           </div>
@@ -4268,7 +4315,48 @@ function jsonResponse(data) {
                   <h4 className="font-semibold text-gray-900 mb-2">🏢 Company Overview</h4>
                   <p className="text-sm text-gray-700">{researchResult.companyOverview}</p>
                 </div>
-                
+
+                {/* Key Contacts Found */}
+                {researchResult.keyContacts && researchResult.keyContacts.length > 0 && (
+                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <h4 className="font-semibold text-emerald-900 mb-3">👥 Key Contacts Found</h4>
+                    <div className="space-y-3">
+                      {researchResult.keyContacts.map((contact, i) => (
+                        <div key={i} className="flex items-start justify-between bg-white rounded-lg p-3 border border-emerald-100">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{contact.name}</div>
+                            <div className="text-sm text-gray-600">{contact.title}</div>
+                            {contact.phone && <div className="text-sm text-emerald-700">📞 {contact.phone}</div>}
+                            {contact.email && <div className="text-sm text-emerald-700">✉️ {contact.email}</div>}
+                          </div>
+                          {selectedLead && (!selectedLead.contact || !selectedLead.phone || !selectedLead.email) && (
+                            <button
+                              onClick={() => {
+                                const updatedLead = {
+                                  ...selectedLead,
+                                  contact: selectedLead.contact || contact.name,
+                                  title: selectedLead.title || contact.title,
+                                  phone: selectedLead.phone || contact.phone || '',
+                                  email: selectedLead.email || contact.email || ''
+                                };
+                                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                                setSelectedLead(updatedLead);
+                                showNotification(`Updated lead with ${contact.name}'s info`);
+                              }}
+                              className="ml-3 px-3 py-1 text-xs bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                            >
+                              Use This Contact
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {selectedLead && selectedLead.contact && selectedLead.phone && selectedLead.email && (
+                      <p className="text-xs text-emerald-600 mt-2">Lead already has complete contact info</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Salesforce Likelihood */}
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-semibold text-blue-900 mb-2">☁️ Salesforce Likelihood</h4>
