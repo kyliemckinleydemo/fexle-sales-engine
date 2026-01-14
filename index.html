@@ -2018,6 +2018,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           duration: slot.duration || 20,
           leadId: lead.id,
           leadName: lead.contact,
+          leadTitle: lead.title,
           company: lead.company,
           email: lead.email,
           createdAt: new Date().toISOString()
@@ -5053,6 +5054,7 @@ function jsonResponse(data) {
             duration: 20,
             leadId: selectedLead.id,
             leadName: selectedLead.contact,
+            leadTitle: selectedLead.title,
             company: selectedLead.company,
             email: selectedLead.email,
             isScheduleChallenge: isScheduleChallenge,
@@ -5216,7 +5218,7 @@ function jsonResponse(data) {
                                     : selectedLead ? 'hover:bg-amber-50 cursor-pointer border border-dashed border-gray-300' : 'hover:bg-gray-50 cursor-pointer'
                                 }`}
                               >
-                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={booked.company}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
+                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={`${booked.company}\n${booked.leadName}${booked.leadTitle ? ' - ' + booked.leadTitle : ''}`}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
                                 {available && !booked && <div className="text-xs text-blue-600 text-center">✓</div>}
                               </div>
                             );
