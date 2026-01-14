@@ -2033,16 +2033,16 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
       const cancelMeeting = (meetingId) => {
         const meeting = bookedMeetings.find(m => m.id === meetingId);
-        if (meeting && confirm(`Cancel meeting with ${meeting.company}?`)) {
+        if (meeting && confirm(`Delete meeting with ${meeting.company}?`)) {
           // Add slot back to availability
-          setCeoAvailability([...ceoAvailability, { 
-            id: `${meeting.date}-${meeting.time}`, 
-            date: meeting.date, 
-            time: meeting.time, 
-            duration: meeting.duration 
+          setCeoAvailability([...ceoAvailability, {
+            id: `${meeting.date}-${meeting.time}`,
+            date: meeting.date,
+            time: meeting.time,
+            duration: meeting.duration
           }]);
           setBookedMeetings(bookedMeetings.filter(m => m.id !== meetingId));
-          showNotification('Meeting cancelled, slot reopened');
+          showNotification('Meeting deleted, slot reopened');
         }
       };
 
@@ -5276,7 +5276,7 @@ function jsonResponse(data) {
                               attendeeCompany: selectedSlotForBooking.company
                             });
                           }} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">📥 Re-download ICS</button>
-                          <button onClick={() => cancelMeeting(selectedSlotForBooking.id)} className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200">Cancel</button>
+                          <button onClick={() => cancelMeeting(selectedSlotForBooking.id)} className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200">🗑️ Delete</button>
                         </div>
                         <button onClick={() => setSelectedSlotForBooking(null)} className="w-full py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-100">Close</button>
                       </div>
