@@ -3918,7 +3918,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     {Object.entries(FEXLE_SCRIPTS.openingsNonSF).map(([key, opening]) => (
                       <div key={key} className="bg-white rounded-lg p-3 border border-green-100">
                         <div className="font-medium text-green-700 text-sm mb-1">{opening.name}</div>
-                        <p className="text-xs text-gray-600 italic">{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', userName)}</p>
+                        <p className="text-xs text-gray-600 italic">{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', callerName || 'Your Name')}</p>
                       </div>
                     ))}
                   </div>
