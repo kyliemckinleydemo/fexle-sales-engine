@@ -673,8 +673,55 @@ The system automatically creates tasks for:
 
 **CSV Import:**
 1. Click **⬇️ Import** in Call Center
-2. Upload CSV file with columns: company, contact, title, phone, email, vertical, notes
+2. Upload CSV file (see format below)
 3. Leads are automatically normalized and scored
+
+### CSV Import Format
+
+The import supports flexible column headers. Include a header row with any of these column names:
+
+| Column | Required | Alternatives | Notes |
+|--------|----------|--------------|-------|
+| `company` | Yes | (position 0 if no headers) | Company name |
+| `contact` | Recommended | `name` | Contact person's full name |
+| `title` | Optional | `role` | Job title |
+| `phone` | Optional | | Phone number |
+| `email` | Optional | | Email address |
+| `vertical` | Optional | `industry` | See mapping below |
+| `notes` | Optional | | Any notes about the lead |
+| `score` | Optional | | 0-100; if blank, auto-calculated |
+| `status` | Optional | | Defaults to "New Lead" |
+
+**Example CSV:**
+```csv
+company,contact,title,phone,email,vertical,notes
+Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at conference
+Pacific Health,Sarah Lee,COO,02 9555 5678,sarah@pacifichealth.com,healthcare,Expanding to 3 sites
+```
+
+**Vertical/Industry Mapping:**
+
+The importer automatically normalizes industry values:
+
+| If CSV contains... | Maps to |
+|-------------------|---------|
+| health, aged, medical | Healthcare |
+| professional, legal, accounting, consulting | Professional Services |
+| manufactur, industrial | Manufacturing |
+| financ, bank, wealth | Financial Services |
+| retail, commerce | Retail |
+| education, training | Education |
+| nonprofit, nfp, charity | Nonprofit |
+| government, public | Government |
+| real estate, property | Real Estate |
+| logistics, transport | Logistics |
+| hospitality, hotel, tourism | Hospitality |
+
+**Tips:**
+- Columns can be in any order if headers are included
+- Use double quotes around values containing commas: `"Smith, John"`
+- Empty rows are skipped
+- Duplicate detection is by email address
 
 **Apollo Import:**
 1. Open Apollo Search modal
