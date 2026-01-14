@@ -5,6 +5,32 @@ All notable changes to the Fexle Sales Engine will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-01-14
+
+### Added
+- **Non-Salesforce Prospect Scripts** - Complete playbook for prospects not using Salesforce
+  - 5 new opening scripts for non-SF prospects (CRM Pain, Growth Challenge, Tech Stack, AI Opportunity, Current System Frustration)
+  - 6 pivot scripts based on current system (Spreadsheets, HubSpot, Dynamics, Legacy, Nothing, AI Angle)
+  - 10 objection handlers for non-SF scenarios
+  - 4 close options (Discovery Call, Demo, ROI Conversation, Competitor Comparison)
+  - Toggle to switch between "Existing SF User" and "Non-SF Prospect" modes
+- **Delete Functionality** - Remove leads and tasks
+  - Delete leads from list view (hover to reveal trash icon)
+  - Delete leads from detail view (trash icon in header)
+  - Delete tasks from Today dashboard
+  - Confirmation prompts to prevent accidents
+
+### Fixed
+- Settings modal scrolling - content now scrolls while header/footer stay fixed
+- Modal input focus issue - inputs no longer lose focus after each keystroke
+- Click outside to close Settings modal
+
+### Changed
+- Updated User Guide with SF vs Non-SF playbook documentation
+- Enhanced Playbooks section with detailed script options for both prospect types
+
+---
+
 ## [2.0.0] - 2026-01-13
 
 ### Added

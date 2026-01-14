@@ -362,6 +362,7 @@ The left panel shows all leads with:
 - Status badge
 - Source indicator
 - Last contact date
+- Delete button (hover to reveal)
 
 ### Filters
 
@@ -433,6 +434,15 @@ If a prospect needs a time outside normal availability:
 
 ## Playbooks & Scripts
 
+### Prospect Type Toggle
+
+The playbook includes two distinct script sets, accessible via the toggle at the top:
+
+| Mode | When to Use |
+|------|-------------|
+| **Existing SF User** | Prospect already uses Salesforce - focus on AI upgrades, optimization |
+| **Non-SF Prospect** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration, new implementation |
+
 ### Vertical Selection
 
 Select an industry vertical to see customized content:
@@ -440,6 +450,13 @@ Select an industry vertical to see customized content:
 - Financial Services
 - Manufacturing
 - Professional Services (Legal, Accounting)
+- Retail / E-Commerce
+- Education
+- Nonprofit
+- Government
+- Real Estate
+- Logistics / Transport
+- Hospitality
 
 ### Available Content
 
@@ -447,20 +464,89 @@ Each playbook includes:
 
 | Section | Content |
 |---------|---------|
-| **Opening Scripts** | 4 different approaches to start the call |
+| **Opening Scripts** | Multiple approaches based on prospect type |
 | **Pivot Scripts** | How to transition after initial engagement |
-| **Close Scripts** | Getting to the CEO meeting or deck |
-| **Objection Handling** | Responses to 10+ common objections |
+| **Close Scripts** | Getting to the CEO meeting or discovery call |
+| **Objection Handling** | Responses to 10+ common objections (SF and non-SF) |
 | **Pain Points** | Industry-specific problems to probe |
 | **Agentforce Use Case** | AI application for this vertical |
 | **Follow-Up Strategy** | Day-by-day multi-touch sequence |
 
-### Opening Script Options
+---
 
-1. **AI Pressure Question** (Recommended) - Asks about AI pressure
-2. **Support Cost Question** - Focuses on cost reduction
-3. **Sales Performance Question** - Addresses Salesforce gaps
-4. **Permission + Problem Hybrid** - Acknowledges cold call, hints at value
+### Scripts for Existing Salesforce Users
+
+#### Opening Script Options
+
+1. **AI Pressure Question** (Recommended) - "Are you seeing pressure to do more with AI in your Salesforce environment?"
+2. **Support Cost Question** - Focuses on reducing customer support costs
+3. **Sales Performance Question** - Addresses gaps in Salesforce utilization
+4. **Permission + Problem Hybrid** - Acknowledges cold call, hints at AI value
+
+#### Pivot Scripts
+
+| Scenario | Script Focus |
+|----------|--------------|
+| **Primary Pivot** | Introduce Fexle's hybrid model + Agentforce |
+| **AI Interest** | Deep dive on Agentforce and Einstein capabilities |
+| **Cost Pressure** | Emphasize 30-40% cost savings |
+| **Sales Gaps** | Focus on Sales Cloud optimization |
+
+#### Close Options
+
+| Path | When to Use |
+|------|-------------|
+| **CEO Meeting** | Prospect is engaged and ready to explore |
+| **AI Deck** | Prospect interested but not ready for meeting |
+| **Deck + Meeting Hybrid** | Offer deck first, then meeting |
+
+---
+
+### Scripts for Non-Salesforce Prospects
+
+Use these when calling prospects who don't currently use Salesforce — they may be using HubSpot, Dynamics, spreadsheets, or nothing at all.
+
+#### Opening Script Options
+
+1. **CRM Pain Question** (Recommended) - "Are you happy with how you're currently tracking customer interactions and sales opportunities?"
+2. **Growth Challenge Question** - "As your business has grown, has keeping track of customer relationships become harder?"
+3. **Tech Stack Curiosity** - Direct question about what they currently use
+4. **AI Opportunity Question** - Lead with AI value proposition
+5. **Current System Frustration** - "Are there gaps that are starting to slow the business down?"
+
+#### Pivot Scripts by Current System
+
+| Current System | Pivot Approach |
+|----------------|----------------|
+| **Spreadsheets/Nothing** | "Spreadsheets work until they don't" - emphasize visibility, collaboration, scalability |
+| **HubSpot** | Address limitations: reporting, automation, AI capabilities, enterprise scale |
+| **Dynamics 365** | Position Salesforce's superior CRM UX, ecosystem, and AI features |
+| **Legacy Systems** | Focus on AI readiness, modern integrations, mobile access |
+| **AI Angle (Universal)** | Lead with Agentforce/Einstein regardless of current system |
+
+#### Non-SF Objection Handling
+
+| Objection | Response Approach |
+|-----------|-------------------|
+| "We use HubSpot and it works fine" | Acknowledge, probe for limits, highlight AI gap |
+| "We use Dynamics 365" | Position Salesforce's CRM superiority and AI lead |
+| "We just use spreadsheets" | Empathize, describe tipping points, emphasize affordability |
+| "CRM seems like overkill" | Reframe as growth preparation, start small |
+| "We tried CRM before and it didn't stick" | Focus on implementation quality and adoption support |
+| "Salesforce is too expensive" | Explain flexible pricing + Fexle's 30-40% savings |
+| "We don't have bandwidth to implement" | Describe Fexle's full-service approach |
+| "Our industry is different" | Highlight Salesforce's customizability |
+| "We're waiting to see how AI develops" | Emphasize AI is working NOW, competitor advantage |
+| "We've heard Salesforce is hard to use" | Stress importance of good implementation |
+
+#### Non-SF Close Options
+
+| Close Type | When to Use |
+|------------|-------------|
+| **Discovery Call** | 30-min conversation about their business and needs |
+| **Tailored Demo** | Show Salesforce configured for their industry |
+| **ROI Conversation** | Build business case based on their specifics |
+| **Competitor Comparison** | Side-by-side vs their current system |
 
 ---
 
@@ -567,6 +653,7 @@ The system automatically creates tasks for:
 
 - Click checkbox to complete
 - Click task to view/edit associated lead
+- Click ✕ button to delete a task
 - Overdue tasks highlighted in red
 - Filter by completed/incomplete
 
@@ -595,6 +682,15 @@ The system automatically creates tasks for:
 3. Click Search Apollo
 4. Select leads to import
 5. Click Import Leads
+
+### Deleting Leads
+
+You can delete leads from two places:
+
+1. **From Lead List**: Hover over a lead in the Call Center sidebar to reveal the trash icon
+2. **From Lead Detail**: Click the trash icon next to the lead score in the header
+
+A confirmation prompt appears before deletion. **Note**: Deleted leads cannot be recovered unless you have a CSV backup.
 
 ### Exporting Data
 

@@ -43,7 +43,7 @@ The Fexle Sales Engine is a purpose-built sales productivity platform designed f
 | 🎯 **Today Dashboard** | AI-prioritized daily task list |
 | 📞 **Call Center** | Integrated calling interface with context-aware scripts |
 | 📅 **CEO Calendar** | Visual booking system with ICS file generation |
-| 📚 **Playbooks** | Industry-specific scripts for 11 verticals |
+| 📚 **Playbooks** | Industry-specific scripts for 11 verticals + SF/Non-SF prospect modes |
 | 🔍 **AI Research** | Claude-powered company research and call prep |
 | ✉️ **Email Templates** | 8 pre-built templates for every sales stage |
 
