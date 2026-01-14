@@ -1302,6 +1302,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [sheetsConnected, setSheetsConnected] = useState(false);
       const [syncStatus, setSyncStatus] = useState({ lastSync: null, syncing: false, error: null });
       const [showSheetsModal, setShowSheetsModal] = useState(false);
+
+      // Onboarding Tour State
+      const [showOnboarding, setShowOnboarding] = useState(false);
+      const [onboardingStep, setOnboardingStep] = useState(0);
+      const onboardingSteps = [
+        { title: 'Welcome to Fexle Sales Engine!', description: 'This quick tour will show you the key features. The app follows a simple workflow: Add leads → Research → Call → Book CEO meetings.', target: null },
+        { title: '1. Add Your Leads', description: 'Click "Add Lead" or "Import CSV" to add prospects. You can also search Apollo.io for new leads.', target: 'add-lead-btn' },
+        { title: '2. Research with AI', description: 'Select a lead and click "AI Research" to get company insights, pain points, and talking points powered by Claude AI.', target: 'research-btn' },
+        { title: '3. Use the Call Scripts', description: 'The Playbooks tab has industry-specific scripts, objection handlers, and email templates to guide your calls.', target: 'playbooks-tab' },
+        { title: '4. Log Your Calls', description: 'After each call, log the outcome. The app will automatically create follow-up tasks based on the result.', target: 'call-section' },
+        { title: '5. Book CEO Meetings', description: 'When a prospect is interested, use the CEO Calendar to book a meeting and download an ICS file.', target: 'calendar-tab' },
+        { title: '6. Track Progress', description: 'The Today dashboard shows your priority tasks. Each lead card shows progress dots: Research → Call → Meeting.', target: 'today-tab' },
+        { title: 'You\\'re Ready!', description: 'Check Settings for API keys (AI Research, Apollo) and Google Sheets sync for team collaboration. Good luck!', target: null }
+      ];
       const [autoSync, setAutoSync] = useState(false);
       const [syncInterval, setSyncInterval] = useState(5); // minutes
       const syncIntervalRef = useRef(null);
@@ -2079,15 +2093,22 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setAutoSync(saved.autoSync || false);
           setSyncInterval(saved.syncInterval || 5);
           setTasks(saved.tasks || []);
-          
+
           // Check sheets connection on load
           if (saved.googleSheetsUrl) {
             GoogleSheetsAPI.getSyncStatus(saved.googleSheetsUrl)
               .then(() => setSheetsConnected(true))
               .catch(() => setSheetsConnected(false));
           }
+
+          // Show onboarding if not completed
+          if (!saved.onboardingCompleted) {
+            setShowOnboarding(true);
+          }
         } else {
           setLeads(defaultLeads);
+          // First time user - show onboarding
+          setShowOnboarding(true);
         }
       }, []);
 
@@ -2950,10 +2971,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 mb-2">{lead.contact} • {lead.title}</div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-1.5 py-0.5 rounded text-xs ${getVerticalColor(lead.vertical)}`}>{verticalData[lead.vertical]?.icon}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(lead.status)}`}>{lead.status}</span>
-                      {lead.research && <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-700">📊 Researched</span>}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-xs ${getVerticalColor(lead.vertical)}`}>{verticalData[lead.vertical]?.icon}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(lead.status)}`}>{lead.status}</span>
+                      </div>
+                      <div className="flex items-center gap-1" title="Progress: Research → Call → Meeting">
+                        <span className={`w-2 h-2 rounded-full ${lead.research ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.research ? 'Researched' : 'Not researched'}></span>
+                        <span className={`w-2 h-2 rounded-full ${lead.lastContactDate ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.lastContactDate ? 'Called' : 'Not called'}></span>
+                        <span className={`w-2 h-2 rounded-full ${lead.status === 'CEO Meeting Booked' ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.status === 'CEO Meeting Booked' ? 'Meeting booked' : 'No meeting'}></span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2964,6 +2991,55 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             <div className="col-span-8 space-y-4">
               {selectedLead ? (
                 <>
+                  {/* Guided Workflow Panel */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-6">
+                        {/* Step 1: Research */}
+                        <div className={`flex items-center gap-2 ${selectedLead.research ? 'text-green-600' : 'text-blue-600 font-medium'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.research ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white animate-pulse'}`}>
+                            {selectedLead.research ? '✓' : '1'}
+                          </div>
+                          <span className="text-sm">Research</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-gray-300"></div>
+                        {/* Step 2: Call */}
+                        <div className={`flex items-center gap-2 ${selectedLead.lastContactDate ? 'text-green-600' : !selectedLead.research ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.lastContactDate ? 'bg-green-100 text-green-600' : !selectedLead.research ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
+                            {selectedLead.lastContactDate ? '✓' : '2'}
+                          </div>
+                          <span className="text-sm">Call</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-gray-300"></div>
+                        {/* Step 3: Book Meeting */}
+                        <div className={`flex items-center gap-2 ${selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
+                            {selectedLead.status === 'CEO Meeting Booked' ? '✓' : '3'}
+                          </div>
+                          <span className="text-sm">Book CEO</span>
+                        </div>
+                      </div>
+                      {/* Next Action Button */}
+                      <div>
+                        {!selectedLead.research ? (
+                          <button onClick={() => performResearch(selectedLead)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                            <span>🔍</span> Research Company
+                          </button>
+                        ) : !selectedLead.lastContactDate ? (
+                          <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                            <span>📞</span> Make Call
+                          </button>
+                        ) : selectedLead.status !== 'CEO Meeting Booked' ? (
+                          <button onClick={() => setActiveView('calendar')} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                            <span>📅</span> Book CEO Meeting
+                          </button>
+                        ) : (
+                          <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">✅ Workflow Complete</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Lead Header */}
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <div className="flex items-start justify-between">
@@ -3258,7 +3334,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   )}
 
                   {/* Call Logging */}
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                  <div id="call-section" className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h3 className="font-semibold text-gray-900 mb-4">📝 Log Call Outcome</h3>
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       {['Call Scheduled', 'Discovery Call Done', 'Qualified', 'Deck Sent', 'CEO Meeting Booked', 'Follow Up', 'No Answer', 'Closed Lost'].map(status => (
@@ -4675,9 +4751,19 @@ function jsonResponse(data) {
                 </div>
               </div>
 
+              {/* Help & Tour */}
+              <div className="pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => { setShowSettings(false); setOnboardingStep(0); setShowOnboarding(true); }}
+                  className="w-full py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 text-sm font-medium"
+                >
+                  🎓 Start Product Tour
+                </button>
+              </div>
+
               {/* Reset */}
               <div className="pt-4 border-t border-gray-100">
-                <button 
+                <button
                   onClick={() => { if(confirm('Clear all leads, tasks, and settings? This cannot be undone.')) { setLeads(useTestData ? defaultLeads : []); setTasks([]); showNotification('Data reset'); } }}
                   className="w-full py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm"
                 >
@@ -5488,6 +5574,100 @@ function jsonResponse(data) {
           {showEmailModal && emailModalContent}
           {showMeetingModal && meetingModalContent}
           {showCalendarModal && <CEOCalendar />}
+
+          {/* Onboarding Tour Modal */}
+          {showOnboarding && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl mx-4 overflow-hidden">
+                {/* Progress Bar */}
+                <div className="h-1 bg-gray-200">
+                  <div
+                    className="h-full bg-blue-600 transition-all duration-300"
+                    style={{ width: `${((onboardingStep + 1) / onboardingSteps.length) * 100}%` }}
+                  ></div>
+                </div>
+
+                <div className="p-8">
+                  {/* Icon */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">
+                      {onboardingStep === 0 ? '👋' :
+                       onboardingStep === 1 ? '➕' :
+                       onboardingStep === 2 ? '🔍' :
+                       onboardingStep === 3 ? '📚' :
+                       onboardingStep === 4 ? '📝' :
+                       onboardingStep === 5 ? '📅' :
+                       onboardingStep === 6 ? '📊' : '🚀'}
+                    </span>
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-gray-900 text-center mb-3">
+                    {onboardingSteps[onboardingStep].title}
+                  </h3>
+                  <p className="text-gray-600 text-center mb-8">
+                    {onboardingSteps[onboardingStep].description}
+                  </p>
+
+                  {/* Navigation */}
+                  <div className="flex gap-3">
+                    {onboardingStep > 0 && (
+                      <button
+                        onClick={() => setOnboardingStep(onboardingStep - 1)}
+                        className="flex-1 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium"
+                      >
+                        Back
+                      </button>
+                    )}
+                    {onboardingStep < onboardingSteps.length - 1 ? (
+                      <button
+                        onClick={() => setOnboardingStep(onboardingStep + 1)}
+                        className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
+                      >
+                        Next
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setShowOnboarding(false);
+                          const saved = loadFromStorage() || {};
+                          saveToStorage({ ...saved, onboardingCompleted: true });
+                          showNotification('Welcome! Start by selecting a lead or adding a new one.');
+                        }}
+                        className="flex-1 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
+                      >
+                        Get Started!
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Skip */}
+                  <button
+                    onClick={() => {
+                      setShowOnboarding(false);
+                      const saved = loadFromStorage() || {};
+                      saveToStorage({ ...saved, onboardingCompleted: true });
+                    }}
+                    className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    Skip tour
+                  </button>
+
+                  {/* Step dots */}
+                  <div className="flex justify-center gap-2 mt-6">
+                    {onboardingSteps.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          i === onboardingStep ? 'bg-blue-600' : i < onboardingStep ? 'bg-blue-300' : 'bg-gray-300'
+                        }`}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
