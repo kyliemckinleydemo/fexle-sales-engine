@@ -1440,6 +1440,12 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [newTask, setNewTask] = useState({ leadId: null, type: 'call', description: '', dueDate: '', dueTime: '' });
       const fileInputRef = useRef(null);
 
+      // Today's Call List State
+      const [todayCallList, setTodayCallList] = useState([]);
+      const [selectedForQueue, setSelectedForQueue] = useState([]);
+      const [showCallListPicker, setShowCallListPicker] = useState(false);
+      const [callListFilter, setCallListFilter] = useState({ minScore: 0, status: 'all', vertical: 'all' });
+
       // Google Sheets Integration State
       const [googleSheetsUrl, setGoogleSheetsUrl] = useState('');
       const [sheetsConnected, setSheetsConnected] = useState(false);
@@ -2387,6 +2393,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setAutoSync(saved.autoSync || false);
           setSyncInterval(saved.syncInterval || 5);
           setTasks(saved.tasks || []);
+          setTodayCallList(saved.todayCallList || []);
 
           // Check sheets connection on load
           if (saved.googleSheetsUrl) {
@@ -2415,14 +2422,14 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
       // Save data whenever it changes
       useEffect(() => {
-        if (leads.length > 0 || callerName || tasks.length > 0 || anthropicApiKey || apolloApiKey || googleSheetsUrl || !useTestData) {
-          saveToStorage({ 
-            leads, callerName, anthropicApiKey, apolloApiKey, 
+        if (leads.length > 0 || callerName || tasks.length > 0 || anthropicApiKey || apolloApiKey || googleSheetsUrl || !useTestData || todayCallList.length > 0) {
+          saveToStorage({
+            leads, callerName, anthropicApiKey, apolloApiKey,
             googleSheetsUrl, autoSync, syncInterval,
-            tasks, useTestData 
+            tasks, useTestData, todayCallList
           });
         }
-      }, [leads, callerName, anthropicApiKey, apolloApiKey, googleSheetsUrl, autoSync, syncInterval, tasks, useTestData]);
+      }, [leads, callerName, anthropicApiKey, apolloApiKey, googleSheetsUrl, autoSync, syncInterval, tasks, useTestData, todayCallList]);
 
       // Handle test data toggle
       const toggleTestData = (enabled) => {
@@ -2557,6 +2564,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             showNotification(`Follow-up task created for ${dueDate.toLocaleDateString('en-AU')}`);
           }
           
+          // Auto-mark as complete in today's call list
+          if (todayCallList.some(item => item.leadId === selectedLead.id)) {
+            markCallListItemComplete(selectedLead.id);
+          }
+
           showNotification('Call logged successfully');
           setCallNotes('');
           setCallOutcome('');
@@ -2646,6 +2658,55 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             return b.score - a.score;
           })
           .slice(0, 10);
+      };
+
+      // Today's Call List Management
+      const getFilteredLeadsForPicker = () => {
+        return leads
+          .filter(l => !['Closed Won', 'Closed Lost'].includes(l.status))
+          .filter(l => !todayCallList.some(c => c.leadId === l.id))
+          .filter(l => callListFilter.minScore === 0 || l.score >= callListFilter.minScore)
+          .filter(l => callListFilter.status === 'all' || l.status === callListFilter.status)
+          .filter(l => callListFilter.vertical === 'all' || l.vertical === callListFilter.vertical)
+          .sort((a, b) => b.score - a.score);
+      };
+
+      const addToCallList = (leadIds) => {
+        const newItems = leadIds.map(leadId => ({
+          leadId,
+          addedAt: new Date().toISOString(),
+          completed: false,
+          calledAt: null
+        }));
+        setTodayCallList(prev => [...prev, ...newItems]);
+        setSelectedForQueue([]);
+        showNotification(`Added ${leadIds.length} lead${leadIds.length > 1 ? 's' : ''} to today's call list`);
+      };
+
+      const removeFromCallList = (leadId) => {
+        setTodayCallList(prev => prev.filter(item => item.leadId !== leadId));
+      };
+
+      const markCallListItemComplete = (leadId) => {
+        setTodayCallList(prev => prev.map(item =>
+          item.leadId === leadId
+            ? { ...item, completed: true, calledAt: new Date().toISOString() }
+            : item
+        ));
+      };
+
+      const clearCallList = () => {
+        if (confirm('Clear all items from today\'s call list?')) {
+          setTodayCallList([]);
+          showNotification('Call list cleared');
+        }
+      };
+
+      const getCallListLeads = () => {
+        return todayCallList.map(item => ({
+          ...item,
+          lead: leads.find(l => l.id === item.leadId)
+        })).filter(item => item.lead); // Filter out any orphaned items
       };
 
       // Import CSV
@@ -2955,6 +3016,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
 
             {/* Quick Actions */}
             <div className="flex gap-3">
+              <button onClick={() => setShowCallListPicker(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                📋 Build Call List
+              </button>
               <button onClick={() => setShowTaskModal(true)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
                 ➕ Add Task
               </button>
@@ -3092,6 +3156,107 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Today's Call List */}
+                {getCallListLeads().length > 0 && (
+                  <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-blue-100 bg-blue-50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+                          📋 Today's Call List
+                          <span className="px-2 py-0.5 bg-blue-200 text-blue-800 rounded-full text-xs">
+                            {getCallListLeads().filter(i => !i.completed).length} remaining
+                          </span>
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setShowCallListPicker(true)}
+                            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          >
+                            + Add More
+                          </button>
+                          <button
+                            onClick={clearCallList}
+                            className="px-3 py-1 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                      {getCallListLeads().map((item, idx) => (
+                        <div key={item.leadId} className={`p-4 transition-colors ${item.completed ? 'bg-green-50/50' : 'hover:bg-gray-50'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                item.completed ? 'bg-green-200 text-green-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {item.completed ? '✓' : idx + 1}
+                              </span>
+                              <div className={item.completed ? 'opacity-60' : ''}>
+                                <div className="font-medium text-gray-900">{item.lead.company}</div>
+                                <div className="text-sm text-gray-500">{item.lead.contact} • {item.lead.title || 'No title'}</div>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-xs ${getVerticalColor(item.lead.vertical)}`}>
+                                {verticalData[item.lead.vertical]?.icon}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(item.lead.status)}`}>
+                                {item.lead.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2 py-1 rounded-full text-sm font-bold ${getScoreColor(item.lead.score)}`}>{item.lead.score}</span>
+                              {item.completed ? (
+                                <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                                  ✓ Called
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => { setSelectedLead(item.lead); setActiveTab('callCenter'); }}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                                  >
+                                    📞 Call
+                                  </button>
+                                  <button
+                                    onClick={() => markCallListItemComplete(item.leadId)}
+                                    className="px-3 py-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                    title="Mark as called"
+                                  >
+                                    ✓
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => removeFromCallList(item.leadId)}
+                                className="px-2 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Remove from list"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Call list progress bar */}
+                    <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-gray-600">Progress</span>
+                        <span className="font-medium text-gray-900">
+                          {getCallListLeads().filter(i => i.completed).length} / {getCallListLeads().length} calls
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full transition-all"
+                          style={{ width: `${(getCallListLeads().filter(i => i.completed).length / getCallListLeads().length) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -4189,6 +4354,183 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
       };
 
       // ==================== MODALS ====================
+
+      // Call List Picker Modal
+      const callListPickerModal = showCallListPicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden" onClick={() => setShowCallListPicker(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[85vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+              <div>
+                <h3 className="text-xl font-bold">📋 Build Today's Call List</h3>
+                <p className="text-sm text-gray-500 mt-1">Select leads to focus on today</p>
+              </div>
+              <button onClick={() => setShowCallListPicker(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+
+            {/* Filters */}
+            <div className="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+              <div className="flex gap-3 flex-wrap items-center">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-600">Min Score:</label>
+                  <select
+                    value={callListFilter.minScore}
+                    onChange={(e) => setCallListFilter({...callListFilter, minScore: parseInt(e.target.value)})}
+                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={0}>Any</option>
+                    <option value={40}>40+</option>
+                    <option value={60}>60+</option>
+                    <option value={80}>80+ (Hot)</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-600">Status:</label>
+                  <select
+                    value={callListFilter.status}
+                    onChange={(e) => setCallListFilter({...callListFilter, status: e.target.value})}
+                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All</option>
+                    <option value="New Lead">New Lead</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Follow Up">Follow Up</option>
+                    <option value="Deck Sent">Deck Sent</option>
+                    <option value="Meeting Requested">Meeting Requested</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-600">Vertical:</label>
+                  <select
+                    value={callListFilter.vertical}
+                    onChange={(e) => setCallListFilter({...callListFilter, vertical: e.target.value})}
+                    className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All</option>
+                    {Object.entries(verticalData).map(([key, data]) => (
+                      <option key={key} value={key}>{data.icon} {data.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="ml-auto text-sm text-gray-500">
+                  {getFilteredLeadsForPicker().length} leads available
+                </div>
+              </div>
+            </div>
+
+            {/* Lead List */}
+            <div className="flex-1 overflow-y-auto p-4 overscroll-contain">
+              {getFilteredLeadsForPicker().length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-lg mb-2">No leads match your filters</p>
+                  <p className="text-sm">Try adjusting the filters above</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Select All */}
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedForQueue.length === getFilteredLeadsForPicker().length && selectedForQueue.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedForQueue(getFilteredLeadsForPicker().map(l => l.id));
+                        } else {
+                          setSelectedForQueue([]);
+                        }
+                      }}
+                      className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="font-medium text-blue-800">
+                      Select All ({getFilteredLeadsForPicker().length} leads)
+                    </span>
+                  </div>
+
+                  {getFilteredLeadsForPicker().map(lead => (
+                    <div
+                      key={lead.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedForQueue.includes(lead.id)
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
+                      }`}
+                      onClick={() => {
+                        setSelectedForQueue(prev =>
+                          prev.includes(lead.id)
+                            ? prev.filter(id => id !== lead.id)
+                            : [...prev, lead.id]
+                        );
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedForQueue.includes(lead.id)}
+                        onChange={() => {}}
+                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 truncate">{lead.company}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{lead.status}</span>
+                        </div>
+                        <div className="text-sm text-gray-500 truncate">
+                          {lead.contact}{lead.title ? ` • ${lead.title}` : ''}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs text-gray-500">{verticalData[lead.vertical]?.icon}</span>
+                        <div className={`px-2 py-1 rounded-lg text-sm font-bold ${
+                          lead.score >= 80 ? 'bg-red-100 text-red-700' :
+                          lead.score >= 60 ? 'bg-orange-100 text-orange-700' :
+                          lead.score >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {lead.score}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {selectedForQueue.length > 0 ? (
+                  <span className="font-medium text-blue-600">{selectedForQueue.length} selected</span>
+                ) : (
+                  <span>Click leads to select them</span>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCallListPicker(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedForQueue.length > 0) {
+                      addToCallList(selectedForQueue);
+                      setShowCallListPicker(false);
+                    }
+                  }}
+                  disabled={selectedForQueue.length === 0}
+                  className={`px-6 py-2 rounded-xl font-medium transition-colors ${
+                    selectedForQueue.length > 0
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Add to Call List
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
       const addLeadModalContent = (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden" key="add-lead-modal" onClick={() => setShowAddLead(false)}>
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
@@ -6303,6 +6645,7 @@ function jsonResponse(data) {
           {showEmailModal && emailModalContent}
           {showMeetingModal && meetingModalContent}
           {showCalendarModal && <CEOCalendar />}
+          {callListPickerModal}
 
           {/* Onboarding Tour Modal */}
           {showOnboarding && (

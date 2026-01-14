@@ -32,6 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Delete tasks from Today dashboard
   - Confirmation prompts to prevent accidents
 - **Playbook Popup Window** - Pop out scripts to separate browser window for better visibility during calls
+- **Today's Call List** - Build a focused call queue from your master leads
+  - "Build Call List" button on Today dashboard
+  - Filter by minimum score (40+, 60+, 80+), status, and vertical
+  - Select individual leads or "Select All" matching filters
+  - Track progress with completion status and progress bar
+  - Auto-mark as complete when call is logged
+  - Persists in localStorage (survives refresh)
 
 ### Fixed
 - Settings modal scrolling - content now scrolls while header/footer stay fixed
