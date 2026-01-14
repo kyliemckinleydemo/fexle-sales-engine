@@ -4425,20 +4425,26 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
         return (
           <div className="space-y-6">
             {/* Vertical Selector */}
-            <div className="flex gap-3">
-              {Object.entries(verticalData).map(([key, data]) => (
-                <button
-                  key={key}
-                  onClick={() => setSelectedVertical(key)}
-                  className={`px-5 py-3 rounded-xl font-medium transition-all ${
-                    selectedVertical === key 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  {data.icon} {data.name}
-                </button>
-              ))}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-sm font-medium text-gray-600">Select Industry:</span>
+                <span className="text-xs text-gray-400">({Object.keys(verticalData).length} verticals)</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(verticalData).map(([key, data]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedVertical(key)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      selectedVertical === key
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {data.icon} {data.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Fexle Value Prop */}
