@@ -2042,6 +2042,21 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             duration: meeting.duration
           }]);
           setBookedMeetings(bookedMeetings.filter(m => m.id !== meetingId));
+
+          // Update lead: log the deletion and change status
+          const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
+          const meetingDate = new Date(meeting.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+          setLeads(leads.map(lead =>
+            lead.id === meeting.leadId
+              ? {
+                  ...lead,
+                  status: 'Follow Up',
+                  notes: `[${timestamp}] CEO meeting deleted (was ${meetingDate} @ ${meeting.time})\n\n${lead.notes || ''}`
+                }
+              : lead
+          ));
+
+          setSelectedSlotForBooking(null);
           showNotification('Meeting deleted, slot reopened');
         }
       };
