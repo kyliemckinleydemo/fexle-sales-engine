@@ -1,9 +1,16 @@
 // ============================================================
 // Fexle Sales Engine - Google Sheets Backend
-// Version: 2.0.0
+// Version: 3.0.0
 // ============================================================
 // This script provides the API backend for syncing leads and
 // tasks between the browser app and Google Sheets.
+//
+// NEW IN v3.0:
+// - Version-based conflict resolution
+// - Incremental sync support (only changed records)
+// - lastModified timestamp tracking
+// - Apollo.io and Anthropic API proxy endpoints
+// - Improved error handling
 //
 // SETUP:
 // 1. Create a Google Sheet with tabs named "Leads" and "Tasks"
@@ -14,6 +21,16 @@
 // 6. Copy the Web App URL to your Sales Engine settings
 // ============================================================
 
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+  // Optional: Store API keys in Script Properties for server-side calls
+  // Go to Project Settings → Script Properties to add these
+  APOLLO_API_KEY: PropertiesService.getScriptProperties().getProperty('APOLLO_API_KEY') || '',
+  ANTHROPIC_API_KEY: PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') || ''
+};
+
+// ==================== REQUEST HANDLERS ====================
+
 /**
  * Handle GET requests (fetch data)
  * @param {Object} e - Event object with parameters
@@ -21,24 +38,26 @@
 function doGet(e) {
   const action = e.parameter.action;
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
+
   try {
-    if (action === 'getLeads') {
-      return getSheetData(ss, 'Leads');
-    } else if (action === 'getTasks') {
-      return getSheetData(ss, 'Tasks');
-    } else if (action === 'status') {
-      return jsonResponse({ 
-        status: 'connected', 
-        sheetName: ss.getName(),
-        leadsCount: getRowCount(ss, 'Leads'),
-        tasksCount: getRowCount(ss, 'Tasks'),
-        lastModified: new Date().toISOString()
-      });
+    switch (action) {
+      case 'getLeads':
+        return getSheetData(ss, 'Leads', e.parameter.since);
+      case 'getTasks':
+        return getSheetData(ss, 'Tasks', e.parameter.since);
+      case 'status':
+        return getStatus(ss);
+      case 'getChanges':
+        // Get only records modified since a timestamp
+        return getChanges(ss, e.parameter.since, e.parameter.sheet);
+      default:
+        return jsonResponse({
+          error: 'Unknown action',
+          validActions: ['getLeads', 'getTasks', 'status', 'getChanges']
+        });
     }
-    return jsonResponse({ error: 'Unknown action. Valid actions: getLeads, getTasks, status' });
   } catch (error) {
-    return jsonResponse({ error: error.message });
+    return jsonResponse({ error: error.message, stack: error.stack });
   }
 }
 
@@ -48,242 +67,491 @@ function doGet(e) {
  */
 function doPost(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
+
   try {
     const data = JSON.parse(e.postData.contents);
-    
-    if (data.action === 'syncLeads') {
-      return syncData(ss, 'Leads', data.headers, data.rows, data.userName);
-    } else if (data.action === 'syncTasks') {
-      return syncData(ss, 'Tasks', data.headers, data.rows, data.userName);
-    } else if (data.action === 'deleteLead') {
-      return deleteRow(ss, 'Leads', data.leadId);
-    } else if (data.action === 'deleteTask') {
-      return deleteRow(ss, 'Tasks', data.taskId);
+
+    switch (data.action) {
+      case 'syncLeads':
+        return syncDataWithVersioning(ss, 'Leads', data.rows, data.userName, data.forceOverwrite);
+      case 'syncTasks':
+        return syncDataWithVersioning(ss, 'Tasks', data.rows, data.userName, data.forceOverwrite);
+      case 'syncIncremental':
+        // Only sync dirty/changed records
+        return syncIncremental(ss, data.sheetName, data.rows, data.userName);
+      case 'deleteLead':
+        return deleteRow(ss, 'Leads', data.leadId);
+      case 'deleteTask':
+        return deleteRow(ss, 'Tasks', data.taskId);
+      case 'resolveConflict':
+        return resolveConflict(ss, data.sheetName, data.id, data.resolution, data.row);
+      // API Proxy endpoints (to avoid CORS and hide API keys)
+      case 'apolloSearch':
+        return apolloSearch(data.searchParams);
+      case 'anthropicResearch':
+        return anthropicResearch(data.prompt, data.leadData);
+      default:
+        return jsonResponse({ error: 'Unknown action' });
     }
-    return jsonResponse({ error: 'Unknown action' });
   } catch (error) {
-    return jsonResponse({ error: error.message });
+    return jsonResponse({ error: error.message, stack: error.stack });
   }
 }
 
+// ==================== DATA RETRIEVAL ====================
+
 /**
- * Get all data from a sheet
+ * Get status information
+ */
+function getStatus(ss) {
+  return jsonResponse({
+    status: 'connected',
+    sheetName: ss.getName(),
+    leadsCount: getRowCount(ss, 'Leads'),
+    tasksCount: getRowCount(ss, 'Tasks'),
+    lastModified: new Date().toISOString(),
+    version: '3.0.0',
+    capabilities: ['versioning', 'incrementalSync', 'conflictResolution', 'apiProxy']
+  });
+}
+
+/**
+ * Get all data from a sheet, optionally filtered by modification time
  * @param {Spreadsheet} ss - The spreadsheet
  * @param {string} sheetName - Name of the sheet
+ * @param {string} since - ISO timestamp to filter records modified after this time
  */
-function getSheetData(ss, sheetName) {
+function getSheetData(ss, sheetName, since) {
   let sheet = ss.getSheetByName(sheetName);
-  
+
   // Create sheet if it doesn't exist
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    return jsonResponse({ headers: [], rows: [] });
+    initializeSheetHeaders(sheet, sheetName);
+    return jsonResponse({ headers: getDefaultHeaders(sheetName), rows: [], count: 0 });
   }
-  
+
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
-  
+
   if (lastRow === 0 || lastCol === 0) {
-    return jsonResponse({ headers: [], rows: [] });
+    return jsonResponse({ headers: getDefaultHeaders(sheetName), rows: [], count: 0 });
   }
-  
+
   const data = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-  
+
   if (data.length === 0) {
-    return jsonResponse({ headers: [], rows: [] });
+    return jsonResponse({ headers: getDefaultHeaders(sheetName), rows: [], count: 0 });
   }
-  
+
   const headers = data[0];
-  const rows = data.slice(1);
-  
-  return jsonResponse({ 
-    headers, 
-    rows,
-    count: rows.length,
+  let rows = data.slice(1);
+
+  // Filter by lastModified if 'since' parameter provided
+  if (since) {
+    const sinceDate = new Date(since);
+    const lastModifiedIndex = headers.indexOf('lastModified');
+    if (lastModifiedIndex >= 0) {
+      rows = rows.filter(row => {
+        const rowDate = new Date(row[lastModifiedIndex]);
+        return rowDate > sinceDate;
+      });
+    }
+  }
+
+  // Convert rows to objects for easier handling
+  const rowObjects = rows.map(row => {
+    const obj = {};
+    headers.forEach((header, i) => {
+      obj[header] = row[i];
+    });
+    return obj;
+  });
+
+  return jsonResponse({
+    headers,
+    rows: rowObjects,
+    count: rowObjects.length,
     fetchedAt: new Date().toISOString()
   });
 }
 
 /**
- * Sync data to a sheet (upsert - update or insert)
+ * Get only records changed since a timestamp
+ */
+function getChanges(ss, since, sheetName) {
+  const sheets = sheetName ? [sheetName] : ['Leads', 'Tasks'];
+  const changes = {};
+
+  sheets.forEach(name => {
+    const result = JSON.parse(getSheetData(ss, name, since).getContent());
+    changes[name.toLowerCase()] = result.rows || [];
+  });
+
+  return jsonResponse({
+    changes,
+    since,
+    fetchedAt: new Date().toISOString()
+  });
+}
+
+// ==================== DATA SYNC WITH VERSIONING ====================
+
+/**
+ * Sync data with version-based conflict detection
  * @param {Spreadsheet} ss - The spreadsheet
  * @param {string} sheetName - Name of the sheet
- * @param {string[]} headers - Column headers
- * @param {Array[]} rows - Data rows
+ * @param {Object[]} rows - Data rows as objects
  * @param {string} userName - Name of user performing sync
+ * @param {boolean} forceOverwrite - If true, overwrite regardless of version
  */
-function syncData(ss, sheetName, headers, rows, userName) {
+function syncDataWithVersioning(ss, sheetName, rows, userName, forceOverwrite) {
   let sheet = ss.getSheetByName(sheetName);
-  
-  // Create sheet if it doesn't exist
+
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
+    initializeSheetHeaders(sheet, sheetName);
   }
-  
-  // Get existing data
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  
-  let existingHeaders = [];
-  let existingRows = [];
-  
-  if (lastRow > 0 && lastCol > 0) {
-    const existingData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-    existingHeaders = existingData[0] || [];
-    existingRows = existingData.slice(1);
-  }
-  
-  // Find ID column index
+
+  const headers = getSheetHeaders(sheet);
   const idIndex = headers.indexOf('id');
-  const existingIdIndex = existingHeaders.indexOf('id');
-  
-  // Create lookup map for existing rows by ID
-  const existingById = {};
-  if (existingIdIndex >= 0) {
-    existingRows.forEach((row, i) => {
-      const id = String(row[existingIdIndex]);
-      if (id && id !== '') {
-        existingById[id] = i + 2; // +2 for 1-indexed and header row
-      }
-    });
-  }
-  
-  // Set headers if sheet is empty
-  if (existingHeaders.length === 0 && headers.length > 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  }
-  
-  // Process each row
+  const versionIndex = headers.indexOf('_version');
+  const lastModifiedIndex = headers.indexOf('lastModified');
+
+  // Get existing data
+  const existingData = getExistingDataMap(sheet, headers);
+
   let updated = 0;
   let inserted = 0;
+  let conflicts = [];
   const errors = [];
-  
+  const now = new Date().toISOString();
+
   rows.forEach((row, index) => {
     try {
-      const rowId = idIndex >= 0 ? String(row[idIndex]) : null;
-      
-      if (rowId && existingById[rowId]) {
+      const rowId = String(row.id);
+      const existing = existingData[rowId];
+
+      // Add/update metadata
+      row.lastModified = now;
+      row._syncedBy = userName || 'Unknown';
+      row._syncedAt = now;
+
+      if (existing) {
+        // Check for version conflict
+        const incomingVersion = row._version || 0;
+        const existingVersion = existing.data._version || 0;
+
+        if (!forceOverwrite && incomingVersion < existingVersion) {
+          // Conflict detected - incoming data is older
+          conflicts.push({
+            id: rowId,
+            field: 'version',
+            localVersion: incomingVersion,
+            remoteVersion: existingVersion,
+            localData: row,
+            remoteData: existing.data
+          });
+          return;
+        }
+
+        // Increment version
+        row._version = Math.max(incomingVersion, existingVersion) + 1;
+
         // Update existing row
-        const rowNum = existingById[rowId];
-        sheet.getRange(rowNum, 1, 1, row.length).setValues([row]);
+        const rowArray = headers.map(h => row[h] !== undefined ? row[h] : '');
+        sheet.getRange(existing.rowNum, 1, 1, headers.length).setValues([rowArray]);
         updated++;
       } else {
-        // Insert new row
-        sheet.appendRow(row);
+        // New row - set initial version
+        row._version = 1;
+
+        const rowArray = headers.map(h => row[h] !== undefined ? row[h] : '');
+        sheet.appendRow(rowArray);
         inserted++;
       }
     } catch (rowError) {
-      errors.push({ index, error: rowError.message });
+      errors.push({ index, id: row.id, error: rowError.message });
     }
   });
-  
+
   // Log sync activity
-  logSync(ss, userName, sheetName, updated, inserted);
-  
-  return jsonResponse({ 
-    success: true, 
-    updated, 
+  logSync(ss, userName, sheetName, updated, inserted, conflicts.length);
+
+  return jsonResponse({
+    success: true,
+    updated,
     inserted,
+    conflicts: conflicts.length > 0 ? conflicts : undefined,
     errors: errors.length > 0 ? errors : undefined,
     total: rows.length,
-    timestamp: new Date().toISOString()
+    timestamp: now
   });
+}
+
+/**
+ * Sync only dirty/changed records (incremental sync)
+ */
+function syncIncremental(ss, sheetName, rows, userName) {
+  // Same as syncDataWithVersioning but expects only changed records
+  return syncDataWithVersioning(ss, sheetName, rows, userName, false);
+}
+
+/**
+ * Resolve a sync conflict
+ * @param {Spreadsheet} ss - The spreadsheet
+ * @param {string} sheetName - Name of the sheet
+ * @param {string} id - ID of the conflicting record
+ * @param {string} resolution - 'local', 'remote', or 'merge'
+ * @param {Object} row - The resolved row data (for 'local' or 'merge')
+ */
+function resolveConflict(ss, sheetName, id, resolution, row) {
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    return jsonResponse({ error: 'Sheet not found: ' + sheetName });
+  }
+
+  const headers = getSheetHeaders(sheet);
+  const existingData = getExistingDataMap(sheet, headers);
+  const existing = existingData[String(id)];
+
+  if (!existing) {
+    return jsonResponse({ error: 'Record not found: ' + id });
+  }
+
+  if (resolution === 'remote') {
+    // Keep remote version - nothing to do
+    return jsonResponse({ success: true, resolution: 'kept_remote' });
+  }
+
+  // For 'local' or 'merge', update with provided row
+  const now = new Date().toISOString();
+  row._version = (existing.data._version || 0) + 1;
+  row.lastModified = now;
+  row._conflictResolved = now;
+
+  const rowArray = headers.map(h => row[h] !== undefined ? row[h] : '');
+  sheet.getRange(existing.rowNum, 1, 1, headers.length).setValues([rowArray]);
+
+  return jsonResponse({
+    success: true,
+    resolution: resolution === 'local' ? 'used_local' : 'merged',
+    newVersion: row._version
+  });
+}
+
+// ==================== API PROXY ENDPOINTS ====================
+
+/**
+ * Proxy Apollo.io search requests
+ * This hides the API key from the client
+ */
+function apolloSearch(searchParams) {
+  const apiKey = CONFIG.APOLLO_API_KEY;
+
+  if (!apiKey) {
+    return jsonResponse({
+      error: 'Apollo API key not configured on server',
+      hint: 'Add APOLLO_API_KEY to Script Properties'
+    });
+  }
+
+  try {
+    const response = UrlFetchApp.fetch('https://api.apollo.io/v1/mixed_people/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'X-Api-Key': apiKey
+      },
+      payload: JSON.stringify(searchParams),
+      muteHttpExceptions: true
+    });
+
+    const result = JSON.parse(response.getContentText());
+    return jsonResponse(result);
+  } catch (error) {
+    return jsonResponse({ error: 'Apollo API error: ' + error.message });
+  }
+}
+
+/**
+ * Proxy Anthropic API requests for company research
+ */
+function anthropicResearch(prompt, leadData) {
+  const apiKey = CONFIG.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    return jsonResponse({
+      error: 'Anthropic API key not configured on server',
+      hint: 'Add ANTHROPIC_API_KEY to Script Properties'
+    });
+  }
+
+  try {
+    const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      payload: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      }),
+      muteHttpExceptions: true
+    });
+
+    const result = JSON.parse(response.getContentText());
+    return jsonResponse(result);
+  } catch (error) {
+    return jsonResponse({ error: 'Anthropic API error: ' + error.message });
+  }
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Get default headers for a sheet
+ */
+function getDefaultHeaders(sheetName) {
+  const commonHeaders = ['id', 'lastModified', '_version', '_syncedBy', '_syncedAt', '_dirty'];
+
+  if (sheetName === 'Leads') {
+    return [
+      ...commonHeaders,
+      'company', 'contact', 'title', 'phone', 'email', 'vertical',
+      'companySize', 'revenue', 'employeeCount', 'website', 'linkedinUrl',
+      'city', 'state', 'country', 'industry', 'source', 'sourceId',
+      'status', 'score', 'lastContact', 'lastContactDate', 'notes',
+      'assignedTo', 'createdDate', 'intentSignals', 'technologies', 'research'
+    ];
+  } else if (sheetName === 'Tasks') {
+    return [
+      ...commonHeaders,
+      'leadId', 'type', 'description', 'dueDate', 'dueTime',
+      'completed', 'completedAt', 'priority', 'assignedTo', 'createdDate'
+    ];
+  }
+  return commonHeaders;
+}
+
+/**
+ * Initialize sheet with headers
+ */
+function initializeSheetHeaders(sheet, sheetName) {
+  const headers = getDefaultHeaders(sheetName);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+}
+
+/**
+ * Get headers from sheet (first row)
+ */
+function getSheetHeaders(sheet) {
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) return getDefaultHeaders('');
+  return sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+}
+
+/**
+ * Get existing data as a map by ID
+ */
+function getExistingDataMap(sheet, headers) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return {};
+
+  const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  const idIndex = headers.indexOf('id');
+  const map = {};
+
+  data.forEach((row, i) => {
+    const id = String(row[idIndex]);
+    if (id && id !== '') {
+      const obj = {};
+      headers.forEach((h, j) => obj[h] = row[j]);
+      map[id] = {
+        rowNum: i + 2, // 1-indexed, +1 for header
+        data: obj
+      };
+    }
+  });
+
+  return map;
 }
 
 /**
  * Delete a row by ID
- * @param {Spreadsheet} ss - The spreadsheet
- * @param {string} sheetName - Name of the sheet
- * @param {string} id - ID of the row to delete
  */
 function deleteRow(ss, sheetName, id) {
   const sheet = ss.getSheetByName(sheetName);
-  
+
   if (!sheet) {
     return jsonResponse({ error: 'Sheet not found: ' + sheetName });
   }
-  
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  
-  if (lastRow === 0) {
-    return jsonResponse({ error: 'Sheet is empty' });
+
+  const headers = getSheetHeaders(sheet);
+  const existingData = getExistingDataMap(sheet, headers);
+  const existing = existingData[String(id)];
+
+  if (!existing) {
+    return jsonResponse({ error: 'ID not found: ' + id });
   }
-  
-  const data = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-  const headers = data[0];
-  const idIndex = headers.indexOf('id');
-  
-  if (idIndex < 0) {
-    return jsonResponse({ error: 'No ID column found in sheet' });
-  }
-  
-  // Search from bottom to top to avoid index shifting issues
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][idIndex]) === String(id)) {
-      sheet.deleteRow(i + 1); // +1 for 1-indexed
-      return jsonResponse({ success: true, deleted: id });
-    }
-  }
-  
-  return jsonResponse({ error: 'ID not found: ' + id });
+
+  sheet.deleteRow(existing.rowNum);
+  return jsonResponse({ success: true, deleted: id });
 }
 
 /**
  * Get row count for a sheet (excluding header)
- * @param {Spreadsheet} ss - The spreadsheet
- * @param {string} sheetName - Name of the sheet
  */
 function getRowCount(ss, sheetName) {
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) return 0;
-  return Math.max(0, sheet.getLastRow() - 1); // -1 for header
+  return Math.max(0, sheet.getLastRow() - 1);
 }
 
 /**
- * Log sync activity to a SyncLog sheet
- * @param {Spreadsheet} ss - The spreadsheet
- * @param {string} userName - Name of user
- * @param {string} sheetName - Sheet that was synced
- * @param {number} updated - Count of updated rows
- * @param {number} inserted - Count of inserted rows
+ * Log sync activity
  */
-function logSync(ss, userName, sheetName, updated, inserted) {
+function logSync(ss, userName, sheetName, updated, inserted, conflicts) {
   try {
     let logSheet = ss.getSheetByName('SyncLog');
-    
+
     if (!logSheet) {
       logSheet = ss.insertSheet('SyncLog');
-      logSheet.getRange(1, 1, 1, 5).setValues([
-        ['Timestamp', 'User', 'Sheet', 'Updated', 'Inserted']
+      logSheet.getRange(1, 1, 1, 6).setValues([
+        ['Timestamp', 'User', 'Sheet', 'Updated', 'Inserted', 'Conflicts']
       ]);
-      // Format header
-      logSheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+      logSheet.getRange(1, 1, 1, 6).setFontWeight('bold');
     }
-    
+
     logSheet.appendRow([
       new Date().toISOString(),
       userName || 'Unknown',
       sheetName,
       updated,
-      inserted
+      inserted,
+      conflicts || 0
     ]);
-    
-    // Keep only last 1000 log entries to prevent sheet from getting too large
+
+    // Keep only last 1000 log entries
     const lastRow = logSheet.getLastRow();
     if (lastRow > 1001) {
       logSheet.deleteRows(2, lastRow - 1001);
     }
   } catch (e) {
-    // Don't fail the sync if logging fails
     console.error('Failed to log sync:', e);
   }
 }
 
 /**
- * Create JSON response with CORS headers
- * @param {Object} data - Data to return as JSON
+ * Create JSON response
  */
 function jsonResponse(data) {
   return ContentService
@@ -291,103 +559,75 @@ function jsonResponse(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ============================================================
-// UTILITY FUNCTIONS (can be run manually from Apps Script)
-// ============================================================
+// ==================== UTILITY FUNCTIONS ====================
 
 /**
  * Remove duplicate rows based on ID column
- * Run this manually if you have duplicate data
  */
 function removeDuplicates() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetsToClean = ['Leads', 'Tasks'];
-  
-  sheetsToClean.forEach(sheetName => {
-    const sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      console.log('Sheet not found: ' + sheetName);
-      return;
-    }
-    
-    const lastRow = sheet.getLastRow();
-    if (lastRow <= 1) {
-      console.log('No data in: ' + sheetName);
-      return;
-    }
-    
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const idIndex = headers.indexOf('id');
-    
-    if (idIndex < 0) {
-      console.log('No ID column in: ' + sheetName);
-      return;
-    }
-    
-    const seen = new Set();
-    const rowsToDelete = [];
-    
-    for (let i = 1; i < data.length; i++) {
-      const id = String(data[i][idIndex]);
-      if (seen.has(id)) {
-        rowsToDelete.push(i + 1); // 1-indexed
-      } else if (id && id !== '') {
-        seen.add(id);
-      }
-    }
-    
-    // Delete from bottom to top to avoid index shifting
-    rowsToDelete.reverse().forEach(row => {
-      sheet.deleteRow(row);
-    });
-    
-    console.log(`Removed ${rowsToDelete.length} duplicates from ${sheetName}`);
-  });
-}
 
-/**
- * Clear all data (except headers) from Leads and Tasks sheets
- * USE WITH CAUTION - this deletes all your data!
- */
-function clearAllData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetsToClean = ['Leads', 'Tasks'];
-  
   sheetsToClean.forEach(sheetName => {
     const sheet = ss.getSheetByName(sheetName);
     if (!sheet) return;
-    
+
+    const headers = getSheetHeaders(sheet);
+    const existingData = getExistingDataMap(sheet, headers);
+
+    // Data is already deduplicated by ID in the map
+    console.log(`${sheetName}: ${Object.keys(existingData).length} unique records`);
+  });
+}
+
+/**
+ * Clear all data (except headers)
+ */
+function clearAllData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ['Leads', 'Tasks'].forEach(sheetName => {
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) return;
+
     const lastRow = sheet.getLastRow();
     if (lastRow > 1) {
       sheet.deleteRows(2, lastRow - 1);
-      console.log(`Cleared all data from ${sheetName}`);
+      console.log(`Cleared ${sheetName}`);
     }
   });
 }
 
 /**
- * Get statistics about the data
+ * Get statistics
  */
 function getStats() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
   const stats = {
     sheetName: ss.getName(),
     leads: getRowCount(ss, 'Leads'),
     tasks: getRowCount(ss, 'Tasks'),
-    syncLogs: getRowCount(ss, 'SyncLog'),
-    lastModified: ss.getLastUpdated()
+    syncLogs: getRowCount(ss, 'SyncLog')
   };
-  
   console.log('Stats:', JSON.stringify(stats, null, 2));
   return stats;
 }
 
 /**
- * Test the doGet function locally
+ * Test functions
  */
 function testDoGet() {
   const result = doGet({ parameter: { action: 'status' } });
+  console.log(result.getContent());
+}
+
+function testGetChanges() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const result = doGet({
+    parameter: {
+      action: 'getChanges',
+      since: yesterday.toISOString()
+    }
+  });
   console.log(result.getContent());
 }
