@@ -3457,7 +3457,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         ✉️ Email Templates
                       </button>
                       <button
-                        onClick={() => { 
+                        onClick={() => {
                           setMeetingDetails({
                             startDate: '',
                             startTime: '14:00',
@@ -3466,11 +3466,18 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             title: `Fexle CEO Call - ${selectedLead.company}`,
                             description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations and how they might help ${selectedLead.company}.`
                           });
-                          setShowMeetingModal(true); 
+                          setShowMeetingModal(true);
                         }}
                         className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-medium shadow-lg shadow-orange-200"
                       >
                         📅 Schedule CEO Meeting
+                      </button>
+                      <button
+                        onClick={openPlaybookPopup}
+                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all text-sm font-medium shadow-lg shadow-pink-200"
+                        title="Open playbook in separate window for reference during calls"
+                      >
+                        🪟 Pop Out Scripts
                       </button>
                       <a href={`https://www.google.com/search?q=${encodeURIComponent(selectedLead.company + ' Sydney')}`} target="_blank" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
                         🌐 Google
@@ -3496,21 +3503,12 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   </div>
 
                   {/* Call Script Toggle */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowScript(!showScript)}
-                      className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-200"
-                    >
-                      {showScript ? '📋 Hide Playbook' : '📋 Show Playbook'}
-                    </button>
-                    <button
-                      onClick={openPlaybookPopup}
-                      className="px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-200"
-                      title="Open playbook in separate window"
-                    >
-                      🪟 Pop Out
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowScript(!showScript)}
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-200"
+                  >
+                    {showScript ? '📋 Hide Playbook' : '📋 Show Playbook'}
+                  </button>
 
                   {/* Fexle Call Script */}
                   {showScript && vertical && (
