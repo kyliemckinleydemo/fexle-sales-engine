@@ -5020,20 +5020,23 @@ function jsonResponse(data) {
         const handleSlotClick = (date, time) => {
           const dateStr = formatDate(date);
           const booked = isSlotBooked(dateStr, time);
-          
+          const available = isSlotAvailable(dateStr, time);
+
           if (booked) {
+            // Show booked meeting details
             setSelectedSlotForBooking({ ...booked, isBooked: true });
-          } else if (isSlotAvailable(dateStr, time)) {
-            setSelectedSlotForBooking({ date: dateStr, time, id: `${dateStr}-${time}`, isScheduleChallenge: false });
+          } else if (selectedLead) {
+            // Lead is selected - show booking form (schedule challenge if not available)
+            setSelectedSlotForBooking({
+              date: dateStr,
+              time,
+              id: `${dateStr}-${time}`,
+              isScheduleChallenge: !available
+            });
           } else {
-            // If clicking unavailable slot while holding shift OR if a lead is selected, offer to book anyway
-            if (selectedLead) {
-              // Offer to book outside normal availability
-              setSelectedSlotForBooking({ date: dateStr, time, id: `${dateStr}-${time}`, isScheduleChallenge: true });
-            } else {
-              // Just toggle availability
-              toggleAvailability(dateStr, time);
-            }
+            // No lead selected - toggle availability on/off
+            toggleAvailability(dateStr, time);
+            setSelectedSlotForBooking(null); // Clear sidebar
           }
         };
 
