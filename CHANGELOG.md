@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2026-01-14
 
 ### Added
+- **Industry-Specific Playbooks** - Tailored opening scripts and objection handling for each vertical
+  - Healthcare: Staff burnout, family communication, compliance, patient engagement angles
+  - Professional Services: Billable hours, client portal, M&A integration, knowledge management
+  - Manufacturing: Supply chain, plant floor visibility, distributor management, quality assurance
+  - Financial Services: Compliance, client onboarding, wealth handoff, regulatory pressure
+  - Retail: Omnichannel, inventory visibility, customer loyalty, seasonal scaling
+  - Education: Student lifecycle, enrollment funnel, alumni engagement, manual processes
+  - Nonprofit: Donor retention, grant tracking, volunteer coordination, impact measurement
+  - Government: Digital services, citizen experience, cross-agency collaboration, procurement
+  - Real Estate: Lead response time, client relationship, market intelligence, transaction coordination
+  - Logistics: WISMO calls, proactive communication, customer retention, e-commerce pressure
+  - Hospitality: OTA dependency, guest recognition, 24/7 service, group sales
 - **Non-Salesforce Prospect Scripts** - Complete playbook for prospects not using Salesforce
   - 5 new opening scripts for non-SF prospects (CRM Pain, Growth Challenge, Tech Stack, AI Opportunity, Current System Frustration)
   - 6 pivot scripts based on current system (Spreadsheets, HubSpot, Dynamics, Legacy, Nothing, AI Angle)
@@ -19,13 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Delete leads from detail view (trash icon in header)
   - Delete tasks from Today dashboard
   - Confirmation prompts to prevent accidents
+- **Playbook Popup Window** - Pop out scripts to separate browser window for better visibility during calls
 
 ### Fixed
 - Settings modal scrolling - content now scrolls while header/footer stay fixed
 - Modal input focus issue - inputs no longer lose focus after each keystroke
 - Click outside to close Settings modal
+- CEO Meeting Booked status data integrity check
+- Stale closure issues in booking functions
 
 ### Changed
+- Renamed "Playbooks" tab to "Industry Playbooks"
 - Updated User Guide with SF vs Non-SF playbook documentation
 - Enhanced Playbooks section with detailed script options for both prospect types
 
