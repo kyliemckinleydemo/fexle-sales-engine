@@ -867,7 +867,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling billing inquiries, service troubleshooting, and plan recommendations 24/7",
         competitors: ["Amdocs", "NetCracker", "Custom BSS/OSS"],
-        industryStats: "Telcos using AI see 35% reduction in support calls and 25% improvement in customer satisfaction"
+        industryStats: "Telcos using AI see 35% reduction in support calls and 25% improvement in customer satisfaction",
+        openings: [
+          { name: "Churn Problem", script: "Hi [NAME], what's your current monthly churn rate? For most telcos it's 1-2%, and every point costs millions. We're helping carriers use AI to predict and prevent churn before customers leave.", why: "Churn is the #1 telco metric" },
+          { name: "Billing Call Volume", script: "Hi [NAME], what percentage of your support calls are billing-related? For most telcos it's 40-50%. AI can handle those instantly, 24/7, freeing your team for complex issues.", why: "Billing calls are high volume, low complexity" },
+          { name: "5G Opportunity", script: "Hi [NAME], as you roll out 5G services, how are you handling the increase in customer inquiries and plan changes? AI can scale your support without scaling your headcount.", why: "5G creates support surge" },
+          { name: "Self-Service Gap", script: "Hi [NAME], what's your self-service adoption rate? Most telcos struggle to get customers to use portals. AI chatbots can bridge that gap — customers get instant answers without waiting on hold.", why: "Self-service saves money" }
+        ],
+        objections: {
+          "We have a BSS/OSS system already": "Those are great for billing and network management — but customer engagement is different. Salesforce adds the AI layer on top: automated support, proactive communication, churn prediction. It integrates with your existing BSS.",
+          "Our customers prefer calling": "Some do — but 60% just want a quick answer about their bill or data usage. AI handles those instantly. When someone needs real help, your team isn't buried in routine calls.",
+          "We're mid-contract with our current vendor": "No problem — we're talking about adding AI capabilities, not replacing your core systems. This layers on top. Worth understanding what's possible so you're ready when the time comes.",
+          "Telco is too complex for AI": "Actually, telco is perfect for AI — high volume, repetitive inquiries, predictable patterns. The complexity is in your network, not in explaining a bill. AI handles the customer-facing side brilliantly.",
+          "Our NPS scores are already good": "Good scores are about maintaining them. One network outage with poor communication can tank NPS overnight. AI enables proactive, personalised communication at scale."
+        }
       },
       energy: {
         name: "Energy & Utilities",
@@ -893,7 +906,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling billing questions, outage updates, and usage insights 24/7",
         competitors: ["Oracle Utilities", "SAP IS-U", "Custom systems"],
-        industryStats: "Utilities using AI see 40% reduction in billing calls and improved outage communication"
+        industryStats: "Utilities using AI see 40% reduction in billing calls and improved outage communication",
+        openings: [
+          { name: "Billing Call Volume", script: "Hi [NAME], what percentage of your customer calls are billing-related? For most utilities it's 50-60%. AI can handle those automatically — customers get instant answers without waiting on hold.", why: "Billing dominates utility call centres" },
+          { name: "Outage Communication", script: "Hi [NAME], when there's an outage, how do customers find out? If they're calling you, that's backwards. We help utilities flip to proactive communication — customers know before they call.", why: "Proactive beats reactive" },
+          { name: "Smart Meter Data", script: "Hi [NAME], you've invested in smart meters — but are you using that data to help customers? AI can turn usage data into personalised insights that reduce bills and support calls.", why: "Smart meter ROI opportunity" },
+          { name: "Energy Transition", script: "Hi [NAME], as you add solar, battery, and EV services, how are you handling the complexity? AI can help customers navigate new options without overwhelming your team.", why: "Transition creates complexity" }
+        ],
+        objections: {
+          "We have Oracle/SAP Utilities": "Those are essential for billing and operations — but customer engagement is a different layer. Salesforce adds AI-powered service on top: chatbots, proactive communication, personalised insights. It integrates with your existing systems.",
+          "Our customers are older and prefer phone": "Some do — but even older customers appreciate not waiting 20 minutes for a simple billing question. AI handles the routine stuff instantly. When someone needs help, your team has time for them.",
+          "Utilities are heavily regulated": "Exactly why you need consistent, auditable customer communication. AI ensures every customer gets accurate information every time. No human errors, full audit trail.",
+          "We're a government-owned utility": "Government utilities face the same customer expectations as private ones. Citizens expect modern service. AI helps you deliver that within your budget constraints.",
+          "Our call centre is outsourced": "AI can actually help there — it handles the simple calls, so your outsourced team focuses on complex issues. You might even reduce your outsourcing costs."
+        }
       },
       media: {
         name: "Media & Entertainment",
@@ -919,7 +945,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling subscription inquiries, content recommendations, and account management",
         competitors: ["Custom systems", "Zuora", "Vindicia"],
-        industryStats: "Media companies using AI see 30% improvement in subscriber retention"
+        industryStats: "Media companies using AI see 30% improvement in subscriber retention",
+        openings: [
+          { name: "Subscriber Churn", script: "Hi [NAME], what's your monthly subscriber churn rate? In streaming, every percentage point is millions in lost revenue. We're helping media companies use AI to predict and prevent cancellations.", why: "Churn is existential for subscription media" },
+          { name: "Audience Fragmentation", script: "Hi [NAME], how unified is your view of audience across platforms — app, web, social, email? Most media companies have data silos. AI can stitch that together for true personalisation.", why: "Fragmented data limits personalisation" },
+          { name: "Content Discovery", script: "Hi [NAME], how do subscribers find new content? If they're not discovering, they're churning. AI-powered recommendations keep audiences engaged and watching.", why: "Discovery drives retention" },
+          { name: "Support Scaling", script: "Hi [NAME], as you grow subscribers, how are you scaling support? AI can handle account questions, billing, and technical issues 24/7 without growing your team proportionally.", why: "Support doesn't scale linearly" }
+        ],
+        objections: {
+          "We have a custom subscriber system": "Those handle transactions — but engagement is different. Salesforce adds the AI layer: churn prediction, personalised recommendations, automated support. It integrates via API.",
+          "Our audience is ad-supported, not subscribers": "Ad-supported needs even better audience understanding. AI helps you know your audience deeply — demographics, behaviour, preferences — so you can command premium CPMs.",
+          "We're focused on content, not technology": "Great content is table stakes. What separates winners is how you engage audiences around that content. AI makes your content investment work harder.",
+          "Our tech team is stretched thin": "That's exactly why you need a platform, not a custom build. Salesforce is out-of-the-box AI — your tech team configures, not codes.",
+          "We're a small publisher": "Small publishers actually benefit most — you can't afford big support teams. AI gives you enterprise-level audience engagement on a small publisher budget."
+        }
       },
       agriculture: {
         name: "Agriculture & Farming",
@@ -944,7 +983,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling order inquiries, delivery tracking, and product recommendations",
         competitors: ["Spreadsheets", "Basic accounting software", "Custom systems"],
-        industryStats: "Agricultural businesses using CRM see 25% improvement in customer retention"
+        industryStats: "Agricultural businesses using CRM see 25% improvement in customer retention",
+        openings: [
+          { name: "Spreadsheet Problem", script: "Hi [NAME], are you still managing customer relationships in spreadsheets? Most agricultural businesses are — and it works until someone leaves or the file gets corrupted. We help farmers and agribusiness professionalise without complexity.", why: "Spreadsheets are fragile" },
+          { name: "Seasonal Planning", script: "Hi [NAME], how do you forecast demand for next season? If you're guessing based on last year, you're leaving money on the table. AI can analyse patterns and help you plan inventory and production.", why: "Seasonality drives cash flow" },
+          { name: "Customer Knowledge", script: "Hi [NAME], if your best salesperson left tomorrow, how much customer knowledge walks out the door? We help agricultural businesses capture and share that intelligence across the team.", why: "Knowledge is often in people's heads" },
+          { name: "Growth Ceiling", script: "Hi [NAME], at what point does growth start breaking your current systems? Most agribusinesses hit a ceiling where spreadsheets and manual processes can't scale. Better to fix that before you hit it.", why: "Growth exposes system weaknesses" }
+        ],
+        objections: {
+          "We're too small for CRM": "Actually, small is the perfect time to start — before bad habits set in. Salesforce scales from 5 users to 5,000. You won't outgrow it.",
+          "Our industry is relationship-based": "Exactly — and relationships need to be remembered and nurtured. CRM helps you remember every conversation, preference, and promise. That strengthens relationships.",
+          "We don't have IT staff": "You don't need any. This is cloud software — login and go. We handle the setup, and it's designed for business users, not tech people.",
+          "Farming is different": "The fundamentals are the same — you have customers, orders, relationships to manage. The difference is we configure it for your industry: seasonal cycles, product types, delivery patterns.",
+          "We're family-owned and doing fine": "Family businesses that last generations do it by professionalising operations. When it's time to hand over, you want systems, not tribal knowledge."
+        }
       },
       construction: {
         name: "Construction & Engineering",
@@ -969,7 +1021,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling project inquiries, service requests, and bid follow-ups",
         competitors: ["Procore", "Autodesk", "Custom systems", "Spreadsheets"],
-        industryStats: "Construction firms using CRM see 20% improvement in bid win rates"
+        industryStats: "Construction firms using CRM see 20% improvement in bid win rates",
+        openings: [
+          { name: "Bid Win Rate", script: "Hi [NAME], what's your bid win rate? Most construction firms are at 20-30%. We're helping builders improve that by tracking relationships and follow-ups systematically.", why: "Win rate is the key metric" },
+          { name: "Pipeline Visibility", script: "Hi [NAME], how far ahead can you see your project pipeline? If it's less than 12 months, you're flying blind on capacity and hiring. AI can help predict and track opportunities earlier.", why: "Visibility drives planning" },
+          { name: "Client Communication", script: "Hi [NAME], when a client asks for a project update, how long does it take to pull that together? We help construction firms give clients real-time visibility without manual reporting.", why: "Clients expect transparency" },
+          { name: "Repeat Business", script: "Hi [NAME], what percentage of your work is repeat clients? If it's less than 50%, you might be leaving money on the table. CRM helps you nurture relationships and win more repeat work.", why: "Repeat clients are more profitable" }
+        ],
+        objections: {
+          "We use Procore for everything": "Procore is great for project management — but it's not designed for business development and client relationships. Salesforce handles the front-end: leads, bids, client communication. They integrate well together.",
+          "Construction is won on price": "Price matters, but relationships often tip close decisions. When you're 5% apart, the client goes with the builder they trust. CRM helps you build that trust through consistent communication.",
+          "Our estimators manage their own relationships": "That works until an estimator leaves — and takes all that relationship knowledge with them. CRM captures it for the company, not the individual.",
+          "We're too busy with projects to implement software": "That's exactly why you need it — you're too busy to chase leads properly. AI can automate follow-ups so opportunities don't fall through the cracks.",
+          "We're a subcontractor, not a main contractor": "Subcontractors need relationships with main contractors even more. CRM helps you track which GCs are bidding what, and stay top of mind when they need your trade."
+        }
       },
       mining: {
         name: "Mining & Resources",
@@ -994,7 +1059,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling contract inquiries, service scheduling, and compliance questions",
         competitors: ["SAP", "Oracle", "Custom systems"],
-        industryStats: "Mining companies using CRM see improved contract management and customer visibility"
+        industryStats: "Mining companies using CRM see improved contract management and customer visibility",
+        openings: [
+          { name: "Contract Complexity", script: "Hi [NAME], how many customer contracts are you managing, and how easy is it to track renewals and variations? Most mining companies struggle with contract visibility across sites.", why: "Contract management is complex in mining" },
+          { name: "ESG Reporting", script: "Hi [NAME], how much time does your team spend pulling together ESG data for investors and regulators? We're helping mining companies automate that reporting.", why: "ESG is a growing requirement" },
+          { name: "Remote Site Coordination", script: "Hi [NAME], how do you manage customer and supplier communication across remote sites? Email chains get messy. We help centralise that communication.", why: "Remote operations create info silos" },
+          { name: "Equipment Service", script: "Hi [NAME], how are you tracking equipment service schedules and customer maintenance contracts? Most mining operations do this manually — until something fails.", why: "Service tracking prevents failures" }
+        ],
+        objections: {
+          "We use SAP for everything": "SAP is great for ERP and operations — but customer engagement and service tracking need something more flexible. Salesforce adds that layer and integrates with SAP.",
+          "Mining is B2B, we don't need CRM": "B2B is exactly where CRM matters most — fewer customers, bigger contracts, longer relationships. Every relationship is worth millions. You need to manage them properly.",
+          "Our operations are too remote": "Cloud software works anywhere you have internet. And AI can handle inquiries when your team is underground or in transit. That's actually a strength.",
+          "We're focused on production, not sales": "Production is what you sell — but who buys it matters. Understanding your customers helps you prioritise production, negotiate better terms, and spot opportunities.",
+          "Commodity prices drive our business, not CRM": "Prices fluctuate — but customer relationships are what get you through the down cycles. When prices drop, the miners with strong customer relationships survive."
+        }
       },
       automotive: {
         name: "Automotive & Dealers",
@@ -1019,7 +1097,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling service bookings, inventory inquiries, and lead qualification",
         competitors: ["DMS systems (Reynolds, CDK)", "Custom solutions"],
-        industryStats: "Dealers using CRM see 30% improvement in lead conversion and service retention"
+        industryStats: "Dealers using CRM see 30% improvement in lead conversion and service retention",
+        openings: [
+          { name: "Lead Response Time", script: "Hi [NAME], how fast do you respond to online leads? Industry data shows responding within 5 minutes vs 30 minutes makes a 10x difference in conversion. Most dealers aren't close to that.", why: "Speed to lead is critical" },
+          { name: "Service-Sales Disconnect", script: "Hi [NAME], when a customer's car is in for service, does your sales team know? That's prime time to discuss trade-ins — but most dealers miss it because systems don't talk.", why: "Service is a sales opportunity" },
+          { name: "Customer Lifecycle", script: "Hi [NAME], do you know which of your customers are coming up on their lease end or loan payoff? That's a 3-6 month window to bring them back before they shop elsewhere.", why: "Lifecycle marketing drives retention" },
+          { name: "OEM Pressure", script: "Hi [NAME], how are your CSI scores? OEMs are pushing harder on customer experience — and threatening allocations. AI can help you deliver consistent experience without adding staff.", why: "OEM requirements are tightening" }
+        ],
+        objections: {
+          "We have a DMS already": "DMS handles transactions — but customer engagement needs more. Salesforce sits on top of your DMS: better lead management, automated follow-ups, service marketing. They integrate directly.",
+          "Our salespeople work their own way": "That's often the problem — inconsistent follow-up means lost sales. CRM doesn't change how they sell, it makes sure nothing falls through the cracks.",
+          "We tried CRM before and it didn't stick": "Usually that's a training or configuration issue, not a CRM issue. Fexle specialises in dealer implementations — we know what works and what doesn't.",
+          "The OEM has their own CRM requirements": "Many OEM programs are built on Salesforce. Even if they're not, Salesforce data can feed their systems. You get a better tool and stay compliant.",
+          "Margins are too tight for new technology": "Tight margins mean you can't afford to lose a single lead. One extra car sale per month pays for the entire system. The math works."
+        }
       },
       other: {
         name: "Other Industry",
@@ -1044,7 +1135,20 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         ],
         agentforceUseCase: "AI agents handling customer inquiries, service requests, and sales support 24/7",
         competitors: ["Various legacy systems", "Spreadsheets", "Basic CRM tools"],
-        industryStats: "Companies implementing Salesforce see average 25% increase in sales productivity"
+        industryStats: "Companies implementing Salesforce see average 25% increase in sales productivity",
+        openings: [
+          { name: "Growth Ceiling", script: "Hi [NAME], at what point does growth start breaking your current systems? Most businesses hit a ceiling where spreadsheets and manual processes can't scale. We help companies break through that.", why: "Growth exposes system weaknesses" },
+          { name: "Customer Knowledge", script: "Hi [NAME], if your best salesperson left tomorrow, how much customer knowledge walks out the door? We help businesses capture that intelligence so it belongs to the company, not individuals.", why: "Knowledge shouldn't be in people's heads" },
+          { name: "AI Opportunity", script: "Hi [NAME], have you looked at how AI could help with customer service? Companies are using AI to handle routine inquiries 24/7 — customers get instant answers, team focuses on complex work.", why: "AI is transforming customer service" },
+          { name: "Competitive Pressure", script: "Hi [NAME], how are your competitors managing customer relationships? If they're more responsive and organised, they're probably winning deals you should be getting.", why: "Competition drives technology adoption" }
+        ],
+        objections: {
+          "We're doing fine with what we have": "That's great — but 'fine' often means 'used to the pain'. What would happen if you could respond to customers twice as fast, or never miss a follow-up?",
+          "We're too small": "Small is actually the perfect time — before bad habits and scattered data become problems. The system scales with you, so you won't outgrow it.",
+          "We don't have time to implement": "That's the irony — you're too busy because you don't have systems. Implementation takes weeks, not months. Then you get time back every day.",
+          "Technology isn't our strength": "It doesn't need to be. Salesforce is designed for business users. We handle the setup, train your team, and you use it like any other business tool.",
+          "We've tried CRM before": "Most failed CRM implementations fail because of poor setup or training, not the software. Fexle specialises in making it work — we've done 700+ implementations."
+        }
       }
     };
 

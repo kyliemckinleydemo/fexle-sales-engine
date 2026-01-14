@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2026-01-14
 
 ### Added
-- **Industry-Specific Playbooks** - Tailored opening scripts and objection handling for each vertical
+- **Industry-Specific Playbooks** - Tailored opening scripts and objection handling for 19 verticals
   - Healthcare: Staff burnout, family communication, compliance, patient engagement angles
   - Professional Services: Billable hours, client portal, M&A integration, knowledge management
   - Manufacturing: Supply chain, plant floor visibility, distributor management, quality assurance
@@ -20,6 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real Estate: Lead response time, client relationship, market intelligence, transaction coordination
   - Logistics: WISMO calls, proactive communication, customer retention, e-commerce pressure
   - Hospitality: OTA dependency, guest recognition, 24/7 service, group sales
+  - Telecommunications: Churn reduction, billing calls, 5G opportunity, self-service gap
+  - Energy & Utilities: Billing volume, outage communication, smart meter data, energy transition
+  - Media & Entertainment: Subscriber churn, audience fragmentation, content discovery, support scaling
+  - Agriculture: Spreadsheet migration, seasonal planning, customer knowledge, growth ceiling
+  - Construction: Bid win rate, pipeline visibility, client communication, repeat business
+  - Mining & Resources: Contract complexity, ESG reporting, remote coordination, equipment service
+  - Automotive: Lead response time, service-sales disconnect, customer lifecycle, OEM pressure
+  - Other Industry: Growth ceiling, customer knowledge, AI opportunity, competitive pressure
 - **Non-Salesforce Prospect Scripts** - Complete playbook for prospects not using Salesforce
   - 5 new opening scripts for non-SF prospects (CRM Pain, Growth Challenge, Tech Stack, AI Opportunity, Current System Frustration)
   - 6 pivot scripts based on current system (Spreadsheets, HubSpot, Dynamics, Legacy, Nothing, AI Angle)
