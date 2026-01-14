@@ -1885,16 +1885,101 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        
+
         // Create filename from company and date
         const filename = `CEO_Meeting_${meetingDetails.attendeeCompany.replace(/[^a-zA-Z0-9]/g, '_')}_${meetingDetails.startDate}.ics`;
-        
+
         link.href = url;
         link.download = filename;
         link.click();
         URL.revokeObjectURL(url);
-        
+
         showNotification('Calendar invite downloaded! Send to prospect via email.');
+      };
+
+      // Export all upcoming meetings as single ICS file
+      const exportAllMeetings = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const upcomingMeetings = bookedMeetings.filter(m => m.date >= today).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+        if (upcomingMeetings.length === 0) {
+          showNotification('No upcoming meetings to export');
+          return;
+        }
+
+        const formatLocalDate = (date) => {
+          const pad = (n) => n.toString().padStart(2, '0');
+          return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+        };
+
+        const formatICSDate = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        // Build VEVENT entries for each meeting
+        const events = upcomingMeetings.map(meeting => {
+          const [year, month, day] = meeting.date.split('-').map(Number);
+          const [hours, minutes] = meeting.time.split(':').map(Number);
+          const startDateTime = new Date(year, month - 1, day, hours, minutes);
+          const endDateTime = new Date(startDateTime.getTime() + (meeting.duration || 20) * 60000);
+          const uid = `fexle-${meeting.id}@fexle.com`;
+
+          const description = `CEO meeting with ${meeting.leadName}\\n` +
+            `Company: ${meeting.company}\\n` +
+            `Email: ${meeting.email || 'N/A'}\\n` +
+            (meeting.isScheduleChallenge ? '\\n⚠️ SCHEDULE CHALLENGE - Confirm CEO availability' : '');
+
+          return [
+            'BEGIN:VEVENT',
+            `UID:${uid}`,
+            `DTSTAMP:${formatICSDate(new Date())}`,
+            `DTSTART;TZID=Australia/Sydney:${formatLocalDate(startDateTime)}`,
+            `DTEND;TZID=Australia/Sydney:${formatLocalDate(endDateTime)}`,
+            `SUMMARY:${meeting.isScheduleChallenge ? '⚠️ ' : ''}CEO Call - ${meeting.company}`,
+            `DESCRIPTION:${description}`,
+            'LOCATION:Video Call - Link to follow',
+            'STATUS:CONFIRMED',
+            'BEGIN:VALARM',
+            'TRIGGER:-PT15M',
+            'ACTION:DISPLAY',
+            'DESCRIPTION:Meeting reminder',
+            'END:VALARM',
+            'END:VEVENT'
+          ].join('\r\n');
+        });
+
+        const icsContent = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//Fexle Sales Engine//EN',
+          'CALSCALE:GREGORIAN',
+          'X-WR-CALNAME:Fexle CEO Meetings',
+          'BEGIN:VTIMEZONE',
+          'TZID:Australia/Sydney',
+          'BEGIN:STANDARD',
+          'DTSTART:19700405T030000',
+          'RRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU',
+          'TZOFFSETFROM:+1100',
+          'TZOFFSETTO:+1000',
+          'END:STANDARD',
+          'BEGIN:DAYLIGHT',
+          'DTSTART:19701004T020000',
+          'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=1SU',
+          'TZOFFSETFROM:+1000',
+          'TZOFFSETTO:+1100',
+          'END:DAYLIGHT',
+          'END:VTIMEZONE',
+          ...events,
+          'END:VCALENDAR'
+        ].join('\r\n');
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `CEO_Meetings_Export_${today}.ics`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showNotification(`Exported ${upcomingMeetings.length} upcoming meeting${upcomingMeetings.length > 1 ? 's' : ''}`);
       };
 
       // Meeting scheduler state
@@ -5594,7 +5679,16 @@ function jsonResponse(data) {
                       </div>
                       {bookedMeetings.length > 0 && (
                         <div className="border-t border-gray-200 pt-4">
-                          <h4 className="font-semibold text-gray-900 mb-3">Upcoming</h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-900">Upcoming</h4>
+                            <button
+                              onClick={exportAllMeetings}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                              title="Download all upcoming meetings as ICS file"
+                            >
+                              📥 Export All
+                            </button>
+                          </div>
                           <div className="space-y-2 max-h-40 overflow-y-auto">
                             {bookedMeetings.filter(m => new Date(m.date) >= new Date(today)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5).map(m => (
                               <div key={m.id} onClick={() => setSelectedSlotForBooking({ ...m, isBooked: true })} className="bg-white rounded-lg p-3 shadow-sm cursor-pointer hover:bg-gray-50">
