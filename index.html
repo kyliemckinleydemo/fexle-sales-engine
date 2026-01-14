@@ -3301,22 +3301,23 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 </ul>
               </div>
 
-              <scr` + `ipt>
-                function switchMode(mode) {
-                  document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-                  document.querySelectorAll('.sf-content, .nonsf-content').forEach(el => el.classList.remove('active'));
-
-                  if (mode === 'sf') {
-                    document.querySelector('.toggle-btn.sf').classList.add('active');
-                    document.querySelector('.sf-content').classList.add('active');
-                  } else {
-                    document.querySelector('.toggle-btn.nonsf').classList.add('active');
-                    document.querySelector('.nonsf-content').classList.add('active');
-                  }
-                }
-              </scr` + `ipt>
             </body>
             </html>
+          `;
+
+          // Add the script after writing the HTML
+          const popupScript = `
+            function switchMode(mode) {
+              document.querySelectorAll('.toggle-btn').forEach(function(btn) { btn.classList.remove('active'); });
+              document.querySelectorAll('.sf-content, .nonsf-content').forEach(function(el) { el.classList.remove('active'); });
+              if (mode === 'sf') {
+                document.querySelector('.toggle-btn.sf').classList.add('active');
+                document.querySelector('.sf-content').classList.add('active');
+              } else {
+                document.querySelector('.toggle-btn.nonsf').classList.add('active');
+                document.querySelector('.nonsf-content').classList.add('active');
+              }
+            }
           `;
 
           const popup = window.open('', 'FexlePlaybook', 'width=850,height=900,scrollbars=yes,resizable=yes');
@@ -3326,6 +3327,10 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
           }
           try {
             popup.document.write(html);
+            // Inject script after HTML
+            const scriptEl = popup.document.createElement('script');
+            scriptEl.textContent = popupScript;
+            popup.document.body.appendChild(scriptEl);
             popup.document.close();
             popup.focus();
           } catch (err) {
