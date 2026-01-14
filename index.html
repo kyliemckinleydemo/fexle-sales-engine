@@ -3115,17 +3115,11 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       .replace(/'/g, '&#039;');
           };
 
-          const scripts = scriptMode === 'salesforce' ? FEXLE_SCRIPTS : {
-            openings: FEXLE_SCRIPTS.openingsNonSF,
-            pivots: FEXLE_SCRIPTS.pivotsNonSF,
-            closes: FEXLE_SCRIPTS.closesNonSF,
-            objections: FEXLE_SCRIPTS.objectionsNonSF
-          };
-
-          const openingsHtml = Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.openings : FEXLE_SCRIPTS.openingsNonSF)
+          // Generate BOTH SF and Non-SF content for the popup
+          const sfOpeningsHtml = Object.entries(FEXLE_SCRIPTS.openings)
             .map(([key, o]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
-                <div style="background: ${scriptMode === 'salesforce' ? '#dbeafe' : '#dcfce7'}; padding: 8px 16px; font-weight: 500;">${escapeHtml(o.name)}</div>
+                <div style="background: #dbeafe; padding: 8px 16px; font-weight: 500;">${escapeHtml(o.name)}</div>
                 <div style="padding: 12px 16px;">
                   <p style="font-style: italic; color: #374151;">${escapeHtml(personalizeScript(o.script))}</p>
                   <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">💡 ${escapeHtml(o.why)}</p>
@@ -3133,24 +3127,36 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               </div>
             `).join('');
 
-          const pivotsHtml = scriptMode === 'salesforce' ? `
+          const nonSfOpeningsHtml = Object.entries(FEXLE_SCRIPTS.openingsNonSF)
+            .map(([key, o]) => `
+              <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+                <div style="background: #dcfce7; padding: 8px 16px; font-weight: 500;">${escapeHtml(o.name)}</div>
+                <div style="padding: 12px 16px;">
+                  <p style="font-style: italic; color: #374151;">${escapeHtml(personalizeScript(o.script))}</p>
+                  <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">💡 ${escapeHtml(o.why)}</p>
+                </div>
+              </div>
+            `).join('');
+
+          const sfPivotsHtml = `
             <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e; margin-bottom: 12px;">
               <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">PRIMARY PIVOT</div>
               <p style="font-style: italic; color: #166534;">${escapeHtml(FEXLE_SCRIPTS.pivots.primary)}</p>
             </div>
-            <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #86efac; margin-bottom: 12px;">
+            <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #86efac;">
               <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">IF THEY MENTIONED AI INTEREST</div>
               <p style="font-style: italic; color: #166534;">${escapeHtml(FEXLE_SCRIPTS.pivots.aiInterest)}</p>
             </div>
-          ` : Object.entries(FEXLE_SCRIPTS.pivotsNonSF).map(([key, script]) => `
+          `;
+
+          const nonSfPivotsHtml = Object.entries(FEXLE_SCRIPTS.pivotsNonSF).map(([key, script]) => `
             <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e; margin-bottom: 12px;">
-              <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">${escapeHtml(key.toUpperCase())}</div>
+              <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">${escapeHtml(key.replace(/([A-Z])/g, ' $1').toUpperCase())}</div>
               <p style="font-style: italic; color: #166534;">${escapeHtml(script)}</p>
             </div>
           `).join('');
 
-          const objectionsHtml = Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.objections : FEXLE_SCRIPTS.objectionsNonSF)
-            .slice(0, 8)
+          const sfObjectionsHtml = Object.entries(FEXLE_SCRIPTS.objections).slice(0, 8)
             .map(([obj, resp]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
                 <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "${escapeHtml(obj)}"</div>
@@ -3158,7 +3164,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               </div>
             `).join('');
 
-          const closesHtml = scriptMode === 'salesforce' ? `
+          const nonSfObjectionsHtml = Object.entries(FEXLE_SCRIPTS.objectionsNonSF).slice(0, 8)
+            .map(([obj, resp]) => `
+              <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+                <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "${escapeHtml(obj)}"</div>
+                <div style="background: #dcfce7; padding: 12px 16px; color: #166534;">✅ ${escapeHtml(resp)}</div>
+              </div>
+            `).join('');
+
+          const sfClosesHtml = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div style="background: #f3e8ff; padding: 16px; border-radius: 8px; border: 1px solid #d8b4fe;">
                 <div style="font-weight: 600; color: #7c3aed; margin-bottom: 8px;">Path A: Ready → CEO Meeting</div>
@@ -3169,7 +3183,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 <p style="font-size: 13px; color: #9d174d; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closes.aiDeck)}</p>
               </div>
             </div>
-          ` : `
+          `;
+
+          const nonSfClosesHtml = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div style="background: #f3e8ff; padding: 16px; border-radius: 8px; border: 1px solid #d8b4fe;">
                 <div style="font-weight: 600; color: #7c3aed; margin-bottom: 8px;">Discovery Call</div>
@@ -3194,20 +3210,26 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             <!DOCTYPE html>
             <html>
             <head>
-              <title>Fexle Playbook - ${selectedLead.company}</title>
+              <title>Fexle Playbook - ${escapeHtml(selectedLead.company)}</title>
               <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; max-width: 800px; margin: 0 auto; background: #f9fafb; }
-                h1 { color: #1e40af; margin-bottom: 8px; }
                 h2 { color: #374151; margin-top: 32px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
-                .lead-info { background: linear-gradient(135deg, #1e40af 0%, #4338ca 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; }
-                .lead-info h2 { color: white; border: none; margin: 0; }
-                .mode-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px; }
-                .sf-mode { background: #3b82f6; }
-                .nonsf-mode { background: #22c55e; }
+                .lead-info { background: linear-gradient(135deg, #1e40af 0%, #4338ca 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 16px; }
+                .lead-info h2 { color: white; border: none; margin: 0; padding: 0; }
+                .toggle-bar { display: flex; gap: 8px; padding: 8px; background: #f3f4f6; border-radius: 12px; margin-bottom: 24px; position: sticky; top: 0; z-index: 100; }
+                .toggle-btn { flex: 1; padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+                .toggle-btn.sf { background: #e5e7eb; color: #6b7280; }
+                .toggle-btn.sf.active { background: #3b82f6; color: white; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); }
+                .toggle-btn.nonsf { background: #e5e7eb; color: #6b7280; }
+                .toggle-btn.nonsf.active { background: #22c55e; color: white; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3); }
+                .sf-content, .nonsf-content { display: none; }
+                .sf-content.active, .nonsf-content.active { display: block; }
                 .industry-box { background: #fef3c7; padding: 16px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 24px; }
                 .key-messages { background: #dbeafe; padding: 16px; border-radius: 8px; border: 1px solid #93c5fd; }
                 .key-messages ul { margin: 0; padding-left: 20px; }
                 .key-messages li { margin-bottom: 4px; color: #1e40af; }
+                .pain-points { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                .pain-point { background: #fee2e2; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
               </style>
             </head>
             <body>
@@ -3215,9 +3237,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 <h2>📞 ${escapeHtml(selectedLead.company)}</h2>
                 <div>${escapeHtml(selectedLead.contact)} • ${escapeHtml(selectedLead.title || 'N/A')}</div>
                 <div>${escapeHtml(selectedLead.phone || 'No phone')}</div>
-                <span class="mode-badge ${scriptMode === 'salesforce' ? 'sf-mode' : 'nonsf-mode'}">
-                  ${scriptMode === 'salesforce' ? 'Existing SF User' : 'Non-SF Prospect'}
-                </span>
+              </div>
+
+              <div class="toggle-bar">
+                <button class="toggle-btn sf ${scriptMode === 'salesforce' ? 'active' : ''}" onclick="switchMode('sf')">
+                  Existing SF User
+                </button>
+                <button class="toggle-btn nonsf ${scriptMode === 'nonSalesforce' ? 'active' : ''}" onclick="switchMode('nonsf')">
+                  Non-SF Prospect
+                </button>
               </div>
 
               <div class="industry-box">
@@ -3226,22 +3254,45 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 <span style="font-size: 14px;"><strong>Industry Stats:</strong> ${escapeHtml(vertical.industryStats)}</span>
               </div>
 
-              <h2>1️⃣ Opening Scripts</h2>
-              ${openingsHtml}
+              <!-- SF Content -->
+              <div class="sf-content ${scriptMode === 'salesforce' ? 'active' : ''}">
+                <h2>1️⃣ Opening Scripts</h2>
+                ${sfOpeningsHtml}
 
-              <h2>2️⃣ Pain Points to Probe</h2>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                ${vertical.painPoints.map(p => `<div style="background: #fee2e2; padding: 8px 12px; border-radius: 6px; font-size: 14px;">• ${escapeHtml(p)}</div>`).join('')}
+                <h2>2️⃣ Pain Points to Probe</h2>
+                <div class="pain-points">
+                  ${vertical.painPoints.map(p => `<div class="pain-point">• ${escapeHtml(p)}</div>`).join('')}
+                </div>
+
+                <h2>3️⃣ Pivot to Value</h2>
+                ${sfPivotsHtml}
+
+                <h2>4️⃣ Two Paths Forward</h2>
+                ${sfClosesHtml}
+
+                <h2>5️⃣ Objection Handling</h2>
+                ${sfObjectionsHtml}
               </div>
 
-              <h2>3️⃣ Pivot to Value</h2>
-              ${pivotsHtml}
+              <!-- Non-SF Content -->
+              <div class="nonsf-content ${scriptMode === 'nonSalesforce' ? 'active' : ''}">
+                <h2>1️⃣ Opening Scripts</h2>
+                ${nonSfOpeningsHtml}
 
-              <h2>4️⃣ ${scriptMode === 'salesforce' ? 'Two Paths Forward' : 'Next Steps / Closes'}</h2>
-              ${closesHtml}
+                <h2>2️⃣ Pain Points to Probe</h2>
+                <div class="pain-points">
+                  ${vertical.painPoints.map(p => `<div class="pain-point">• ${escapeHtml(p)}</div>`).join('')}
+                </div>
 
-              <h2>5️⃣ Objection Handling</h2>
-              ${objectionsHtml}
+                <h2>3️⃣ Pivot to Value</h2>
+                ${nonSfPivotsHtml}
+
+                <h2>4️⃣ Next Steps / Closes</h2>
+                ${nonSfClosesHtml}
+
+                <h2>5️⃣ Objection Handling</h2>
+                ${nonSfObjectionsHtml}
+              </div>
 
               <h2>📝 Key Messages</h2>
               <div class="key-messages">
@@ -3249,6 +3300,21 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   ${FEXLE_SCRIPTS.keyMessages.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
                 </ul>
               </div>
+
+              <script>
+                function switchMode(mode) {
+                  document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+                  document.querySelectorAll('.sf-content, .nonsf-content').forEach(el => el.classList.remove('active'));
+
+                  if (mode === 'sf') {
+                    document.querySelector('.toggle-btn.sf').classList.add('active');
+                    document.querySelector('.sf-content').classList.add('active');
+                  } else {
+                    document.querySelector('.toggle-btn.nonsf').classList.add('active');
+                    document.querySelector('.nonsf-content').classList.add('active');
+                  }
+                }
+              </script>
             </body>
             </html>
           `;
