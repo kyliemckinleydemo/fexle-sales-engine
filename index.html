@@ -1937,20 +1937,58 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           return;
         }
 
+        // Check if this is a schedule challenge (no availability for this slot)
+        const isAvailableSlot = ceoAvailability.some(
+          s => s.date === meetingDetails.startDate && s.time === meetingDetails.startTime
+        );
+        const isScheduleChallenge = !isAvailableSlot;
+
+        // Add schedule challenge note to ICS if applicable
+        const scheduleNote = isScheduleChallenge
+          ? '\n\n⚠️ SCHEDULE CHALLENGE: This meeting was booked outside normal CEO availability.'
+          : '';
+
         downloadICSFile({
           ...meetingDetails,
+          title: isScheduleChallenge ? `⚠️ [CHALLENGE] ${meetingDetails.title}` : meetingDetails.title,
+          description: meetingDetails.description + scheduleNote,
           attendeeName: selectedLead?.contact,
           attendeeEmail: selectedLead?.email,
           attendeeCompany: selectedLead?.company
         });
 
         if (selectedLead) {
+          // Book the meeting in the calendar
+          const meeting = {
+            id: `meeting-${Date.now()}`,
+            date: meetingDetails.startDate,
+            time: meetingDetails.startTime,
+            duration: meetingDetails.duration,
+            leadId: selectedLead.id,
+            leadName: selectedLead.contact,
+            leadTitle: selectedLead.title,
+            company: selectedLead.company,
+            email: selectedLead.email,
+            isScheduleChallenge: isScheduleChallenge,
+            createdAt: new Date().toISOString()
+          };
+          setBookedMeetings([...bookedMeetings, meeting]);
+
+          // Remove from availability if it was an available slot
+          if (!isScheduleChallenge) {
+            setCeoAvailability(ceoAvailability.filter(
+              s => !(s.date === meetingDetails.startDate && s.time === meetingDetails.startTime)
+            ));
+          }
+
+          // Update lead status
           setLeads(leads.map(l =>
             l.id === selectedLead.id
               ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: new Date().toISOString() }
               : l
           ));
 
+          // Create prep reminder task
           const meetingDate = new Date(meetingDetails.startDate);
           const reminderDate = new Date(meetingDate);
           reminderDate.setDate(reminderDate.getDate() - 1);
@@ -1969,7 +2007,9 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
 
         setShowMeetingModal(false);
-        showNotification('Calendar invite created! Send it to the prospect.');
+        showNotification(isScheduleChallenge
+          ? '⚠️ Schedule Challenge booked! Confirm CEO availability.'
+          : 'Meeting booked and calendar invite created!');
       };
 
       const getMeetingQuickDates = () => {
@@ -4997,30 +5037,80 @@ function jsonResponse(data) {
                   </div>
                 </div>
 
-                {/* Manual Date/Time */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={meetingDetails.startDate}
-                      onChange={(e) => setMeetingDetails({ ...meetingDetails, startDate: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time (AEST)</label>
-                    <select
-                      value={meetingDetails.startTime}
-                      onChange={(e) => setMeetingDetails({ ...meetingDetails, startTime: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'].map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Manual Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={meetingDetails.startDate}
+                    onChange={(e) => setMeetingDetails({ ...meetingDetails, startDate: e.target.value, startTime: '' })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
+
+                {/* Available Time Slots */}
+                {meetingDetails.startDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Available CEO Slots
+                      {ceoAvailability.filter(s => s.date === meetingDetails.startDate && !bookedMeetings.some(m => m.date === s.date && m.time === s.time)).length === 0 && (
+                        <span className="ml-2 text-xs text-amber-600 font-normal">(No slots - will be Schedule Challenge)</span>
+                      )}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        const availableSlots = ceoAvailability
+                          .filter(s => s.date === meetingDetails.startDate && !bookedMeetings.some(m => m.date === s.date && m.time === s.time))
+                          .map(s => s.time)
+                          .sort();
+                        const allTimes = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
+
+                        if (availableSlots.length > 0) {
+                          return availableSlots.map(time => (
+                            <button
+                              key={time}
+                              onClick={() => setMeetingDetails({ ...meetingDetails, startTime: time })}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                meetingDetails.startTime === time
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
+                              }`}
+                            >
+                              ✓ {time}
+                            </button>
+                          ));
+                        } else {
+                          return (
+                            <>
+                              <div className="w-full p-3 bg-amber-50 border border-amber-200 rounded-lg mb-2">
+                                <p className="text-sm text-amber-800">⚠️ No CEO availability set for this date. Select a time to create a Schedule Challenge booking.</p>
+                              </div>
+                              {allTimes.map(time => {
+                                const isBooked = bookedMeetings.some(m => m.date === meetingDetails.startDate && m.time === time);
+                                return (
+                                  <button
+                                    key={time}
+                                    onClick={() => !isBooked && setMeetingDetails({ ...meetingDetails, startTime: time })}
+                                    disabled={isBooked}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                      isBooked
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : meetingDetails.startTime === time
+                                          ? 'bg-amber-500 text-white'
+                                          : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-300'
+                                    }`}
+                                  >
+                                    {isBooked ? '✗' : '⚠️'} {time}
+                                  </button>
+                                );
+                              })}
+                            </>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
 
                 {/* Duration */}
                 <div>
