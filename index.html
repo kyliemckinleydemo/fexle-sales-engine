@@ -5216,7 +5216,7 @@ function jsonResponse(data) {
                                     : selectedLead ? 'hover:bg-amber-50 cursor-pointer border border-dashed border-gray-300' : 'hover:bg-gray-50 cursor-pointer'
                                 }`}
                               >
-                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company?.substring(0, 10)}</div>}
+                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={booked.company}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
                                 {available && !booked && <div className="text-xs text-blue-600 text-center">✓</div>}
                               </div>
                             );
