@@ -334,7 +334,61 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         "One client cut support ticket volume by 40% in 8 weeks",
         "Our AI implementation deck — practical, not theoretical, shows how to get real results",
         "20-minute call with our CEO — no pitch, just a conversation"
-      ]
+      ],
+      // Scripts for prospects NOT currently using Salesforce
+      openingsNonSF: {
+        crmPain: {
+          name: "CRM Pain Question (Recommended)",
+          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be quick — I'm calling because we help mid-sized Australian companies get better visibility into their sales pipeline and customer relationships. Quick question: are you happy with how you're currently tracking customer interactions and sales opportunities, or is that an area where you're looking to improve?"`,
+          why: "Opens with business value, not product. Gets them talking about their current situation without assuming any tool."
+        },
+        growthChallenge: {
+          name: "Growth Challenge Question",
+          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. Quick question for you — as your business has grown, has keeping track of customer relationships and sales opportunities become harder, or do you have that pretty well sorted?"`,
+          why: "Connects to a universal growth pain point. Works whether they use spreadsheets, basic tools, or nothing at all."
+        },
+        techStack: {
+          name: "Tech Stack Curiosity",
+          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. We're a Salesforce implementation partner, and I'm curious — what are you using to manage customer relationships and sales tracking today? Spreadsheets, another CRM, or something else?"`,
+          why: "Direct and honest. Gets intel on their current setup immediately so you can tailor the conversation."
+        },
+        aiOpportunity: {
+          name: "AI Opportunity Question",
+          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be honest — this is a cold call, so I'll keep it short. We're seeing a lot of companies looking at AI to automate customer service and boost sales productivity. Is that something on your radar, or is that not where your priorities are right now?"`,
+          why: "Leads with AI value prop which is relevant regardless of current CRM. Opens door to discuss Salesforce as the AI-ready platform."
+        },
+        competitorPain: {
+          name: "Current System Frustration",
+          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. We specialise in helping companies move to Salesforce from other systems — or from spreadsheets and manual processes. Quick question: are you getting everything you need from your current setup, or are there gaps that are starting to slow the business down?"`,
+          why: "Positions migration expertise upfront. Invites them to share frustrations with their current approach."
+        }
+      },
+      pivotsNonSF: {
+        fromSpreadsheets: `"I hear that a lot — spreadsheets work until they don't. The challenge is when you need to see your full pipeline at a glance, or when multiple people need to update the same data, or when a key person leaves and takes all the relationship knowledge with them. That's exactly when companies look at Salesforce. The good news is, Salesforce has gotten much more accessible, and with Fexle's hybrid model, we can implement it at 30-40% less than the big consultancies. Would it be worth a quick conversation to see what's actually involved?"`,
+        fromHubSpot: `"HubSpot's a good starting point, but a lot of companies outgrow it — especially around reporting, workflow automation, and now AI. Salesforce's new AI features like Agentforce and Einstein are genuinely game-changing, and HubSpot isn't anywhere close. The other thing is scale — Salesforce handles enterprise complexity that HubSpot struggles with. We've helped several companies migrate from HubSpot to Salesforce, and the ROI is usually clear within months. Want to hear what that looks like?"`,
+        fromDynamics: `"Dynamics works for some companies, but what we often hear is that it's clunky, the Salesforce integrations are better, and the AI features aren't as mature. Salesforce has really pulled ahead on the AI side — Agentforce, Einstein Copilot, automated workflows. And as a pure-play Salesforce partner, we can implement faster and at lower cost than the Microsoft consultancies. Would it be worth exploring what a migration could look like?"`,
+        fromLegacy: `"Legacy systems are tough — they work until you need them to do something new. The challenge is they can't adapt to things like AI, modern integrations, or mobile access. A lot of companies are facing this right now. Salesforce is designed to evolve with you, and with the new AI capabilities, you're not just fixing today's problems — you're setting up for the next 10 years. We specialise in helping companies migrate from legacy systems. Would a conversation about what's involved be useful?"`,
+        fromNothing: `"Honestly, that's where a lot of growing companies are. You get by with spreadsheets and email until suddenly you can't — deals fall through, customer history is scattered, and growth actually becomes harder. The smart move is getting on a proper platform before it becomes urgent. Salesforce is the market leader for good reason, and with Fexle's hybrid model, it's more affordable than most people think. Would it be useful to see what's actually involved in getting started?"`,
+        aiAngle: `"Here's what's changed: AI is no longer future stuff — it's working right now. Salesforce's Agentforce can handle customer inquiries 24/7, Einstein Copilot helps sales reps work faster, and automated workflows can replace hours of manual work. But you need a platform that supports it. Salesforce is purpose-built for AI in a way that other CRMs and definitely spreadsheets aren't. And with Fexle, you get Salesforce implementation at 30-40% less than traditional consultancies. Would it be worth exploring what AI could do for your business?"`
+      },
+      objectionsNonSF: {
+        "We use HubSpot and it works fine": `"That's fair — HubSpot is solid for getting started. The question is: are you bumping into its limits yet? Things like complex reporting, workflow automation, or scaling with your growth? And the big one now is AI — Salesforce's Agentforce and Einstein are way ahead of anything HubSpot offers. We've helped companies migrate when they hit that ceiling. Would it be useful to understand what the upgrade path looks like, even if you're not ready now?"`,
+        "We use Dynamics 365": `"Makes sense — it's a common choice, especially for Microsoft shops. What we often hear is that the CRM side of Dynamics is clunky compared to Salesforce, and the ecosystem isn't as rich. Plus Salesforce is genuinely ahead on AI right now. We've done several Dynamics to Salesforce migrations, and the feedback is usually 'wish we'd done this sooner.' Would it be worth a conversation about what's involved?"`,
+        "We just use spreadsheets": `"Honestly, a lot of companies do — and it works until it doesn't. The tipping point is usually when you can't see your full pipeline, when deals slip through the cracks, or when someone leaves and takes all the relationship knowledge with them. The good news is Salesforce is more accessible than people think, especially with Fexle's 30-40% lower cost model. Would it be useful to see what getting started actually looks like?"`,
+        "CRM seems like overkill for us": `"I hear that a lot. Here's the thing though — the companies that grow successfully usually have their customer data sorted before they need it urgently. Salesforce can start small and scale with you. And with the new AI features, you're not just getting a database — you're getting automation that saves real time. Would a quick conversation about what's appropriate for your size be useful?"`,
+        "We tried CRM before and it didn't stick": `"That's really common, actually — and usually it's not the tool, it's the implementation. Either it wasn't set up for how your team actually works, or there wasn't proper training and adoption support. That's exactly what we focus on at Fexle. We don't just implement and leave — we make sure it actually gets used. Would it be worth hearing how we approach that differently?"`,
+        "Salesforce is too expensive": `"That's what a lot of people think — and it used to be more true. Two things have changed: first, Salesforce has more flexible pricing now, including Starter editions. Second, Fexle's hybrid model means implementation costs are 30-40% lower than traditional consultancies. When you factor in the productivity gains and the AI capabilities, the ROI is usually clear within 6-12 months. Would it be useful to see what it might actually cost for your situation?"`,
+        "We don't have the bandwidth to implement a CRM": `"That's exactly why our model works. Fexle handles the heavy lifting — we configure it for how your team works, migrate your data, and train your people. Your team's involvement is minimal. And because of our hybrid model, it costs less than you might expect. Would it be worth a conversation about what a realistic timeline and commitment looks like?"`,
+        "Our industry is different / We have specific needs": `"That's actually where Salesforce shines — it's incredibly customisable. We've implemented it across healthcare, manufacturing, financial services, you name it. Whatever your specific workflows are, we can build them in. And the AI features work across industries. What's unique about your business that you think might be challenging?"`,
+        "We're waiting to see how AI develops": `"Fair enough — but here's the thing: AI is working right now, not future tense. Salesforce's Agentforce is handling customer inquiries autonomously today. Companies are cutting support costs by 40%+ in weeks. Waiting means your competitors might get there first. Would it be worth at least understanding what's possible now, so you can make an informed decision about timing?"`,
+        "We've heard Salesforce is hard to use": `"That used to be more true, but the interface has improved a lot. More importantly, that's where implementation matters. A well-configured Salesforce that matches how your team actually works is intuitive. A poorly implemented one is painful. That's why we focus so much on understanding your processes before we build anything. Would it help to see a demo of how it actually looks when it's done right?"`
+      },
+      closesNonSF: {
+        discovery: `"Here's what I'd suggest. Let's set up a 30-minute discovery call — no pitch, just a conversation about your business, how you're managing customer relationships today, and where you want to be. If Salesforce makes sense, we can talk about what that looks like. If it doesn't, I'll tell you. Would [specific day] at [specific time] work?"`,
+        demo: `"What I'd suggest is a quick demo tailored to your industry. I can show you how companies like yours use Salesforce — not the generic version, but what it actually looks like for [their vertical]. Takes about 30 minutes. That way you can see if it resonates before committing any serious time. Would that be useful?"`,
+        roiConversation: `"Here's an idea. Before we talk features, let me put together a quick ROI analysis for your situation — based on your team size, your industry, and what you're trying to achieve. That way you can see actual numbers before deciding if it's worth exploring further. Would that be helpful?"`,
+        competitorComparison: `"I know you're using [competitor/current system]. What I'd suggest is a side-by-side comparison — not marketing material, but an honest look at where Salesforce is stronger and where it might not matter for your situation. That way you can make an informed decision. Would that be useful to see?"`
+      }
     };
 
     // ==================== VERTICAL DATA WITH FEXLE CONTEXT ====================
@@ -671,502 +725,244 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       }
     };
 
-    // ==================== GOOGLE SHEETS INTEGRATION v3.0 ====================
-    // Enhanced with: versioning, conflict resolution, incremental sync,
-    // offline queue, rate limiting, and improved CORS handling
-
+    // ==================== GOOGLE SHEETS INTEGRATION ====================
+    // Uses Google Apps Script Web App as backend
+    // Deploy the Apps Script and paste the URL in settings
+    
     const SHEETS_COLUMNS = {
       leads: [
-        'id', 'lastModified', '_version', '_dirty', '_syncedBy', '_syncedAt',
-        'company', 'contact', 'title', 'phone', 'email', 'vertical',
+        'id', 'company', 'contact', 'title', 'phone', 'email', 'vertical', 
         'score', 'status', 'source', 'companySize', 'revenue', 'employeeCount',
-        'website', 'linkedinUrl', 'city', 'state', 'country', 'industry',
-        'lastContact', 'lastContactDate', 'createdDate', 'importedAt',
-        'notes', 'assignedTo', 'intentSignals', 'technologies', 'research'
+        'website', 'linkedinUrl', 'city', 'state', 'industry', 'lastContact',
+        'lastContactDate', 'createdDate', 'importedAt', 'notes', 'assignedTo',
+        'syncedAt', 'localModified'
       ],
       tasks: [
-        'id', 'lastModified', '_version', '_dirty', '_syncedBy', '_syncedAt',
-        'leadId', 'type', 'description', 'dueDate', 'dueTime',
-        'completed', 'completedAt', 'createdAt', 'priority', 'assignedTo'
+        'id', 'leadId', 'type', 'description', 'dueDate', 'dueTime', 
+        'completed', 'completedAt', 'createdAt', 'assignedTo', 'syncedAt'
       ]
     };
 
-    // ==================== RATE LIMITER ====================
-    const RateLimiter = {
-      lastCall: 0,
-      minInterval: 1000, // Minimum 1 second between calls
-      queue: [],
-      processing: false,
-
-      async throttle(fn) {
-        return new Promise((resolve, reject) => {
-          this.queue.push({ fn, resolve, reject });
-          this.processQueue();
-        });
-      },
-
-      async processQueue() {
-        if (this.processing || this.queue.length === 0) return;
-        this.processing = true;
-
-        while (this.queue.length > 0) {
-          const now = Date.now();
-          const timeSinceLastCall = now - this.lastCall;
-
-          if (timeSinceLastCall < this.minInterval) {
-            await new Promise(r => setTimeout(r, this.minInterval - timeSinceLastCall));
-          }
-
-          const { fn, resolve, reject } = this.queue.shift();
-          this.lastCall = Date.now();
-
-          try {
-            const result = await fn();
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-        }
-
-        this.processing = false;
-      }
+    // Convert lead object to row array for Sheets
+    const leadToRow = (lead) => {
+      return SHEETS_COLUMNS.leads.map(col => {
+        const val = lead[col];
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'object') return JSON.stringify(val);
+        return String(val);
+      });
     };
 
-    // ==================== OFFLINE QUEUE ====================
-    const OfflineQueue = {
-      queue: [],
-      isOnline: navigator.onLine,
-
-      init() {
-        window.addEventListener('online', () => {
-          this.isOnline = true;
-          this.processQueue();
-        });
-        window.addEventListener('offline', () => {
-          this.isOnline = false;
-        });
-        // Load persisted queue
-        try {
-          const saved = localStorage.getItem('fexle_offline_queue');
-          if (saved) this.queue = JSON.parse(saved);
-        } catch (e) {}
-      },
-
-      add(operation) {
-        operation.timestamp = new Date().toISOString();
-        operation.id = Date.now() + Math.random();
-        this.queue.push(operation);
-        this.persist();
-        return operation.id;
-      },
-
-      persist() {
-        try {
-          localStorage.setItem('fexle_offline_queue', JSON.stringify(this.queue));
-        } catch (e) {}
-      },
-
-      async processQueue() {
-        if (!this.isOnline || this.queue.length === 0) return { processed: 0 };
-
-        const processed = [];
-        const failed = [];
-
-        for (const op of this.queue) {
+    // Convert row array from Sheets to lead object
+    const rowToLead = (row, headers) => {
+      const lead = {};
+      headers.forEach((header, i) => {
+        let val = row[i] || '';
+        // Parse JSON fields
+        if (['intentSignals', 'research', 'technologies', 'intentTopics'].includes(header)) {
           try {
-            await this.executeOperation(op);
-            processed.push(op.id);
+            val = val ? JSON.parse(val) : null;
           } catch (e) {
-            failed.push({ ...op, error: e.message });
+            val = null;
           }
         }
-
-        this.queue = this.queue.filter(op => !processed.includes(op.id));
-        this.persist();
-
-        return { processed: processed.length, failed: failed.length };
-      },
-
-      async executeOperation(op) {
-        // Operations will be executed by the sync engine
-        console.log('Processing offline operation:', op.type);
-      },
-
-      getQueueSize() {
-        return this.queue.length;
-      }
+        // Parse numbers
+        if (['score', 'employeeCount', 'id', 'leadId'].includes(header)) {
+          val = val ? parseInt(val) : (header === 'score' ? 50 : 0);
+        }
+        // Parse booleans
+        if (header === 'completed') {
+          val = val === 'true' || val === true;
+        }
+        lead[header] = val;
+      });
+      return lead;
     };
 
-    // Initialize offline queue
-    OfflineQueue.init();
-
-    // ==================== CONFLICT RESOLUTION ====================
-    const ConflictResolver = {
-      pendingConflicts: [],
-
-      detect(localItem, remoteItem) {
-        if (!localItem || !remoteItem) return null;
-
-        const localVersion = localItem._version || 0;
-        const remoteVersion = remoteItem._version || 0;
-        const localModified = new Date(localItem.lastModified || 0);
-        const remoteModified = new Date(remoteItem.lastModified || 0);
-
-        if (localVersion !== remoteVersion && localItem._dirty) {
-          return {
-            id: localItem.id,
-            type: 'version_mismatch',
-            localVersion,
-            remoteVersion,
-            localModified,
-            remoteModified,
-            localData: localItem,
-            remoteData: remoteItem
-          };
-        }
-        return null;
-      },
-
-      autoResolve(conflict, strategy = 'latest-wins') {
-        if (strategy === 'latest-wins') {
-          const localTime = new Date(conflict.localModified).getTime();
-          const remoteTime = new Date(conflict.remoteModified).getTime();
-          return localTime > remoteTime ? 'local' : 'remote';
-        }
-        if (strategy === 'local-wins') return 'local';
-        if (strategy === 'remote-wins') return 'remote';
-        return 'manual'; // Requires user intervention
-      },
-
-      merge(localItem, remoteItem) {
-        // Smart merge: take non-null values, prefer newer for conflicts
-        const merged = { ...remoteItem };
-        const localTime = new Date(localItem.lastModified || 0).getTime();
-        const remoteTime = new Date(remoteItem.lastModified || 0).getTime();
-
-        Object.keys(localItem).forEach(key => {
-          if (key.startsWith('_')) return; // Skip meta fields
-
-          const localVal = localItem[key];
-          const remoteVal = remoteItem[key];
-
-          if (localVal && !remoteVal) {
-            merged[key] = localVal;
-          } else if (localVal !== remoteVal && localTime > remoteTime) {
-            merged[key] = localVal;
-          }
-        });
-
-        merged._version = Math.max(localItem._version || 0, remoteItem._version || 0) + 1;
-        merged.lastModified = new Date().toISOString();
-        merged._dirty = false;
-        return merged;
-      }
-    };
-
-    // ==================== ENHANCED GOOGLE SHEETS API ====================
+    // Google Sheets API wrapper
     const GoogleSheetsAPI = {
-      serverCapabilities: null,
-
-      // Parse response with better CORS error handling
-      async fetchWithCorsHandling(url, options = {}) {
+      // Fetch all leads from Google Sheet
+      fetchLeads: async (webAppUrl) => {
         try {
-          const response = await fetch(url, {
-            ...options,
+          const response = await fetch(`${webAppUrl}?action=getLeads`, {
+            method: 'GET',
             mode: 'cors'
           });
-
-          if (!response.ok) {
-            if (response.status === 0) {
-              throw new Error('CORS_ERROR: The Google Sheets Web App may not be deployed correctly. Ensure "Who has access" is set to "Anyone" in the deployment settings.');
-            }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
-          if (data.error) {
-            throw new Error(data.error);
-          }
-          return data;
+          if (data.error) throw new Error(data.error);
+          
+          const headers = data.headers || SHEETS_COLUMNS.leads;
+          return (data.rows || []).map(row => rowToLead(row, headers));
         } catch (error) {
-          if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            if (!navigator.onLine) {
-              throw new Error('OFFLINE: You are currently offline. Changes will be synced when connection is restored.');
-            }
-            throw new Error('CORS_ERROR: Unable to connect to Google Sheets. Please verify:\n1. The Web App URL is correct\n2. The deployment is set to "Anyone" access\n3. You have redeployed after code changes');
-          }
+          console.error('Error fetching leads from Sheets:', error);
           throw error;
         }
       },
 
-      // Check server capabilities
-      async checkCapabilities(webAppUrl) {
-        if (this.serverCapabilities) return this.serverCapabilities;
-
-        const status = await this.getSyncStatus(webAppUrl);
-        this.serverCapabilities = {
-          versioning: status.capabilities?.includes('versioning') || false,
-          incrementalSync: status.capabilities?.includes('incrementalSync') || false,
-          conflictResolution: status.capabilities?.includes('conflictResolution') || false,
-          apiProxy: status.capabilities?.includes('apiProxy') || false,
-          version: status.version || '2.0.0'
-        };
-        return this.serverCapabilities;
-      },
-
-      // Fetch leads with optional since parameter for incremental sync
-      fetchLeads: async (webAppUrl, since = null) => {
-        return RateLimiter.throttle(async () => {
-          const url = since
-            ? `${webAppUrl}?action=getLeads&since=${encodeURIComponent(since)}`
-            : `${webAppUrl}?action=getLeads`;
-
-          const data = await GoogleSheetsAPI.fetchWithCorsHandling(url);
-          return data.rows || [];
-        });
-      },
-
-      // Fetch tasks with optional since parameter
-      fetchTasks: async (webAppUrl, since = null) => {
-        return RateLimiter.throttle(async () => {
-          const url = since
-            ? `${webAppUrl}?action=getTasks&since=${encodeURIComponent(since)}`
-            : `${webAppUrl}?action=getTasks`;
-
-          const data = await GoogleSheetsAPI.fetchWithCorsHandling(url);
-          return data.rows || [];
-        });
-      },
-
-      // Fetch only changes since last sync
-      fetchChanges: async (webAppUrl, since) => {
-        return RateLimiter.throttle(async () => {
-          const url = `${webAppUrl}?action=getChanges&since=${encodeURIComponent(since)}`;
-          const data = await GoogleSheetsAPI.fetchWithCorsHandling(url);
-          return data.changes || { leads: [], tasks: [] };
-        });
-      },
-
-      // Sync leads with versioning support
-      syncLeads: async (webAppUrl, leads, userName, forceOverwrite = false) => {
-        if (!navigator.onLine) {
-          OfflineQueue.add({ type: 'syncLeads', leads, userName });
-          throw new Error('OFFLINE: Changes queued for sync when online.');
+      // Fetch all tasks from Google Sheet
+      fetchTasks: async (webAppUrl) => {
+        try {
+          const response = await fetch(`${webAppUrl}?action=getTasks`, {
+            method: 'GET',
+            mode: 'cors'
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          
+          const headers = data.headers || SHEETS_COLUMNS.tasks;
+          return (data.rows || []).map(row => rowToLead(row, headers));
+        } catch (error) {
+          console.error('Error fetching tasks from Sheets:', error);
+          throw error;
         }
+      },
 
-        return RateLimiter.throttle(async () => {
-          const response = await GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
+      // Sync leads to Google Sheet (upsert)
+      syncLeads: async (webAppUrl, leads, userName) => {
+        try {
+          const rows = leads.map(lead => ({
+            ...lead,
+            assignedTo: lead.assignedTo || userName,
+            syncedAt: new Date().toISOString(),
+            localModified: false
+          })).map(leadToRow);
+
+          const response = await fetch(webAppUrl, {
             method: 'POST',
+            mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'syncLeads',
-              rows: leads.map(lead => ({
-                ...lead,
-                assignedTo: lead.assignedTo || userName,
-                intentSignals: lead.intentSignals ? JSON.stringify(lead.intentSignals) : '',
-                technologies: lead.technologies ? JSON.stringify(lead.technologies) : '',
-                research: lead.research ? JSON.stringify(lead.research) : ''
-              })),
-              userName,
-              forceOverwrite
+              headers: SHEETS_COLUMNS.leads,
+              rows: rows,
+              userName: userName
             })
           });
-          return response;
-        });
-      },
-
-      // Sync only dirty (changed) leads - incremental sync
-      syncDirtyLeads: async (webAppUrl, leads, userName) => {
-        const dirtyLeads = leads.filter(l => l._dirty);
-        if (dirtyLeads.length === 0) return { updated: 0, inserted: 0 };
-
-        return GoogleSheetsAPI.syncLeads(webAppUrl, dirtyLeads, userName);
-      },
-
-      // Sync tasks with versioning
-      syncTasks: async (webAppUrl, tasks, userName, forceOverwrite = false) => {
-        if (!navigator.onLine) {
-          OfflineQueue.add({ type: 'syncTasks', tasks, userName });
-          throw new Error('OFFLINE: Changes queued for sync when online.');
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          return data;
+        } catch (error) {
+          console.error('Error syncing leads to Sheets:', error);
+          throw error;
         }
+      },
 
-        return RateLimiter.throttle(async () => {
-          const response = await GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
+      // Sync tasks to Google Sheet
+      syncTasks: async (webAppUrl, tasks, userName) => {
+        try {
+          const rows = tasks.map(task => {
+            const row = {};
+            SHEETS_COLUMNS.tasks.forEach(col => {
+              row[col] = task[col] !== undefined ? task[col] : '';
+            });
+            row.assignedTo = task.assignedTo || userName;
+            row.syncedAt = new Date().toISOString();
+            return SHEETS_COLUMNS.tasks.map(col => String(row[col] || ''));
+          });
+
+          const response = await fetch(webAppUrl, {
             method: 'POST',
+            mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'syncTasks',
-              rows: tasks,
-              userName,
-              forceOverwrite
+              headers: SHEETS_COLUMNS.tasks,
+              rows: rows,
+              userName: userName
             })
           });
-          return response;
-        });
-      },
-
-      // Sync only dirty tasks
-      syncDirtyTasks: async (webAppUrl, tasks, userName) => {
-        const dirtyTasks = tasks.filter(t => t._dirty);
-        if (dirtyTasks.length === 0) return { updated: 0, inserted: 0 };
-
-        return GoogleSheetsAPI.syncTasks(webAppUrl, dirtyTasks, userName);
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          return data;
+        } catch (error) {
+          console.error('Error syncing tasks to Sheets:', error);
+          throw error;
+        }
       },
 
       // Delete a lead
       deleteLead: async (webAppUrl, leadId) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
+        try {
+          const response = await fetch(webAppUrl, {
             method: 'POST',
+            mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'deleteLead', leadId })
+            body: JSON.stringify({
+              action: 'deleteLead',
+              leadId: leadId
+            })
           });
-        });
-      },
-
-      // Delete a task
-      deleteTask: async (webAppUrl, taskId) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'deleteTask', taskId })
-          });
-        });
-      },
-
-      // Resolve a conflict
-      resolveConflict: async (webAppUrl, sheetName, id, resolution, row) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'resolveConflict', sheetName, id, resolution, row })
-          });
-        });
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          console.error('Error deleting lead from Sheets:', error);
+          throw error;
+        }
       },
 
       // Get sync status
       getSyncStatus: async (webAppUrl) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(`${webAppUrl}?action=status`);
-        });
-      },
-
-      // Apollo search via server proxy (hides API key)
-      apolloSearchViaProxy: async (webAppUrl, searchParams) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'apolloSearch', searchParams })
+        try {
+          const response = await fetch(`${webAppUrl}?action=status`, {
+            method: 'GET',
+            mode: 'cors'
           });
-        });
-      },
-
-      // Anthropic research via server proxy (hides API key)
-      anthropicResearchViaProxy: async (webAppUrl, prompt, leadData) => {
-        return RateLimiter.throttle(async () => {
-          return GoogleSheetsAPI.fetchWithCorsHandling(webAppUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'anthropicResearch', prompt, leadData })
-          });
-        });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          console.error('Error getting sync status:', error);
+          throw error;
+        }
       }
     };
 
-    // ==================== ENHANCED MERGE WITH CONFLICT RESOLUTION ====================
-    const mergeLeads = (localLeads, remoteLeads, strategy = 'latest-wins') => {
+    // Merge strategy for syncing
+    const mergeLeads = (localLeads, remoteLeads, strategy = 'remote-wins') => {
       const merged = new Map();
-      const conflicts = [];
-
-      // Index remote leads by ID with metadata
+      
+      // Index remote leads by ID
       remoteLeads.forEach(lead => {
-        if (lead.id) {
-          merged.set(String(lead.id), {
-            ...lead,
-            _source: 'remote',
-            _dirty: false
-          });
-        }
+        if (lead.id) merged.set(String(lead.id), { ...lead, source: 'remote' });
       });
-
-      // Merge local leads with conflict detection
+      
+      // Merge local leads
       localLeads.forEach(lead => {
         const id = String(lead.id);
         const existing = merged.get(id);
-
+        
         if (!existing) {
-          // New local lead not on remote
-          merged.set(id, { ...lead, _dirty: true });
-        } else {
-          // Check for conflicts
-          const conflict = ConflictResolver.detect(lead, existing);
-
-          if (conflict) {
-            const resolution = ConflictResolver.autoResolve(conflict, strategy);
-
-            if (resolution === 'local') {
-              merged.set(id, { ...lead, _dirty: true, _version: (existing._version || 0) + 1 });
-            } else if (resolution === 'remote') {
-              merged.set(id, { ...existing, _dirty: false });
-            } else if (resolution === 'merge' || strategy === 'merge') {
-              const mergedItem = ConflictResolver.merge(lead, existing);
-              merged.set(id, mergedItem);
-            } else {
-              // Manual resolution needed
-              conflicts.push(conflict);
-              merged.set(id, existing); // Keep remote for now
-            }
-          } else if (lead._dirty) {
-            // Local has unsync'd changes, no conflict
-            const localTime = new Date(lead.lastModified || 0).getTime();
-            const remoteTime = new Date(existing.lastModified || 0).getTime();
-
-            if (localTime > remoteTime) {
-              merged.set(id, { ...lead, _version: (existing._version || 0) + 1 });
-            } else {
-              merged.set(id, { ...existing, _dirty: false });
-            }
-          } else {
-            // No local changes, use remote
-            merged.set(id, { ...existing, _dirty: false });
+          // New local lead
+          merged.set(id, { ...lead, localModified: true });
+        } else if (strategy === 'local-wins') {
+          // Local takes precedence
+          merged.set(id, { ...existing, ...lead });
+        } else if (strategy === 'remote-wins') {
+          // Remote takes precedence, but keep local modifications if newer
+          const localDate = new Date(lead.lastContactDate || lead.createdDate || 0);
+          const remoteDate = new Date(existing.syncedAt || 0);
+          if (localDate > remoteDate) {
+            merged.set(id, { ...existing, ...lead, localModified: true });
           }
+        } else if (strategy === 'merge') {
+          // Merge non-empty fields
+          const mergedLead = { ...existing };
+          Object.keys(lead).forEach(key => {
+            if (lead[key] && (!existing[key] || existing[key] === '')) {
+              mergedLead[key] = lead[key];
+            }
+          });
+          merged.set(id, mergedLead);
         }
       });
-
-      const result = Array.from(merged.values());
-      result._conflicts = conflicts;
-      return result;
-    };
-
-    // Helper to mark a lead as dirty (modified locally)
-    const markDirty = (item) => ({
-      ...item,
-      _dirty: true,
-      lastModified: new Date().toISOString()
-    });
-
-    // Helper to parse JSON fields from sheets
-    const parseLeadFromSheets = (lead) => {
-      const parsed = { ...lead };
-      ['intentSignals', 'technologies', 'research'].forEach(field => {
-        if (typeof parsed[field] === 'string' && parsed[field]) {
-          try {
-            parsed[field] = JSON.parse(parsed[field]);
-          } catch (e) {
-            parsed[field] = null;
-          }
-        }
-      });
-      // Ensure numeric fields
-      ['score', 'employeeCount', '_version'].forEach(field => {
-        if (typeof parsed[field] === 'string') {
-          parsed[field] = parseInt(parsed[field]) || 0;
-        }
-      });
-      return parsed;
+      
+      return Array.from(merged.values());
     };
 
     // ==================== CSV FUNCTIONS ====================
@@ -1449,6 +1245,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [apolloApiKey, setApolloApiKey] = useState('');
       const [apolloSearching, setApolloSearching] = useState(false);
       const [apolloResults, setApolloResults] = useState([]);
+      const [apolloSelectedLeads, setApolloSelectedLeads] = useState([]);
       const [apolloSearchParams, setApolloSearchParams] = useState({
         personTitles: ['CEO', 'COO', 'CIO', 'CTO', 'Managing Director', 'Director of Operations', 'Head of IT'],
         personLocations: ['Australia'],
@@ -1479,6 +1276,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [callNotes, setCallNotes] = useState('');
       const [callOutcome, setCallOutcome] = useState('');
       const [showScript, setShowScript] = useState(false);
+      const [scriptMode, setScriptMode] = useState('salesforce'); // 'salesforce' or 'nonSalesforce'
       const [searchQuery, setSearchQuery] = useState('');
       const [filterVertical, setFilterVertical] = useState('all');
       const [filterStatus, setFilterStatus] = useState('all');
@@ -1508,207 +1306,63 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [syncInterval, setSyncInterval] = useState(5); // minutes
       const syncIntervalRef = useRef(null);
 
-      // Sync conflict state
-      const [syncConflicts, setSyncConflicts] = useState([]);
-      const [showConflictModal, setShowConflictModal] = useState(false);
-      const [incrementalSync, setIncrementalSync] = useState(true); // Use incremental by default
-
-      // Google Sheets Sync Functions - Enhanced v3.0
-      const syncToSheets = async (showNotif = true, forceFullSync = false) => {
+      // Google Sheets Sync Functions
+      const syncToSheets = async (showNotif = true) => {
         if (!googleSheetsUrl) {
           if (showNotif) showNotification('Please configure Google Sheets URL in Settings', 'error');
           return false;
         }
 
-        // Check for offline
-        if (!navigator.onLine) {
-          if (showNotif) showNotification('You are offline. Changes will sync when connection is restored.', 'error');
-          return false;
-        }
-
         setSyncStatus(prev => ({ ...prev, syncing: true, error: null }));
-
+        
         try {
-          let leadsResult, tasksResult;
-
-          // Use incremental sync if enabled and not forcing full sync
-          if (incrementalSync && !forceFullSync) {
-            const dirtyLeads = leads.filter(l => l._dirty);
-            const dirtyTasks = tasks.filter(t => t._dirty);
-
-            if (dirtyLeads.length === 0 && dirtyTasks.length === 0) {
-              if (showNotif) showNotification('No changes to sync');
-              setSyncStatus(prev => ({ ...prev, syncing: false }));
-              return true;
-            }
-
-            leadsResult = await GoogleSheetsAPI.syncLeads(googleSheetsUrl, dirtyLeads, callerName || 'Unknown');
-            tasksResult = await GoogleSheetsAPI.syncTasks(googleSheetsUrl, dirtyTasks, callerName || 'Unknown');
-
-            // Clear dirty flags on synced items
-            if (leadsResult.success) {
-              setLeads(prev => prev.map(l =>
-                dirtyLeads.find(d => d.id === l.id)
-                  ? { ...l, _dirty: false, _version: (l._version || 0) + 1 }
-                  : l
-              ));
-            }
-            if (tasksResult.success) {
-              setTasks(prev => prev.map(t =>
-                dirtyTasks.find(d => d.id === t.id)
-                  ? { ...t, _dirty: false, _version: (t._version || 0) + 1 }
-                  : t
-              ));
-            }
-
-            if (showNotif) {
-              showNotification(`✓ Synced ${dirtyLeads.length} leads and ${dirtyTasks.length} tasks`);
-            }
-          } else {
-            // Full sync
-            leadsResult = await GoogleSheetsAPI.syncLeads(googleSheetsUrl, leads, callerName || 'Unknown');
-            tasksResult = await GoogleSheetsAPI.syncTasks(googleSheetsUrl, tasks, callerName || 'Unknown');
-
-            if (showNotif) {
-              showNotification(`✓ Synced ${leads.length} leads and ${tasks.length} tasks to Google Sheets`);
-            }
-          }
-
-          // Handle conflicts if any
-          const allConflicts = [
-            ...(leadsResult.conflicts || []).map(c => ({ ...c, type: 'lead' })),
-            ...(tasksResult.conflicts || []).map(c => ({ ...c, type: 'task' }))
-          ];
-
-          if (allConflicts.length > 0) {
-            setSyncConflicts(allConflicts);
-            setShowConflictModal(true);
-            if (showNotif) showNotification(`${allConflicts.length} conflict(s) need resolution`, 'error');
-          }
-
+          // Sync leads
+          await GoogleSheetsAPI.syncLeads(googleSheetsUrl, leads, callerName || 'Unknown');
+          
+          // Sync tasks
+          await GoogleSheetsAPI.syncTasks(googleSheetsUrl, tasks, callerName || 'Unknown');
+          
           const now = new Date().toISOString();
           setSyncStatus({ lastSync: now, syncing: false, error: null });
           setSheetsConnected(true);
-
+          
+          if (showNotif) showNotification(`✓ Synced ${leads.length} leads and ${tasks.length} tasks to Google Sheets`);
           return true;
         } catch (error) {
-          const errorMsg = error.message;
-          setSyncStatus(prev => ({ ...prev, syncing: false, error: errorMsg }));
-
-          // Better error messages for common issues
-          if (errorMsg.includes('CORS_ERROR')) {
-            if (showNotif) showNotification('Connection blocked. Check Web App deployment settings.', 'error');
-          } else if (errorMsg.includes('OFFLINE')) {
-            if (showNotif) showNotification('Offline: Changes queued for later sync.', 'error');
-          } else {
-            if (showNotif) showNotification(`Sync failed: ${errorMsg}`, 'error');
-          }
+          setSyncStatus(prev => ({ ...prev, syncing: false, error: error.message }));
+          if (showNotif) showNotification(`Sync failed: ${error.message}`, 'error');
           return false;
         }
       };
 
-      const pullFromSheets = async (incrementalPull = false) => {
+      const pullFromSheets = async () => {
         if (!googleSheetsUrl) {
           showNotification('Please configure Google Sheets URL in Settings', 'error');
           return;
         }
 
-        if (!navigator.onLine) {
-          showNotification('You are offline. Cannot pull from Google Sheets.', 'error');
-          return;
-        }
-
         setSyncStatus(prev => ({ ...prev, syncing: true, error: null }));
-
+        
         try {
-          let remoteLeads, remoteTasks;
-
-          if (incrementalPull && syncStatus.lastSync) {
-            // Fetch only changes since last sync
-            const changes = await GoogleSheetsAPI.fetchChanges(googleSheetsUrl, syncStatus.lastSync);
-            remoteLeads = (changes.leads || []).map(parseLeadFromSheets);
-            remoteTasks = changes.tasks || [];
-          } else {
-            // Full fetch
-            remoteLeads = (await GoogleSheetsAPI.fetchLeads(googleSheetsUrl)).map(parseLeadFromSheets);
-            remoteTasks = await GoogleSheetsAPI.fetchTasks(googleSheetsUrl);
-          }
-
-          // Merge with conflict detection
-          const mergedLeads = mergeLeads(leads, remoteLeads, 'latest-wins');
-          const mergedTasks = mergeLeads(tasks, remoteTasks, 'latest-wins');
-
-          // Check for conflicts that need manual resolution
-          if (mergedLeads._conflicts && mergedLeads._conflicts.length > 0) {
-            setSyncConflicts(mergedLeads._conflicts.map(c => ({ ...c, type: 'lead' })));
-            setShowConflictModal(true);
-          }
-
+          // Fetch remote data
+          const remoteLeads = await GoogleSheetsAPI.fetchLeads(googleSheetsUrl);
+          const remoteTasks = await GoogleSheetsAPI.fetchTasks(googleSheetsUrl);
+          
+          // Merge with local data
+          const mergedLeads = mergeLeads(leads, remoteLeads, 'merge');
+          const mergedTasks = mergeLeads(tasks, remoteTasks, 'merge');
+          
           setLeads(mergedLeads);
           setTasks(mergedTasks);
-
+          
           const now = new Date().toISOString();
           setSyncStatus({ lastSync: now, syncing: false, error: null });
           setSheetsConnected(true);
-
+          
           showNotification(`✓ Pulled ${remoteLeads.length} leads and ${remoteTasks.length} tasks from Google Sheets`);
         } catch (error) {
           setSyncStatus(prev => ({ ...prev, syncing: false, error: error.message }));
-
-          if (error.message.includes('CORS_ERROR')) {
-            showNotification('Connection blocked. Verify Web App URL and deployment settings.', 'error');
-          } else {
-            showNotification(`Pull failed: ${error.message}`, 'error');
-          }
-        }
-      };
-
-      // Resolve a single conflict
-      const resolveConflict = async (conflict, resolution) => {
-        try {
-          const sheetName = conflict.type === 'lead' ? 'Leads' : 'Tasks';
-          let resolvedData;
-
-          if (resolution === 'local') {
-            resolvedData = conflict.localData;
-          } else if (resolution === 'remote') {
-            resolvedData = conflict.remoteData;
-          } else if (resolution === 'merge') {
-            resolvedData = ConflictResolver.merge(conflict.localData, conflict.remoteData);
-          }
-
-          await GoogleSheetsAPI.resolveConflict(googleSheetsUrl, sheetName, conflict.id, resolution, resolvedData);
-
-          // Update local state
-          if (conflict.type === 'lead') {
-            setLeads(prev => prev.map(l => l.id === conflict.id ? { ...resolvedData, _dirty: false } : l));
-          } else {
-            setTasks(prev => prev.map(t => t.id === conflict.id ? { ...resolvedData, _dirty: false } : t));
-          }
-
-          // Remove from conflicts list
-          setSyncConflicts(prev => prev.filter(c => c.id !== conflict.id));
-          showNotification(`Conflict resolved for ${conflict.type} ${conflict.id}`);
-        } catch (error) {
-          showNotification(`Failed to resolve conflict: ${error.message}`, 'error');
-        }
-      };
-
-      // Process offline queue when coming back online
-      const processOfflineQueue = async () => {
-        const queueSize = OfflineQueue.getQueueSize();
-        if (queueSize === 0) return;
-
-        showNotification(`Processing ${queueSize} queued operations...`);
-        const result = await OfflineQueue.processQueue();
-
-        if (result.processed > 0) {
-          showNotification(`✓ Processed ${result.processed} offline operations`);
-          // Trigger a full sync to reconcile
-          await syncToSheets(false, true);
-        }
-        if (result.failed > 0) {
-          showNotification(`${result.failed} operations failed`, 'error');
+          showNotification(`Pull failed: ${error.message}`, 'error');
         }
       };
 
@@ -1721,53 +1375,22 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         try {
           const status = await GoogleSheetsAPI.getSyncStatus(googleSheetsUrl);
           setSheetsConnected(true);
-
-          // Check capabilities
-          const capabilities = status.capabilities || [];
-          const versionInfo = status.version ? ` (v${status.version})` : '';
-          const capInfo = capabilities.length > 0 ? ` - Features: ${capabilities.join(', ')}` : '';
-
-          showNotification(`✓ Connected to "${status.sheetName || 'Google Sheet'}"${versionInfo}`);
-          console.log('Server capabilities:', status);
+          showNotification(`✓ Connected to "${status.sheetName || 'Google Sheet'}"`);
           return true;
         } catch (error) {
           setSheetsConnected(false);
-
-          if (error.message.includes('CORS_ERROR')) {
-            showNotification('Connection blocked. Ensure Web App is deployed with "Anyone" access.', 'error');
-          } else {
-            showNotification(`Connection failed: ${error.message}`, 'error');
-          }
+          showNotification(`Connection failed: ${error.message}`, 'error');
           return false;
         }
       };
 
-      // Online/offline detection
-      useEffect(() => {
-        const handleOnline = () => {
-          showNotification('Back online! Processing queued changes...');
-          processOfflineQueue();
-        };
-        const handleOffline = () => {
-          showNotification('You are now offline. Changes will be saved locally.', 'error');
-        };
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        return () => {
-          window.removeEventListener('online', handleOnline);
-          window.removeEventListener('offline', handleOffline);
-        };
-      }, [googleSheetsUrl]);
-
-      // Auto-sync effect with incremental sync support
+      // Auto-sync effect
       useEffect(() => {
         if (autoSync && googleSheetsUrl && syncInterval > 0) {
           syncIntervalRef.current = setInterval(() => {
-            syncToSheets(false); // Silent incremental sync
+            syncToSheets(false); // Silent sync
           }, syncInterval * 60 * 1000);
-
+          
           return () => {
             if (syncIntervalRef.current) {
               clearInterval(syncIntervalRef.current);
@@ -1840,16 +1463,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const importApolloLeads = (selectedIds) => {
         const leadsToImport = apolloResults.filter(l => selectedIds.includes(l.id));
         const existingEmails = new Set(leads.map(l => l.email?.toLowerCase()));
-
-        const now = new Date().toISOString();
-        const newLeads = leadsToImport
-          .filter(l => !existingEmails.has(l.email?.toLowerCase()))
-          .map(l => ({
-            ...l,
-            lastModified: now,
-            _version: 1,
-            _dirty: true
-          }));
+        
+        const newLeads = leadsToImport.filter(l => !existingEmails.has(l.email?.toLowerCase()));
         const duplicates = leadsToImport.length - newLeads.length;
 
         if (newLeads.length > 0) {
@@ -1857,6 +1472,21 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           showNotification(`Imported ${newLeads.length} leads${duplicates > 0 ? ` (${duplicates} duplicates skipped)` : ''}`);
         } else {
           showNotification('All selected leads already exist', 'error');
+        }
+      };
+
+      // Apollo modal helper functions (moved from ApolloModal)
+      const toggleApolloLeadSelection = (id) => {
+        setApolloSelectedLeads(prev =>
+          prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+      };
+
+      const selectAllApolloLeads = () => {
+        if (apolloSelectedLeads.length === apolloResults.length) {
+          setApolloSelectedLeads([]);
+        } else {
+          setApolloSelectedLeads(apolloResults.map(l => l.id));
         }
       };
 
@@ -2274,6 +1904,76 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         description: ''
       });
 
+      // Initialize meeting details when selectedLead changes (moved from MeetingModal)
+      useEffect(() => {
+        if (selectedLead && showMeetingModal && !meetingDetails.title) {
+          const vertical = verticalData[selectedLead.vertical];
+          setMeetingDetails(prev => ({
+            ...prev,
+            title: `Fexle CEO Call - ${selectedLead.company}`,
+            description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations and how they might help ${selectedLead.company}.\n\nTopics:\n- ${vertical?.salesforceSolution || 'Salesforce'} capabilities\n- Agentforce and AI automation opportunities\n- Quick wins for ${vertical?.name || 'your industry'}`
+          }));
+        }
+      }, [selectedLead, showMeetingModal]);
+
+      // Meeting modal helper functions (moved from MeetingModal)
+      const handleMeetingDownload = () => {
+        if (!meetingDetails.startDate || !meetingDetails.startTime) {
+          showNotification('Please select date and time', 'error');
+          return;
+        }
+
+        downloadICSFile({
+          ...meetingDetails,
+          attendeeName: selectedLead?.contact,
+          attendeeEmail: selectedLead?.email,
+          attendeeCompany: selectedLead?.company
+        });
+
+        if (selectedLead) {
+          setLeads(leads.map(l =>
+            l.id === selectedLead.id
+              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: new Date().toISOString() }
+              : l
+          ));
+
+          const meetingDate = new Date(meetingDetails.startDate);
+          const reminderDate = new Date(meetingDate);
+          reminderDate.setDate(reminderDate.getDate() - 1);
+
+          const reminderTask = {
+            id: Date.now(),
+            leadId: selectedLead.id,
+            type: 'meeting',
+            description: `Prep for CEO meeting with ${selectedLead.company}`,
+            dueDate: reminderDate.toISOString().split('T')[0],
+            dueTime: '09:00',
+            completed: false,
+            createdAt: new Date().toISOString()
+          };
+          setTasks([...tasks, reminderTask]);
+        }
+
+        setShowMeetingModal(false);
+        showNotification('Calendar invite created! Send it to the prospect.');
+      };
+
+      const getMeetingQuickDates = () => {
+        const dates = [];
+        const today = new Date();
+        for (let i = 1; i <= 10; i++) {
+          const date = new Date(today);
+          date.setDate(date.getDate() + i);
+          if (date.getDay() !== 0 && date.getDay() !== 6) {
+            dates.push({
+              value: date.toISOString().split('T')[0],
+              label: date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
+            });
+          }
+        }
+        return dates.slice(0, 5);
+      };
+
       // Load/save availability and meetings
       useEffect(() => {
         const saved = loadFromStorage();
@@ -2454,21 +2154,17 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         return matchesSearch && matchesVertical && matchesStatus && matchesSource;
       });
 
-      // Add lead with versioning support
+      // Add lead
       const addNewLead = () => {
         if (newLead.company && newLead.contact) {
           const { score } = calculateLeadScore(newLead);
-          const now = new Date().toISOString();
           const lead = {
             id: Date.now(),
             ...newLead,
             score,
             status: 'New Lead',
             lastContact: 'Never',
-            createdDate: now,
-            lastModified: now,
-            _version: 1,
-            _dirty: true,
+            createdDate: new Date().toISOString(),
             research: null
           };
           setLeads([...leads, lead]);
@@ -2498,16 +2194,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       const logCall = () => {
         if (selectedLead && callOutcome) {
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
-          const now = new Date().toISOString();
           setLeads(leads.map(lead =>
-            lead.id === selectedLead.id
-              ? {
-                  ...lead,
-                  status: callOutcome,
+            lead.id === selectedLead.id 
+              ? { 
+                  ...lead, 
+                  status: callOutcome, 
                   lastContact: 'Just now',
-                  lastContactDate: now,
-                  lastModified: now,
-                  _dirty: true,
+                  lastContactDate: new Date().toISOString(),
                   notes: callNotes ? `[${timestamp}] ${callNotes}\n\n${lead.notes}` : lead.notes
                 }
               : lead
@@ -2519,7 +2212,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             const dueDate = new Date();
             dueDate.setDate(dueDate.getDate() + followUpDays[callOutcome]);
             
-            const taskCreatedAt = new Date().toISOString();
             const newFollowUp = {
               id: Date.now(),
               leadId: selectedLead.id,
@@ -2528,10 +2220,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
               dueDate: dueDate.toISOString().split('T')[0],
               dueTime: '16:00',
               completed: false,
-              createdAt: taskCreatedAt,
-              lastModified: taskCreatedAt,
-              _version: 1,
-              _dirty: true
+              createdAt: new Date().toISOString()
             };
             setTasks([...tasks, newFollowUp]);
             showNotification(`Follow-up task created for ${dueDate.toLocaleDateString('en-AU')}`);
@@ -2543,18 +2232,14 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
       };
 
-      // Task management functions with versioning
+      // Task management functions
       const addTask = () => {
         if (newTask.description && newTask.dueDate) {
-          const now = new Date().toISOString();
           const task = {
             id: Date.now(),
             ...newTask,
             completed: false,
-            createdAt: now,
-            lastModified: now,
-            _version: 1,
-            _dirty: true
+            createdAt: new Date().toISOString()
           };
           setTasks([...tasks, task]);
           setNewTask({ leadId: null, type: 'call', description: '', dueDate: '', dueTime: '' });
@@ -2564,13 +2249,23 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       };
 
       const completeTask = (taskId) => {
-        const now = new Date().toISOString();
-        setTasks(tasks.map(t => t.id === taskId ? { ...t, completed: true, completedAt: now, lastModified: now, _dirty: true } : t));
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, completed: true, completedAt: new Date().toISOString() } : t));
         showNotification('Task completed');
       };
 
       const deleteTask = (taskId) => {
         setTasks(tasks.filter(t => t.id !== taskId));
+        showNotification('Task deleted');
+      };
+
+      const deleteLead = (leadId) => {
+        if (confirm('Are you sure you want to delete this lead? This cannot be undone.')) {
+          setLeads(leads.filter(l => l.id !== leadId));
+          if (selectedLead?.id === leadId) {
+            setSelectedLead(null);
+          }
+          showNotification('Lead deleted');
+        }
       };
 
       const snoozeTask = (taskId, days) => {
@@ -2629,13 +2324,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           const reader = new FileReader();
           reader.onload = (event) => {
             const csvText = event.target.result;
-            const now = new Date().toISOString();
-            const importedLeads = parseCSV(csvText).map(l => ({
-              ...l,
-              lastModified: now,
-              _version: 1,
-              _dirty: true
-            }));
+            const importedLeads = parseCSV(csvText);
             if (importedLeads.length > 0) {
               setLeads([...leads, ...importedLeads]);
               showNotification(`Imported ${importedLeads.length} leads`);
@@ -2810,10 +2499,10 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
           };
           
           setResearchResult(research);
-
-          // Save research to lead (mark as dirty for sync)
-          setLeads(leads.map(l =>
-            l.id === lead.id ? { ...l, research, lastModified: new Date().toISOString(), _dirty: true } : l
+          
+          // Save research to lead
+          setLeads(leads.map(l => 
+            l.id === lead.id ? { ...l, research } : l
           ));
           
         } catch (error) {
@@ -2996,6 +2685,9 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                                     </button>
                                     <button onClick={() => snoozeTask(task.id, 1)} className="px-2 py-1.5 text-gray-500 hover:bg-gray-100 rounded-lg text-xs">
                                       +1d
+                                    </button>
+                                    <button onClick={() => deleteTask(task.id)} className="px-2 py-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs" title="Delete task">
+                                      ✕
                                     </button>
                                   </>
                                 )}
@@ -3211,13 +2903,24 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                   <div
                     key={lead.id}
                     onClick={() => setSelectedLead(lead)}
-                    className={`p-4 border-b border-gray-50 cursor-pointer transition-colors ${
+                    className={`p-4 border-b border-gray-50 cursor-pointer transition-colors group ${
                       selectedLead?.id === lead.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-gray-900 text-sm">{lead.company}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getScoreColor(lead.score)}`}>{lead.score}</span>
+                      <div className="flex items-center gap-1">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getScoreColor(lead.score)}`}>{lead.score}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteLead(lead.id); }}
+                          className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete lead"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <div className="text-xs text-gray-500 mb-2">{lead.contact} • {lead.title}</div>
                     <div className="flex items-center gap-2">
@@ -3246,9 +2949,20 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                           <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedLead.status)}`}>{selectedLead.status}</span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`text-4xl font-bold ${selectedLead.score >= 80 ? 'text-green-600' : selectedLead.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>{selectedLead.score}</div>
-                        <div className="text-sm text-gray-500">Lead Score</div>
+                      <div className="flex items-start gap-4">
+                        <div className="text-right">
+                          <div className={`text-4xl font-bold ${selectedLead.score >= 80 ? 'text-green-600' : selectedLead.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>{selectedLead.score}</div>
+                          <div className="text-sm text-gray-500">Lead Score</div>
+                        </div>
+                        <button
+                          onClick={() => deleteLead(selectedLead.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete lead"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                     
@@ -3340,7 +3054,31 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                   {/* Fexle Call Script */}
                   {showScript && vertical && (
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6 max-h-[600px] overflow-y-auto scrollbar-thin">
-                      
+
+                      {/* Prospect Type Toggle */}
+                      <div className="flex items-center justify-center gap-2 p-2 bg-gray-100 rounded-lg">
+                        <button
+                          onClick={() => setScriptMode('salesforce')}
+                          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                            scriptMode === 'salesforce'
+                              ? 'bg-blue-600 text-white shadow-md'
+                              : 'bg-white text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          Existing SF User
+                        </button>
+                        <button
+                          onClick={() => setScriptMode('nonSalesforce')}
+                          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                            scriptMode === 'nonSalesforce'
+                              ? 'bg-green-600 text-white shadow-md'
+                              : 'bg-white text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          Non-SF Prospect
+                        </button>
+                      </div>
+
                       {/* Opening Options */}
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -3348,9 +3086,9 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                           Opening Scripts (Pick One)
                         </h3>
                         <div className="space-y-3">
-                          {Object.entries(FEXLE_SCRIPTS.openings).map(([key, opening]) => (
+                          {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.openings : FEXLE_SCRIPTS.openingsNonSF).map(([key, opening]) => (
                             <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
-                              <div className="bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800">{opening.name}</div>
+                              <div className={`px-4 py-2 text-sm font-medium ${scriptMode === 'salesforce' ? 'bg-blue-50 text-blue-800' : 'bg-green-50 text-green-800'}`}>{opening.name}</div>
                               <div className="px-4 py-3 text-sm bg-white">
                                 <p className="italic text-gray-700">{personalizeScript(opening.script)}</p>
                                 <p className="text-xs text-gray-500 mt-2">💡 {opening.why}</p>
@@ -3389,34 +3127,76 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                           <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-sm font-bold">3</span>
                           Pivot to Value (When They Engage)
                         </h3>
-                        <div className="space-y-3">
-                          <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
-                            <div className="text-xs text-green-600 font-medium mb-1">PRIMARY PIVOT</div>
-                            <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.primary}</p>
+                        {scriptMode === 'salesforce' ? (
+                          <div className="space-y-3">
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                              <div className="text-xs text-green-600 font-medium mb-1">PRIMARY PIVOT</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.primary}</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
+                              <div className="text-xs text-green-600 font-medium mb-1">IF THEY MENTIONED AI INTEREST</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.aiInterest}</p>
+                            </div>
                           </div>
-                          <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
-                            <div className="text-xs text-green-600 font-medium mb-1">IF THEY MENTIONED AI INTEREST</div>
-                            <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.aiInterest}</p>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                              <div className="text-xs text-green-600 font-medium mb-1">IF USING SPREADSHEETS / NOTHING</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromSpreadsheets}</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                              <div className="text-xs text-green-600 font-medium mb-1">IF USING HUBSPOT</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromHubSpot}</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
+                              <div className="text-xs text-green-600 font-medium mb-1">IF USING DYNAMICS 365</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromDynamics}</p>
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-200">
+                              <div className="text-xs text-green-600 font-medium mb-1">AI ANGLE (UNIVERSAL)</div>
+                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.aiAngle}</p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
-                      {/* Two Paths Forward */}
+                      {/* Two Paths Forward / Closes */}
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                           <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-sm font-bold">4</span>
-                          Two Paths Forward
+                          {scriptMode === 'salesforce' ? 'Two Paths Forward' : 'Next Steps / Closes'}
                         </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <div className="text-sm font-semibold text-purple-800 mb-2">Path A: Ready → CEO Meeting</div>
-                            <p className="text-xs text-purple-900 italic">{FEXLE_SCRIPTS.closes.ceoMeeting}</p>
+                        {scriptMode === 'salesforce' ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                              <div className="text-sm font-semibold text-purple-800 mb-2">Path A: Ready → CEO Meeting</div>
+                              <p className="text-xs text-purple-900 italic">{FEXLE_SCRIPTS.closes.ceoMeeting}</p>
+                            </div>
+                            <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
+                              <div className="text-sm font-semibold text-pink-800 mb-2">Path B: Not Ready → AI Deck</div>
+                              <p className="text-xs text-pink-900 italic">{FEXLE_SCRIPTS.closes.aiDeck}</p>
+                            </div>
                           </div>
-                          <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
-                            <div className="text-sm font-semibold text-pink-800 mb-2">Path B: Not Ready → AI Deck</div>
-                            <p className="text-xs text-pink-900 italic">{FEXLE_SCRIPTS.closes.aiDeck}</p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                              <div className="text-sm font-semibold text-purple-800 mb-2">Discovery Call</div>
+                              <p className="text-xs text-purple-900 italic">{FEXLE_SCRIPTS.closesNonSF.discovery}</p>
+                            </div>
+                            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                              <div className="text-sm font-semibold text-indigo-800 mb-2">Tailored Demo</div>
+                              <p className="text-xs text-indigo-900 italic">{FEXLE_SCRIPTS.closesNonSF.demo}</p>
+                            </div>
+                            <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
+                              <div className="text-sm font-semibold text-pink-800 mb-2">ROI Conversation</div>
+                              <p className="text-xs text-pink-900 italic">{FEXLE_SCRIPTS.closesNonSF.roiConversation}</p>
+                            </div>
+                            <div className="bg-violet-50 p-4 rounded-lg border border-violet-200">
+                              <div className="text-sm font-semibold text-violet-800 mb-2">Competitor Comparison</div>
+                              <p className="text-xs text-violet-900 italic">{FEXLE_SCRIPTS.closesNonSF.competitorComparison}</p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Objection Handling */}
@@ -3426,7 +3206,7 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
                           Objection Handling
                         </h3>
                         <div className="space-y-3">
-                          {Object.entries(FEXLE_SCRIPTS.objections).slice(0, 6).map(([objection, response], i) => (
+                          {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.objections : FEXLE_SCRIPTS.objectionsNonSF).slice(0, 6).map(([objection, response], i) => (
                             <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
                               <div className="bg-red-50 px-4 py-2 text-sm font-medium text-red-800">🚫 "{objection}"</div>
                               <div className="px-4 py-3 text-sm bg-green-50 text-green-900">✅ {response}</div>
@@ -3596,11 +3376,77 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
               </div>
             </div>
 
+            {/* Non-Salesforce Prospect Scripts */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+              <h3 className="font-semibold text-green-900 mb-4 text-lg">🆕 Non-Salesforce Prospect Scripts</h3>
+              <p className="text-sm text-green-700 mb-4">Use these when calling prospects who don't currently use Salesforce — they may be using HubSpot, Dynamics, spreadsheets, or nothing at all.</p>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-green-800 mb-2">Opening Scripts</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(FEXLE_SCRIPTS.openingsNonSF).map(([key, opening]) => (
+                      <div key={key} className="bg-white rounded-lg p-3 border border-green-100">
+                        <div className="font-medium text-green-700 text-sm mb-1">{opening.name}</div>
+                        <p className="text-xs text-gray-600 italic">{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', userName)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-green-800 mb-2">Pivot Scripts (Based on Current System)</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <div className="font-medium text-green-700 text-sm mb-1">From Spreadsheets</div>
+                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromSpreadsheets.substring(0, 200)}...</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <div className="font-medium text-green-700 text-sm mb-1">From HubSpot</div>
+                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromHubSpot.substring(0, 200)}...</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <div className="font-medium text-green-700 text-sm mb-1">From Dynamics 365</div>
+                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromDynamics.substring(0, 200)}...</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <div className="font-medium text-green-700 text-sm mb-1">AI Angle (Universal)</div>
+                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.aiAngle.substring(0, 200)}...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Full Objection Handling */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4 text-lg">🛡️ Complete Objection Handling Guide</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 text-lg">🛡️ Complete Objection Handling Guide</h3>
+                <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
+                  <button
+                    onClick={() => setScriptMode('salesforce')}
+                    className={`py-1 px-3 rounded text-sm font-medium transition-colors ${
+                      scriptMode === 'salesforce'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    SF Users
+                  </button>
+                  <button
+                    onClick={() => setScriptMode('nonSalesforce')}
+                    className={`py-1 px-3 rounded text-sm font-medium transition-colors ${
+                      scriptMode === 'nonSalesforce'
+                        ? 'bg-green-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Non-SF
+                  </button>
+                </div>
+              </div>
               <div className="space-y-4">
-                {Object.entries(FEXLE_SCRIPTS.objections).map(([objection, response], i) => (
+                {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.objections : FEXLE_SCRIPTS.objectionsNonSF).map(([objection, response], i) => (
                   <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
                     <div className="bg-red-50 px-5 py-3 font-medium text-red-800">🚫 "{objection}"</div>
                     <div className="px-5 py-4 text-sm bg-green-50 text-green-900">✅ {response}</div>
@@ -3634,8 +3480,8 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
       };
 
       // ==================== MODALS ====================
-      const AddLeadModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const addLeadModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="add-lead-modal">
           <div className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-6">➕ Add New Lead</h3>
             <div className="space-y-4">
@@ -3734,8 +3580,8 @@ Format your response as JSON with these keys: companyOverview, salesforceLikelih
         </div>
       );
 
-      const ImportModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const importModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="import-modal">
           <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
             <h3 className="text-xl font-bold mb-4">📥 Import Leads from CSV</h3>
             <p className="text-gray-600 mb-4">Upload a CSV file with columns: company, contact, title, phone, email, vertical, notes</p>
@@ -3756,25 +3602,8 @@ Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at confere
       );
 
       // Apollo.io Search Modal
-      const ApolloModal = () => {
-        const [selectedLeads, setSelectedLeads] = useState([]);
-        
-        const toggleLeadSelection = (id) => {
-          setSelectedLeads(prev => 
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-          );
-        };
-
-        const selectAll = () => {
-          if (selectedLeads.length === apolloResults.length) {
-            setSelectedLeads([]);
-          } else {
-            setSelectedLeads(apolloResults.map(l => l.id));
-          }
-        };
-
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const apolloModalContent = (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="apollo-modal">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
@@ -3887,38 +3716,38 @@ Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at confere
                     <>
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
-                          <button onClick={selectAll} className="text-sm text-blue-600 hover:underline">
-                            {selectedLeads.length === apolloResults.length ? 'Deselect All' : 'Select All'}
+                          <button onClick={selectAllApolloLeads} className="text-sm text-blue-600 hover:underline">
+                            {apolloSelectedLeads.length === apolloResults.length ? 'Deselect All' : 'Select All'}
                           </button>
-                          <span className="text-sm text-gray-500">{selectedLeads.length} selected</span>
+                          <span className="text-sm text-gray-500">{apolloSelectedLeads.length} selected</span>
                         </div>
                         <button
                           onClick={() => {
-                            importApolloLeads(selectedLeads);
-                            setSelectedLeads([]);
+                            importApolloLeads(apolloSelectedLeads);
+                            setApolloSelectedLeads([]);
                           }}
-                          disabled={selectedLeads.length === 0}
+                          disabled={apolloSelectedLeads.length === 0}
                           className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:bg-gray-300"
                         >
-                          Import {selectedLeads.length} Leads
+                          Import {apolloSelectedLeads.length} Leads
                         </button>
                       </div>
 
                       <div className="space-y-2">
                         {apolloResults.map(lead => (
-                          <div 
+                          <div
                             key={lead.id}
                             className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                              selectedLeads.includes(lead.id) ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-gray-300'
+                              apolloSelectedLeads.includes(lead.id) ? 'border-purple-400 bg-purple-50' : 'border-gray-200 hover:border-gray-300'
                             }`}
-                            onClick={() => toggleLeadSelection(lead.id)}
+                            onClick={() => toggleApolloLeadSelection(lead.id)}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-start gap-3">
                                 <input
                                   type="checkbox"
-                                  checked={selectedLeads.includes(lead.id)}
-                                  onChange={() => toggleLeadSelection(lead.id)}
+                                  checked={apolloSelectedLeads.includes(lead.id)}
+                                  onChange={() => toggleApolloLeadSelection(lead.id)}
                                   className="mt-1 rounded border-gray-300"
                                   onClick={(e) => e.stopPropagation()}
                                 />
@@ -3970,15 +3799,14 @@ Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at confere
             </div>
           </div>
         );
-      };
 
       // Source Statistics Modal
-      const SourceStatsModal = () => {
+      const sourceStatsModalContent = (() => {
         const stats = getSourceStats();
         const sortedSources = Object.entries(stats).sort((a, b) => b[1].total - a[1].total);
 
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="source-stats-modal">
             <div className="bg-white rounded-2xl p-8 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">📊 Lead Source Analytics</h3>
@@ -4055,11 +3883,11 @@ Acme Corp,John Smith,CEO,02 9555 1234,john@acme.com,manufacturing,Met at confere
             </div>
           </div>
         );
-      };
+      })();
 
       // Google Sheets Setup Guide Modal
-      const SheetsSetupModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const sheetsSetupModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="sheets-setup-modal">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
               <div className="flex items-center justify-between">
@@ -4313,12 +4141,12 @@ function jsonResponse(data) {
       );
 
       // Score Breakdown Modal
-      const ScoreBreakdownModal = () => {
+      const scoreBreakdownModalContent = (() => {
         if (!showScoreBreakdown) return null;
         const { score, breakdown } = calculateLeadScore(showScoreBreakdown);
 
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="score-breakdown-modal">
             <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">📊 Score Breakdown</h3>
@@ -4367,10 +4195,10 @@ function jsonResponse(data) {
             </div>
           </div>
         );
-      };
+      })();
 
-      const ResearchModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const researchModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="research-modal">
           <div className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               🔍 AI Research: {selectedLead?.company}
@@ -4520,8 +4348,8 @@ function jsonResponse(data) {
         </div>
       );
 
-      const SettingsModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const settingsModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="settings-modal">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <h3 className="text-xl font-bold mb-6">⚙️ Settings</h3>
             <div className="space-y-6">
@@ -4755,8 +4583,8 @@ function jsonResponse(data) {
         </div>
       );
 
-      const TaskModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const taskModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="task-modal">
           <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
             <h3 className="text-xl font-bold mb-6">➕ Add Task</h3>
             <div className="space-y-4">
@@ -4856,8 +4684,8 @@ function jsonResponse(data) {
         </div>
       );
 
-      const EmailModal = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const emailModalContent = (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="email-modal">
           <div className="bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold">✉️ Email Templates for {selectedLead?.company}</h3>
@@ -4938,87 +4766,8 @@ function jsonResponse(data) {
         </div>
       );
 
-      const MeetingModal = () => {
-        const initMeeting = () => {
-          if (selectedLead && !meetingDetails.title) {
-            const vertical = verticalData[selectedLead.vertical];
-            setMeetingDetails(prev => ({
-              ...prev,
-              title: `Fexle CEO Call - ${selectedLead.company}`,
-              description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations and how they might help ${selectedLead.company}.\n\nTopics:\n- ${vertical?.salesforceSolution || 'Salesforce'} capabilities\n- Agentforce and AI automation opportunities\n- Quick wins for ${vertical?.name || 'your industry'}`
-            }));
-          }
-        };
-
-        React.useEffect(() => {
-          initMeeting();
-        }, [selectedLead]);
-
-        const handleDownload = () => {
-          if (!meetingDetails.startDate || !meetingDetails.startTime) {
-            showNotification('Please select date and time', 'error');
-            return;
-          }
-
-          downloadICSFile({
-            ...meetingDetails,
-            attendeeName: selectedLead.contact,
-            attendeeEmail: selectedLead.email,
-            attendeeCompany: selectedLead.company
-          });
-
-          // Update lead status (mark dirty for sync)
-          const now = new Date().toISOString();
-          setLeads(leads.map(l =>
-            l.id === selectedLead.id
-              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: now, lastModified: now, _dirty: true }
-              : l
-          ));
-
-          // Create follow-up task for day before meeting
-          const meetingDate = new Date(meetingDetails.startDate);
-          const reminderDate = new Date(meetingDate);
-          reminderDate.setDate(reminderDate.getDate() - 1);
-
-          const taskNowTime = new Date().toISOString();
-          const reminderTask = {
-            id: Date.now(),
-            leadId: selectedLead.id,
-            type: 'meeting',
-            description: `Prep for CEO meeting with ${selectedLead.company}`,
-            dueDate: reminderDate.toISOString().split('T')[0],
-            dueTime: '09:00',
-            completed: false,
-            createdAt: taskNowTime,
-            lastModified: taskNowTime,
-            _version: 1,
-            _dirty: true
-          };
-          setTasks([...tasks, reminderTask]);
-
-          setShowMeetingModal(false);
-          showNotification('Calendar invite created! Send it to the prospect.');
-        };
-
-        // Generate quick date options
-        const getQuickDates = () => {
-          const dates = [];
-          const today = new Date();
-          for (let i = 1; i <= 10; i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() + i);
-            if (date.getDay() !== 0 && date.getDay() !== 6) { // Skip weekends
-              dates.push({
-                value: date.toISOString().split('T')[0],
-                label: date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
-              });
-            }
-          }
-          return dates.slice(0, 5);
-        };
-
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      const meetingModalContent = (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="meeting-modal">
             <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold">📅 Schedule CEO Meeting</h3>
@@ -5037,7 +4786,7 @@ function jsonResponse(data) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Quick Select Date</label>
                   <div className="flex flex-wrap gap-2">
-                    {getQuickDates().map(({ value, label }) => (
+                    {getMeetingQuickDates().map(({ value, label }) => (
                       <button
                         key={value}
                         onClick={() => setMeetingDetails({ ...meetingDetails, startDate: value })}
@@ -5135,7 +4884,7 @@ function jsonResponse(data) {
 
               <div className="mt-6 space-y-3">
                 <button
-                  onClick={handleDownload}
+                  onClick={handleMeetingDownload}
                   disabled={!meetingDetails.startDate || !meetingDetails.startTime}
                   className="w-full py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
@@ -5149,7 +4898,6 @@ function jsonResponse(data) {
             </div>
           </div>
         );
-      };
 
       // ==================== CEO CALENDAR COMPONENT ====================
       const CEOCalendar = () => {
@@ -5240,10 +4988,9 @@ function jsonResponse(data) {
             attendeeCompany: selectedLead.company
           });
 
-          const nowTs = new Date().toISOString();
-          setLeads(leads.map(l =>
-            l.id === selectedLead.id
-              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: nowTs, lastModified: nowTs, _dirty: true }
+          setLeads(leads.map(l => 
+            l.id === selectedLead.id 
+              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: new Date().toISOString() }
               : l
           ));
 
@@ -5251,21 +4998,17 @@ function jsonResponse(data) {
           const reminderDate = new Date(meetingDate);
           reminderDate.setDate(reminderDate.getDate() - 1);
 
-          const taskNow = new Date().toISOString();
           setTasks([...tasks, {
             id: Date.now(),
             leadId: selectedLead.id,
             type: 'meeting',
-            description: isScheduleChallenge
+            description: isScheduleChallenge 
               ? `⚠️ CONFIRM CEO AVAILABILITY: Meeting with ${selectedLead.company}`
               : `Prep for CEO meeting with ${selectedLead.company}`,
             dueDate: reminderDate.toISOString().split('T')[0],
             dueTime: '09:00',
             completed: false,
-            createdAt: taskNow,
-            lastModified: taskNow,
-            _version: 1,
-            _dirty: true
+            createdAt: new Date().toISOString()
           }]);
 
           setSelectedSlotForBooking(null);
@@ -5620,17 +5363,17 @@ function jsonResponse(data) {
           </main>
 
           {/* Modals */}
-          {showAddLead && <AddLeadModal />}
-          {showImportModal && <ImportModal />}
-          {showApolloModal && <ApolloModal />}
-          {showSourceStats && <SourceStatsModal />}
-          {showScoreBreakdown && <ScoreBreakdownModal />}
-          {showSheetsModal && <SheetsSetupModal />}
-          {showResearchModal && <ResearchModal />}
-          {showSettings && <SettingsModal />}
-          {showTaskModal && <TaskModal />}
-          {showEmailModal && <EmailModal />}
-          {showMeetingModal && <MeetingModal />}
+          {showAddLead && addLeadModalContent}
+          {showImportModal && importModalContent}
+          {showApolloModal && apolloModalContent}
+          {showSourceStats && sourceStatsModalContent}
+          {showScoreBreakdown && scoreBreakdownModalContent}
+          {showSheetsModal && sheetsSetupModalContent}
+          {showResearchModal && researchModalContent}
+          {showSettings && settingsModalContent}
+          {showTaskModal && taskModalContent}
+          {showEmailModal && emailModalContent}
+          {showMeetingModal && meetingModalContent}
           {showCalendarModal && <CEOCalendar />}
         </div>
       );
