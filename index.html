@@ -2789,6 +2789,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         'No Answer': 'bg-gray-100 text-gray-800'
       }[status] || 'bg-gray-100 text-gray-800');
 
+      // Helper: Check if lead has a meeting booked (checks both status AND bookedMeetings array)
+      const hasMeetingBooked = (lead) => {
+        return lead.status === 'CEO Meeting Booked' || bookedMeetings.some(m => m.leadId === lead.id);
+      };
+
       // Filter leads
       const filteredLeads = leads.filter(lead => {
         const matchesSearch = lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -3631,7 +3636,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                   </button>
                                 );
                               }
-                              if (lead.status === 'CEO Meeting Booked') {
+                              if (hasMeetingBooked(lead)) {
                                 return (
                                   <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium flex items-center gap-1">
                                     ✅ Booked
@@ -4088,17 +4093,17 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
-                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? 'text-green-600' : 'text-gray-400 hover:text-pink-600'}`}
-                          title={lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? 'Deck sent ✓' : 'Click to send deck'}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? 'text-green-600' : 'text-gray-400 hover:text-pink-600'}`}
+                          title={lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? 'Deck sent ✓' : 'Click to send deck'}
                         >
-                          {lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? '✓' : '○'}📧
+                          {lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? '✓' : '○'}📧
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveView('calendar'); }}
-                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'CEO Meeting Booked' ? 'text-green-600' : 'text-gray-400 hover:text-purple-600'}`}
-                          title={lead.status === 'CEO Meeting Booked' ? 'Meeting booked ✓' : 'Click to book meeting'}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${hasMeetingBooked(lead) ? 'text-green-600' : 'text-gray-400 hover:text-purple-600'}`}
+                          title={hasMeetingBooked(lead) ? 'Meeting booked ✓' : 'Click to book meeting'}
                         >
-                          {lead.status === 'CEO Meeting Booked' ? '✓' : '○'}📅
+                          {hasMeetingBooked(lead) ? '✓' : '○'}📅
                         </button>
                       </div>
                     </div>
@@ -4132,17 +4137,17 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </div>
                         <div className="w-6 h-0.5 bg-gray-300"></div>
                         {/* Step 3: Send Deck */}
-                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
-                            {selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? '✓' : '3'}
+                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
+                            {selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? '✓' : '3'}
                           </div>
                           <span className="text-xs">Deck</span>
                         </div>
                         <div className="w-6 h-0.5 bg-gray-300"></div>
                         {/* Step 4: Book Meeting */}
-                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'text-gray-400' : 'text-purple-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-purple-500 text-white'}`}>
-                            {selectedLead.status === 'CEO Meeting Booked' ? '✓' : '4'}
+                        <div className={`flex items-center gap-1.5 ${hasMeetingBooked(selectedLead) ? 'text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'text-gray-400' : 'text-purple-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-purple-500 text-white'}`}>
+                            {hasMeetingBooked(selectedLead) ? '✓' : '4'}
                           </div>
                           <span className="text-xs">Meeting</span>
                         </div>
@@ -4180,7 +4185,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                               </button>
                             );
                           }
-                          if (selectedLead.status === 'CEO Meeting Booked') {
+                          if (hasMeetingBooked(selectedLead)) {
                             return (
                               <span className="px-5 py-2.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-sm font-semibold border border-green-200 flex items-center gap-2">
                                 <span className="text-lg">✅</span> Meeting Booked!
