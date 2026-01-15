@@ -1685,12 +1685,12 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [onboardingStep, setOnboardingStep] = useState(0);
       const onboardingSteps = [
         { title: 'Welcome to Fexle Sales Engine!', description: 'This quick tour will show you the key features. The app follows a simple workflow: Add leads → Research → Call → Book CEO meetings.', target: null },
-        { title: '1. Add Your Leads', description: 'Click "Add Lead" or "Import CSV" to add prospects. You can also search Apollo.io for new leads.', target: 'add-lead-btn' },
-        { title: '2. Research with AI', description: 'Select a lead and click "AI Research" to get company insights, pain points, and talking points powered by Claude AI.', target: 'research-btn' },
-        { title: '3. Use the Call Scripts', description: 'The Playbooks tab has industry-specific scripts, objection handlers, and email templates to guide your calls.', target: 'playbooks-tab' },
-        { title: '4. Log Your Calls', description: 'After each call, log the outcome. The app will automatically create follow-up tasks based on the result.', target: 'call-section' },
-        { title: '5. Book CEO Meetings', description: 'When a prospect is interested, use the CEO Calendar to book a meeting and download an ICS file.', target: 'calendar-tab' },
-        { title: '6. Track Progress', description: 'The Today dashboard shows your priority tasks. Each lead card shows progress dots: Research → Call → Meeting.', target: 'today-tab' },
+        { title: '1. Add Your Leads', description: 'Click "Add Lead" to add prospects with company, contact name, and title. You can also import CSV or search Apollo.io.', target: 'add-lead-btn' },
+        { title: '2. Your Next Action', description: 'The Today dashboard shows your #1 priority lead with a Smart Next Action button. Use the arrows to see other priority leads.', target: 'today-tab' },
+        { title: '3. Call Center', description: 'Select a lead to see Quick Actions (Email, Schedule Meeting, Research, Playbook) and update the Stage & Milestones with one click.', target: 'call-center-tab' },
+        { title: '4. Use the Playbook', description: 'Click the Playbook button to open call scripts in a popup. Industry-specific openings, objection handlers, and closes.', target: null },
+        { title: '5. Track Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, CEO Meeting, Proposal. Multiple can be selected.', target: null },
+        { title: '6. Book CEO Meetings', description: 'Use Schedule CEO Meeting or check the CEO Meeting milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
         { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo) and Google Sheets sync for team collaboration. Good luck!', target: null }
       ];
       const [autoSync, setAutoSync] = useState(false);
