@@ -2789,9 +2789,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         'No Answer': 'bg-gray-100 text-gray-800'
       }[status] || 'bg-gray-100 text-gray-800');
 
-      // Helper: Check if lead has a meeting booked (checks both status AND bookedMeetings array)
+      // Helper: Check if lead has a meeting booked (checks status, bookedMeetings array, AND prep tasks)
       const hasMeetingBooked = (lead) => {
-        return lead.status === 'CEO Meeting Booked' || bookedMeetings.some(m => m.leadId === lead.id);
+        return lead.status === 'CEO Meeting Booked' ||
+               bookedMeetings.some(m => m.leadId === lead.id) ||
+               tasks.some(t => t.leadId === lead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes('ceo meeting')));
       };
 
       // Filter leads
@@ -3331,6 +3333,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             {prioritizedCalls.length > 0 && (() => {
               const nextLead = prioritizedCalls[0];
               const meeting = bookedMeetings.find(m => m.leadId === nextLead.id);
+              const hasMeeting = hasMeetingBooked(nextLead);
+              const meetingPrepTask = tasks.find(t => t.leadId === nextLead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes('ceo meeting')));
+              const meetingConfirmed = hasMeeting || meetingPrepTask;
               return (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-5 border-2 border-amber-200 shadow-sm">
                   <div className="flex items-center justify-between">
@@ -3358,8 +3363,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <div className={nextLead.lastContactDate ? 'text-green-600' : 'text-gray-400'}>
                           {nextLead.lastContactDate ? `✓ Called ${new Date(nextLead.lastContactDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : '○ Not called'}
                         </div>
-                        <div className={meeting ? 'text-purple-600 font-medium' : 'text-gray-400'}>
-                          {meeting ? `✓ CEO: ${new Date(meeting.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} ${meeting.time}` : '○ No meeting'}
+                        <div className={meetingConfirmed ? 'text-purple-600 font-medium' : 'text-gray-400'}>
+                          {meeting ? `✓ CEO: ${new Date(meeting.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} ${meeting.time}` : meetingConfirmed ? '✓ Meeting scheduled' : '○ No meeting'}
                         </div>
                       </div>
                       {/* Smart Next Action Button - Large */}
@@ -3392,7 +3397,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             </button>
                           );
                         }
-                        if (hasMeetingBooked(nextLead)) {
+                        if (meetingConfirmed) {
                           return (
                             <span className="px-6 py-3 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-xl text-base font-semibold border-2 border-green-200 flex items-center gap-2">
                               <span className="text-xl">✅</span> Meeting Booked!
