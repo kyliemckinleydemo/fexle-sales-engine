@@ -5316,9 +5316,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
                 <input type="text" value={newLead.company} onChange={(e) => setNewLead({...newLead, company: e.target.value})} placeholder="e.g., Acme Corp" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
-                <input type="text" value={newLead.contact} onChange={(e) => setNewLead({...newLead, contact: e.target.value})} placeholder="e.g., John Smith" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+                  <input type="text" value={newLead.contact} onChange={(e) => setNewLead({...newLead, contact: e.target.value})} placeholder="e.g., John Smith" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input type="text" value={newLead.title} onChange={(e) => setNewLead({...newLead, title: e.target.value})} placeholder="e.g., CEO, CIO, COO" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -5343,20 +5349,6 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 <div className="p-4 pt-2 space-y-4 border-t border-gray-100">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                      <input type="text" value={newLead.title} onChange={(e) => setNewLead({...newLead, title: e.target.value})} placeholder="e.g., CEO" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                      <select value={newLead.source} onChange={(e) => setNewLead({...newLead, source: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        {Object.entries(LEAD_SOURCES).map(([key, src]) => (
-                          <option key={key} value={key}>{src.icon} {src.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Vertical</label>
                       <select value={newLead.vertical} onChange={(e) => setNewLead({...newLead, vertical: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         {Object.entries(verticalData).map(([key, data]) => (
@@ -5375,15 +5367,25 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
-                    <select value={newLead.revenue} onChange={(e) => setNewLead({...newLead, revenue: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="Under $5M">Under $5M</option>
-                      <option value="$5M-$20M">$5M-$20M</option>
-                      <option value="$20M-$50M">$20M-$50M</option>
-                      <option value="$50M-$200M">$50M-$200M</option>
-                      <option value="$200M+">$200M+</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
+                      <select value={newLead.revenue} onChange={(e) => setNewLead({...newLead, revenue: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Under $5M">Under $5M</option>
+                        <option value="$5M-$20M">$5M-$20M</option>
+                        <option value="$20M-$50M">$20M-$50M</option>
+                        <option value="$50M-$200M">$50M-$200M</option>
+                        <option value="$200M+">$200M+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                      <select value={newLead.source} onChange={(e) => setNewLead({...newLead, source: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {Object.entries(LEAD_SOURCES).map(([key, src]) => (
+                          <option key={key} value={key}>{src.icon} {src.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
