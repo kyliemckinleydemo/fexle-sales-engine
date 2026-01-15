@@ -2762,23 +2762,23 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         if (selectedLead && callOutcome) {
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
           setLeads(leads.map(lead =>
-            lead.id === selectedLead.id 
-              ? { 
-                  ...lead, 
-                  status: callOutcome, 
+            lead.id === selectedLead.id
+              ? {
+                  ...lead,
+                  status: callOutcome,
                   lastContact: 'Just now',
                   lastContactDate: new Date().toISOString(),
                   notes: callNotes ? `[${timestamp}] ${callNotes}\n\n${lead.notes}` : lead.notes
                 }
               : lead
           ));
-          
+
           // Auto-create follow-up task based on outcome
           if (['Deck Sent', 'Follow Up', 'No Answer'].includes(callOutcome)) {
             const followUpDays = { 'Deck Sent': 7, 'Follow Up': 3, 'No Answer': 2 };
             const dueDate = new Date();
             dueDate.setDate(dueDate.getDate() + followUpDays[callOutcome]);
-            
+
             const newFollowUp = {
               id: Date.now(),
               leadId: selectedLead.id,
@@ -2792,7 +2792,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             setTasks([...tasks, newFollowUp]);
             showNotification(`Follow-up task created for ${dueDate.toLocaleDateString('en-AU')}`);
           }
-          
+
           // Auto-mark as complete in today's call list
           if (todayCallList.some(item => item.leadId === selectedLead.id)) {
             markCallListItemComplete(selectedLead.id);
@@ -2801,6 +2801,31 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           showNotification('Call logged successfully');
           setCallNotes('');
           setCallOutcome('');
+        }
+      };
+
+      // Add call notes without changing status
+      const addCallNotes = () => {
+        if (selectedLead && callNotes.trim()) {
+          const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
+          const updatedLead = {
+            ...selectedLead,
+            lastContact: 'Just now',
+            lastContactDate: new Date().toISOString(),
+            notes: `[${timestamp}] ${callNotes}\n\n${selectedLead.notes || ''}`
+          };
+          setLeads(leads.map(lead =>
+            lead.id === selectedLead.id ? updatedLead : lead
+          ));
+          setSelectedLead(updatedLead);
+
+          // Auto-mark as complete in today's call list
+          if (todayCallList.some(item => item.leadId === selectedLead.id)) {
+            markCallListItemComplete(selectedLead.id);
+          }
+
+          showNotification('Notes added');
+          setCallNotes('');
         }
       };
 
@@ -4252,6 +4277,79 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     </div>
                   </div>
 
+                  {/* Quick Actions & Current State */}
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Quick Actions */}
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h3>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => { setGeneratedEmail(''); setSelectedEmailTemplate(null); setShowEmailModal(true); }}
+                            className="px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-medium shadow-sm"
+                          >
+                            ✉️ Email
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMeetingDetails({
+                                startDate: '',
+                                startTime: '14:00',
+                                duration: 20,
+                                location: 'Video Call - Link to follow',
+                                title: `Fexle CEO Call - ${selectedLead.company}`,
+                                description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                              });
+                              setShowMeetingModal(true);
+                            }}
+                            className="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-medium shadow-sm"
+                          >
+                            📅 Schedule CEO Meeting
+                          </button>
+                          <button
+                            onClick={() => performResearch(selectedLead)}
+                            className="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all text-sm font-medium shadow-sm"
+                          >
+                            🔍 {selectedLead.research ? 'Refresh' : 'Research'}
+                          </button>
+                          <button
+                            onClick={openPlaybookPopup}
+                            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                          >
+                            🪟 Scripts
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Current State */}
+                      <div>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current State</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {['New Lead', 'Qualified', 'Call Scheduled', 'Discovery Call Done', 'Deck Sent', 'CEO Meeting Booked', 'Follow Up', 'Closed Won', 'Closed Lost'].map(status => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                const updatedLeads = leads.map(l =>
+                                  l.id === selectedLead.id ? { ...l, status } : l
+                                );
+                                setLeads(updatedLeads);
+                                setSelectedLead({ ...selectedLead, status });
+                                showNotification(`Status updated to ${status}`);
+                              }}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                selectedLead.status === status
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                              }`}
+                            >
+                              {status}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Activity Summary */}
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-3">
@@ -4340,129 +4438,19 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       <div className="text-sm whitespace-pre-line">{selectedLead.notes}</div>
                     </div>
 
-                    {/* Saved Research Panel */}
-                    {selectedLead.research && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-purple-600 text-lg">🔍</span>
-                            <span className="font-semibold text-purple-900">Saved AI Research</span>
-                            {selectedLead.research.priorityLevel && (
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                selectedLead.research.priorityLevel === 'HIGH' ? 'bg-red-100 text-red-700' :
-                                selectedLead.research.priorityLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {selectedLead.research.priorityLevel}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-purple-600">
-                              {selectedLead.research.timestamp ?
-                                `Researched ${new Date(selectedLead.research.timestamp).toLocaleDateString('en-AU')}` :
-                                'Saved'}
-                            </span>
-                            <button
-                              onClick={() => { setResearchResult(selectedLead.research); setShowResearchModal(true); }}
-                              className="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700"
-                            >
-                              View Full
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Quick Research Summary */}
-                        <div className="space-y-2 text-sm">
-                          {selectedLead.research.companyOverview && (
-                            <p className="text-gray-700">{selectedLead.research.companyOverview.substring(0, 200)}{selectedLead.research.companyOverview.length > 200 ? '...' : ''}</p>
-                          )}
-
-                          {selectedLead.research.talkingPoints && selectedLead.research.talkingPoints.length > 0 && (
-                            <div className="mt-2">
-                              <span className="text-xs font-medium text-purple-700 uppercase">Key Talking Points:</span>
-                              <ul className="mt-1 space-y-1">
-                                {selectedLead.research.talkingPoints.slice(0, 3).map((point, i) => (
-                                  <li key={i} className="text-gray-700 flex items-start gap-2">
-                                    <span className="text-purple-500">•</span>
-                                    <span>{point}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {selectedLead.research.recommendedOpening && (
-                            <div className="mt-2 p-2 bg-white rounded-lg border border-purple-100">
-                              <span className="text-xs font-medium text-purple-700">Recommended Opening: </span>
-                              <span className="text-gray-700">{selectedLead.research.recommendedOpening}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <button
-                        onClick={() => performResearch(selectedLead)}
-                        className={`px-4 py-2 rounded-lg transition-all text-sm font-medium shadow-lg ${
-                          selectedLead.research
-                            ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-purple-200'
-                            : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-purple-200'
-                        }`}
-                      >
-                        🔍 {selectedLead.research ? 'Refresh Research' : 'AI Research'}
-                      </button>
-                      <button
-                        onClick={() => { setGeneratedEmail(''); setSelectedEmailTemplate(null); setShowEmailModal(true); }}
-                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-medium shadow-lg shadow-green-200"
-                      >
-                        ✉️ Email Templates
-                      </button>
-                      <button
-                        onClick={() => {
-                          setMeetingDetails({
-                            startDate: '',
-                            startTime: '14:00',
-                            duration: 20,
-                            location: 'Video Call - Link to follow',
-                            title: `Fexle CEO Call - ${selectedLead.company}`,
-                            description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations and how they might help ${selectedLead.company}.`
-                          });
-                          setShowMeetingModal(true);
-                        }}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-medium shadow-lg shadow-orange-200"
-                      >
-                        📅 Schedule CEO Meeting
-                      </button>
-                      <button
-                        onClick={openPlaybookPopup}
-                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all text-sm font-medium shadow-lg shadow-pink-200"
-                        title="Open playbook in separate window for reference during calls"
-                      >
-                        🪟 Pop Out Scripts
-                      </button>
-                      <a href={`https://www.google.com/search?q=${encodeURIComponent(selectedLead.company + ' Sydney')}`} target="_blank" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a href={`https://www.google.com/search?q=${encodeURIComponent(selectedLead.company + ' Sydney')}`} target="_blank" className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
                         🌐 Google
                       </a>
-                      <a href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(selectedLead.company)}`} target="_blank" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                      <a href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(selectedLead.company)}`} target="_blank" className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
                         💼 LinkedIn
                       </a>
+                      {selectedLead.website && (
+                        <a href={selectedLead.website} target="_blank" className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                          🔗 Website
+                        </a>
+                      )}
                     </div>
-
-                    {/* Show saved research if available */}
-                    {selectedLead.research && (
-                      <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-purple-900">📊 AI Research Summary</h4>
-                          <span className="text-xs text-purple-600">{new Date(selectedLead.research.timestamp).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-sm text-purple-800 mb-2">{selectedLead.research.recommendedApproach}</p>
-                        <button onClick={() => { setResearchResult(selectedLead.research); setShowResearchModal(true); }} className="text-sm text-purple-600 hover:underline">
-                          View full research →
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {/* Call Script Toggle */}
@@ -4768,34 +4756,25 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   )}
 
                   {/* Call Logging */}
-                  <div id="call-section" className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-semibold text-gray-900 mb-4">📝 Log Call Outcome</h3>
-                    <div className="grid grid-cols-4 gap-2 mb-4">
-                      {['Call Scheduled', 'Discovery Call Done', 'Qualified', 'Deck Sent', 'Follow Up', 'No Answer', 'Closed Won', 'Closed Lost'].map(status => (
-                        <button
-                          key={status}
-                          onClick={() => setCallOutcome(status)}
-                          className={`p-2 rounded-lg text-xs font-medium border transition-colors ${
-                            callOutcome === status ? 'bg-blue-100 border-blue-400 text-blue-800' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
+                  <div id="call-section" className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <span>📝</span> Call Notes
+                    </h3>
+                    <div className="flex gap-3">
+                      <textarea
+                        value={callNotes}
+                        onChange={(e) => setCallNotes(e.target.value)}
+                        placeholder="What did you discuss? Next steps? Which script worked?"
+                        className="flex-1 p-3 border border-gray-200 rounded-lg text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={addCallNotes}
+                        disabled={!callNotes.trim()}
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
+                      >
+                        💾 Save
+                      </button>
                     </div>
-                    <textarea
-                      value={callNotes}
-                      onChange={(e) => setCallNotes(e.target.value)}
-                      placeholder="Call notes - what did you discuss? Next steps? Which script worked?"
-                      className="w-full p-3 border border-gray-200 rounded-lg text-sm h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={logCall}
-                      disabled={!callOutcome}
-                      className="mt-3 w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                      💾 Save Call Log
-                    </button>
                   </div>
                 </>
               ) : (
