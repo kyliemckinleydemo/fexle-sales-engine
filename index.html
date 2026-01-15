@@ -1639,6 +1639,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [selectedVertical, setSelectedVertical] = useState('healthcare');
       const [leads, setLeads] = useState([]);
       const [selectedLead, setSelectedLead] = useState(null);
+      const [heroLeadIndex, setHeroLeadIndex] = useState(0);
       const [showAddLead, setShowAddLead] = useState(false);
       const [showImportModal, setShowImportModal] = useState(false);
       const [showApolloModal, setShowApolloModal] = useState(false);
@@ -3276,7 +3277,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
 
             {/* YOUR NEXT ACTION - Hero Section */}
             {prioritizedCalls.length > 0 && (() => {
-              const nextLead = prioritizedCalls[0];
+              const safeIndex = Math.min(heroLeadIndex, prioritizedCalls.length - 1);
+              const nextLead = prioritizedCalls[safeIndex];
               const meeting = bookedMeetings.find(m => m.leadId === nextLead.id);
               const hasMeeting = hasMeetingBooked(nextLead);
               const meetingPrepTask = tasks.find(t => t.leadId === nextLead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes('ceo meeting')));
@@ -3284,12 +3286,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               return (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-5 border-2 border-amber-200 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                    {/* Clickable lead info - opens Call Center */}
+                    <div
+                      className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                      onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); }}
+                    >
                       <div className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center text-xl font-bold shadow-md">
                         ⚡
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Your Next Action</div>
+                        <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Your Next Action <span className="text-amber-500 font-normal">({safeIndex + 1} of {prioritizedCalls.length})</span></div>
                         <div className="text-xl font-bold text-gray-900">{nextLead.company}</div>
                         <div className="text-sm text-gray-600">{nextLead.contact} • {nextLead.title}</div>
                       </div>
@@ -3355,6 +3361,25 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           </button>
                         );
                       })()}
+                      {/* Navigation buttons */}
+                      <div className="flex items-center gap-1 ml-2">
+                        <button
+                          onClick={() => setHeroLeadIndex(prev => Math.max(0, prev - 1))}
+                          disabled={safeIndex === 0}
+                          className={`p-2 rounded-lg transition-colors ${safeIndex === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-amber-100 hover:text-amber-700'}`}
+                          title="Previous lead"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <button
+                          onClick={() => setHeroLeadIndex(prev => Math.min(prioritizedCalls.length - 1, prev + 1))}
+                          disabled={safeIndex >= prioritizedCalls.length - 1}
+                          className={`p-2 rounded-lg transition-colors ${safeIndex >= prioritizedCalls.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-amber-100 hover:text-amber-700'}`}
+                          title="Next lead"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
