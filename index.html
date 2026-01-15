@@ -4547,8 +4547,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-xl">📞</span>
                         <input
                           type="tel"
-                          value={selectedLead.phone || ''}
-                          onChange={(e) => {
+                          defaultValue={selectedLead.phone || ''}
+                          key={`phone-${selectedLead.id}`}
+                          onBlur={(e) => {
                             const updatedLead = { ...selectedLead, phone: e.target.value };
                             setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
                             setSelectedLead(updatedLead);
@@ -4570,8 +4571,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-gray-400">✉️</span>
                         <input
                           type="email"
-                          value={selectedLead.email || ''}
-                          onChange={(e) => {
+                          defaultValue={selectedLead.email || ''}
+                          key={`email-${selectedLead.id}`}
+                          onBlur={(e) => {
                             const updatedLead = { ...selectedLead, email: e.target.value };
                             setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
                             setSelectedLead(updatedLead);
