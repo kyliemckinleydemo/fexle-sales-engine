@@ -4011,10 +4011,36 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className={`px-1.5 py-0.5 rounded text-xs ${getVerticalColor(lead.vertical)}`}>{verticalData[lead.vertical]?.icon}</span>
                         <span className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(lead.status)}`}>{lead.status}</span>
                       </div>
-                      <div className="flex items-center gap-1" title="Progress: Research → Call → Meeting">
-                        <span className={`w-2 h-2 rounded-full ${lead.research ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.research ? 'Researched' : 'Not researched'}></span>
-                        <span className={`w-2 h-2 rounded-full ${lead.lastContactDate ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.lastContactDate ? 'Called' : 'Not called'}></span>
-                        <span className={`w-2 h-2 rounded-full ${lead.status === 'CEO Meeting Booked' ? 'bg-green-500' : 'bg-gray-300'}`} title={lead.status === 'CEO Meeting Booked' ? 'Meeting booked' : 'No meeting'}></span>
+                      {/* Workflow Checklist - Clickable */}
+                      <div className="flex items-center gap-0.5 text-xs" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); if (!lead.research) performResearch(lead); }}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.research ? 'text-green-600' : 'text-gray-400 hover:text-blue-600'}`}
+                          title={lead.research ? 'Researched ✓' : 'Click to research'}
+                        >
+                          {lead.research ? '✓' : '○'}🔍
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.lastContactDate ? 'text-green-600' : 'text-gray-400 hover:text-green-600'}`}
+                          title={lead.lastContactDate ? 'Called ✓' : 'Click to call'}
+                        >
+                          {lead.lastContactDate ? '✓' : '○'}📞
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? 'text-green-600' : 'text-gray-400 hover:text-pink-600'}`}
+                          title={lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? 'Deck sent ✓' : 'Click to send deck'}
+                        >
+                          {lead.status === 'Deck Sent' || lead.status === 'CEO Meeting Booked' ? '✓' : '○'}📧
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveView('calendar'); }}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'CEO Meeting Booked' ? 'text-green-600' : 'text-gray-400 hover:text-purple-600'}`}
+                          title={lead.status === 'CEO Meeting Booked' ? 'Meeting booked ✓' : 'Click to book meeting'}
+                        >
+                          {lead.status === 'CEO Meeting Booked' ? '✓' : '○'}📅
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -4029,48 +4055,92 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   {/* Guided Workflow Panel */}
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         {/* Step 1: Research */}
-                        <div className={`flex items-center gap-2 ${selectedLead.research ? 'text-green-600' : 'text-blue-600 font-medium'}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.research ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white animate-pulse'}`}>
+                        <div className={`flex items-center gap-1.5 ${selectedLead.research ? 'text-green-600' : 'text-blue-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.research ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white animate-pulse'}`}>
                             {selectedLead.research ? '✓' : '1'}
                           </div>
-                          <span className="text-sm">Research</span>
+                          <span className="text-xs">Research</span>
                         </div>
-                        <div className="w-8 h-0.5 bg-gray-300"></div>
+                        <div className="w-6 h-0.5 bg-gray-300"></div>
                         {/* Step 2: Call */}
-                        <div className={`flex items-center gap-2 ${selectedLead.lastContactDate ? 'text-green-600' : !selectedLead.research ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.lastContactDate ? 'bg-green-100 text-green-600' : !selectedLead.research ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
+                        <div className={`flex items-center gap-1.5 ${selectedLead.lastContactDate ? 'text-green-600' : !selectedLead.research ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.lastContactDate ? 'bg-green-100 text-green-600' : !selectedLead.research ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
                             {selectedLead.lastContactDate ? '✓' : '2'}
                           </div>
-                          <span className="text-sm">Call</span>
+                          <span className="text-xs">Call</span>
                         </div>
-                        <div className="w-8 h-0.5 bg-gray-300"></div>
-                        {/* Step 3: Book Meeting */}
-                        <div className={`flex items-center gap-2 ${selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
-                            {selectedLead.status === 'CEO Meeting Booked' ? '✓' : '3'}
+                        <div className="w-6 h-0.5 bg-gray-300"></div>
+                        {/* Step 3: Send Deck */}
+                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
+                            {selectedLead.status === 'Deck Sent' || selectedLead.status === 'CEO Meeting Booked' ? '✓' : '3'}
                           </div>
-                          <span className="text-sm">Book CEO</span>
+                          <span className="text-xs">Deck</span>
+                        </div>
+                        <div className="w-6 h-0.5 bg-gray-300"></div>
+                        {/* Step 4: Book Meeting */}
+                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'CEO Meeting Booked' ? 'text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'text-gray-400' : 'text-purple-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'CEO Meeting Booked' ? 'bg-green-100 text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-purple-500 text-white'}`}>
+                            {selectedLead.status === 'CEO Meeting Booked' ? '✓' : '4'}
+                          </div>
+                          <span className="text-xs">Meeting</span>
                         </div>
                       </div>
-                      {/* Next Action Button */}
+                      {/* Smart Next Action Button */}
                       <div>
-                        {!selectedLead.research ? (
-                          <button onClick={() => performResearch(selectedLead)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                            <span>🔍</span> Research Company
-                          </button>
-                        ) : !selectedLead.lastContactDate ? (
-                          <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                            <span>📞</span> Make Call
-                          </button>
-                        ) : selectedLead.status !== 'CEO Meeting Booked' ? (
-                          <button onClick={() => setActiveView('calendar')} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
-                            <span>📅</span> Book CEO Meeting
-                          </button>
-                        ) : (
-                          <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">✅ Workflow Complete</span>
-                        )}
+                        {(() => {
+                          // Determine next action based on lead state
+                          if (!selectedLead.research) {
+                            return (
+                              <button onClick={() => performResearch(selectedLead)} className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span className="text-lg">🔍</span> Research Company
+                              </button>
+                            );
+                          }
+                          if (!selectedLead.lastContactDate) {
+                            return (
+                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span className="text-lg">📞</span> Make First Call
+                              </button>
+                            );
+                          }
+                          if (selectedLead.status === 'Deck Sent') {
+                            // Deck was sent - next action is follow up
+                            return (
+                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span className="text-lg">🔄</span> Follow Up on Deck
+                              </button>
+                            );
+                          }
+                          if (selectedLead.status === 'Follow Up' || selectedLead.status === 'No Answer') {
+                            return (
+                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span className="text-lg">📞</span> Follow Up Call
+                              </button>
+                            );
+                          }
+                          if (selectedLead.status === 'CEO Meeting Booked') {
+                            return (
+                              <span className="px-5 py-2.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-sm font-semibold border border-green-200 flex items-center gap-2">
+                                <span className="text-lg">✅</span> Meeting Booked!
+                              </span>
+                            );
+                          }
+                          // Called but not Deck Sent and not Meeting Booked - offer choices
+                          return (
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span>📧</span> Send Deck
+                              </button>
+                              <span className="text-gray-400 text-xs">or</span>
+                              <button onClick={() => setActiveView('calendar')} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <span>📅</span> Book Meeting
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
