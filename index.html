@@ -4563,9 +4563,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     </div>
                   )}
 
-                  {/* Expandable Research Panel - Call Prep */}
+                  {/* Expandable Research Panel - Call Prep (auto-opens when research exists) */}
                   {selectedLead.research && (
-                    <details className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 overflow-hidden">
+                    <details open className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 overflow-hidden">
                       <summary className="px-5 py-4 cursor-pointer hover:bg-purple-100/50 transition-colors flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <span className="text-purple-600 text-lg">🔍</span>
