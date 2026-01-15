@@ -3747,7 +3747,11 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       const lead = getLeadForTask(task);
                       const daysUntil = Math.ceil((new Date(task.dueDate) - today) / (1000 * 60 * 60 * 24));
                       return (
-                        <div key={task.id} className="p-3 hover:bg-gray-50">
+                        <div
+                          key={task.id}
+                          className={`p-3 hover:bg-gray-50 ${lead ? 'cursor-pointer' : ''}`}
+                          onClick={() => lead && (setSelectedLead(lead), setActiveTab('callCenter'))}
+                        >
                           <div className="flex items-center gap-2">
                             <TaskTypeIcon type={task.type} />
                             <div className="min-w-0 flex-1">
