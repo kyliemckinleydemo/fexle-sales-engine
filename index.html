@@ -2710,6 +2710,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
                tasks.some(t => t.leadId === lead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes('ceo meeting')));
       };
 
+      // Helper: Check if deck has been sent (checks milestones or legacy status)
+      const hasDeckSent = (lead) => {
+        return lead.milestones?.deckSent || lead.status === 'Deck Sent';
+      };
+
       // Filter leads
       const filteredLeads = leads.filter(lead => {
         const matchesSearch = lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -3243,7 +3248,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
           hotLeads: leads.filter(l => l.score >= 80).length,
           tasksToday: todaysTasks.explicit.length + todaysTasks.implicit.length,
           completedToday: tasks.filter(t => t.completed && t.completedAt?.startsWith(today.toISOString().split('T')[0])).length,
-          decksSent: leads.filter(l => l.status === 'Deck Sent').length,
+          decksSent: leads.filter(l => hasDeckSent(l)).length,
           meetingsBooked: leads.filter(l => l.status === 'CEO Meeting Booked').length
         };
 
@@ -3359,7 +3364,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             </button>
                           );
                         }
-                        if (nextLead.status === 'Deck Sent') {
+                        if (hasDeckSent(nextLead)) {
                           return (
                             <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); }} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-base font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
                               <span className="text-xl">🔄</span> Follow Up on Deck
@@ -3706,7 +3711,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                   </button>
                                 );
                               }
-                              if (lead.status === 'Deck Sent') {
+                              if (hasDeckSent(lead)) {
                                 return (
                                   <button onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-1">
                                     🔄 Follow Up
@@ -4161,10 +4166,10 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); }}
-                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? 'text-green-600' : 'text-gray-400 hover:text-pink-600'}`}
-                          title={lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? 'Deck sent ✓' : 'Click to send deck'}
+                          className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${hasDeckSent(lead) || hasMeetingBooked(lead) ? 'text-green-600' : 'text-gray-400 hover:text-pink-600'}`}
+                          title={hasDeckSent(lead) || hasMeetingBooked(lead) ? 'Deck sent ✓' : 'Click to send deck'}
                         >
-                          {lead.status === 'Deck Sent' || hasMeetingBooked(lead) ? '✓' : '○'}📧
+                          {hasDeckSent(lead) || hasMeetingBooked(lead) ? '✓' : '○'}📧
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveView('calendar'); }}
@@ -4205,9 +4210,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </div>
                         <div className="w-6 h-0.5 bg-gray-300"></div>
                         {/* Step 3: Send Deck */}
-                        <div className={`flex items-center gap-1.5 ${selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
-                            {selectedLead.status === 'Deck Sent' || hasMeetingBooked(selectedLead) ? '✓' : '3'}
+                        <div className={`flex items-center gap-1.5 ${hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
+                            {hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? '✓' : '3'}
                           </div>
                           <span className="text-xs">Deck</span>
                         </div>
@@ -4238,7 +4243,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                               </button>
                             );
                           }
-                          if (selectedLead.status === 'Deck Sent') {
+                          if (hasDeckSent(selectedLead) && !hasMeetingBooked(selectedLead)) {
                             // Deck was sent - next action is follow up
                             return (
                               <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
@@ -4314,18 +4319,18 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           </button>
                           <button
                             onClick={openPlaybookPopup}
-                            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                            className="px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all text-sm font-medium shadow-sm"
                           >
-                            🪟 Scripts
+                            📋 Playbook
                           </button>
                         </div>
                       </div>
 
                       {/* Current State */}
                       <div>
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current State</h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          {['New Lead', 'Qualified', 'Call Scheduled', 'Discovery Call Done', 'Deck Sent', 'CEO Meeting Booked', 'Follow Up', 'Closed Won', 'Closed Lost'].map(status => (
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Stage</h3>
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {['New Lead', 'Qualified', 'Follow Up', 'Closed Won', 'Closed Lost'].map(status => (
                             <button
                               key={status}
                               onClick={() => {
@@ -4334,7 +4339,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                 );
                                 setLeads(updatedLeads);
                                 setSelectedLead({ ...selectedLead, status });
-                                showNotification(`Status updated to ${status}`);
+                                showNotification(`Stage: ${status}`);
                               }}
                               className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                                 selectedLead.status === status
@@ -4345,6 +4350,95 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                               {status}
                             </button>
                           ))}
+                        </div>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Milestones</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {/* Discovery Call */}
+                          <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
+                            selectedLead.milestones?.discoveryCall
+                              ? 'bg-green-100 border-green-400 text-green-800'
+                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedLead.milestones?.discoveryCall || false}
+                              onChange={(e) => {
+                                const milestones = { ...selectedLead.milestones, discoveryCall: e.target.checked };
+                                const updatedLead = { ...selectedLead, milestones };
+                                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                                setSelectedLead(updatedLead);
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            Discovery Call
+                          </label>
+                          {/* Deck Sent */}
+                          <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
+                            selectedLead.milestones?.deckSent
+                              ? 'bg-pink-100 border-pink-400 text-pink-800'
+                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedLead.milestones?.deckSent || false}
+                              onChange={(e) => {
+                                const milestones = { ...selectedLead.milestones, deckSent: e.target.checked };
+                                const updatedLead = { ...selectedLead, milestones };
+                                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                                setSelectedLead(updatedLead);
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            Deck Sent
+                          </label>
+                          {/* CEO Meeting */}
+                          <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
+                            hasMeetingBooked(selectedLead)
+                              ? 'bg-purple-100 border-purple-400 text-purple-800'
+                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={hasMeetingBooked(selectedLead)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setMeetingDetails({
+                                    startDate: '',
+                                    startTime: '14:00',
+                                    duration: 20,
+                                    location: 'Video Call - Link to follow',
+                                    title: `Fexle CEO Call - ${selectedLead.company}`,
+                                    description: `20-minute conversation with Fexle CEO.`
+                                  });
+                                  setShowMeetingModal(true);
+                                } else {
+                                  setBookedMeetings(bookedMeetings.filter(m => m.leadId !== selectedLead.id));
+                                  showNotification('CEO Meeting removed');
+                                }
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            CEO Meeting
+                          </label>
+                          {/* Proposal Sent */}
+                          <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
+                            selectedLead.milestones?.proposalSent
+                              ? 'bg-amber-100 border-amber-400 text-amber-800'
+                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedLead.milestones?.proposalSent || false}
+                              onChange={(e) => {
+                                const milestones = { ...selectedLead.milestones, proposalSent: e.target.checked };
+                                const updatedLead = { ...selectedLead, milestones };
+                                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                                setSelectedLead(updatedLead);
+                              }}
+                              className="w-3 h-3 rounded"
+                            />
+                            Proposal Sent
+                          </label>
                         </div>
                       </div>
                     </div>
