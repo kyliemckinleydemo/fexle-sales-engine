@@ -2794,7 +2794,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const matchesSearch = lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
                              lead.contact.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesVertical = filterVertical === 'all' || lead.vertical === filterVertical;
-        const matchesStatus = filterStatus === 'all' || lead.status === filterStatus;
+        const matchesStatus = filterStatus === 'all' ||
+          (filterStatus === 'active' ? (lead.lastContactDate && !['Closed Won', 'Closed Lost'].includes(lead.status)) : lead.status === filterStatus);
         const matchesSource = filterSource === 'all' || lead.source === filterSource;
         return matchesSearch && matchesVertical && matchesStatus && matchesSource;
       });
@@ -3975,6 +3976,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   </select>
                   <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs">
                     <option value="all">All Status</option>
+                    <option value="active">⚡ Active Leads</option>
                     {['New Lead', 'Qualified', 'Call Scheduled', 'Discovery Call Done', 'Deck Sent', 'CEO Meeting Booked', 'Follow Up'].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -4005,7 +4007,20 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </button>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 mb-2">{lead.contact} • {lead.title}</div>
+                    <div className="text-xs text-gray-500 mb-1">{lead.contact} • {lead.title}</div>
+                    {/* Quick Status Line */}
+                    {(lead.lastContactDate || bookedMeetings.find(m => m.leadId === lead.id)) && (
+                      <div className="text-xs text-gray-400 mb-2 flex items-center gap-2 flex-wrap">
+                        {lead.lastContactDate && (
+                          <span>📞 {new Date(lead.lastContactDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} → {lead.status}</span>
+                        )}
+                        {bookedMeetings.find(m => m.leadId === lead.id) && (
+                          <span className="text-purple-600 font-medium">
+                            📅 CEO: {new Date(bookedMeetings.find(m => m.leadId === lead.id).date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} {bookedMeetings.find(m => m.leadId === lead.id).time}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className={`px-1.5 py-0.5 rounded text-xs ${getVerticalColor(lead.vertical)}`}>{verticalData[lead.vertical]?.icon}</span>
