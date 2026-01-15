@@ -329,9 +329,24 @@ The Google Sheets integration enables your team to share leads and tasks in real
 
 The Today view shows your daily priorities and key metrics.
 
-### Priority Queue
+### Priority Leads
 
-Tasks are automatically prioritized:
+The **🔥 Priority Leads** section shows your top 10 leads sorted by priority and score. Each lead displays a **Smart Next Action button** that changes based on the lead's current workflow state:
+
+| Button | Color | Meaning |
+|--------|-------|---------|
+| 🔍 Research | Blue | Lead needs AI research first |
+| 📞 Call | Green | Researched, ready for first call |
+| 🔄 Follow Up | Orange | Deck was sent, needs follow-up |
+| 📞 Follow Up | Orange | Status is Follow Up or No Answer |
+| 📅 Book Meeting | Purple | Called, ready to book CEO meeting |
+| ✅ Booked | Green badge | CEO meeting already scheduled |
+
+Clicking the button takes you directly to the appropriate action.
+
+### Priority Levels
+
+Leads are automatically prioritized:
 
 1. **Priority 1** (Red): Hot leads (85+), CEO meetings booked, calls scheduled
 2. **Priority 2** (Orange): Warm leads in follow-up, qualified leads
@@ -410,26 +425,59 @@ The left panel shows all leads with:
 - Company name and contact
 - Title and vertical
 - Score badge (color-coded)
+- **Quick Status Line**: Shows last call date, outcome, and CEO meeting date if scheduled
 - Status badge
-- Source indicator
-- Last contact date
+- **Workflow Checklist**: Clickable icons showing progress (🔍📞📧📅)
 - Delete button (hover to reveal)
+
+### Workflow Checklist
+
+Each lead card shows a mini checklist with clickable icons:
+
+| Icon | Meaning | Click Action |
+|------|---------|--------------|
+| ○🔍 / ✓🔍 | Research pending/done | Triggers AI research |
+| ○📞 / ✓📞 | Call pending/done | Opens lead detail |
+| ○📧 / ✓📧 | Deck pending/sent | Opens lead detail |
+| ○📅 / ✓📅 | Meeting pending/booked | Opens CEO Calendar |
+
+Icons turn green with checkmarks as you complete each step. The checklist auto-updates based on lead state.
 
 ### Filters
 
 | Filter | Options |
 |--------|---------|
 | **Search** | Search by company or contact name |
-| **Vertical** | All, Healthcare, Financial, Manufacturing, Professional Services |
-| **Status** | All, New Lead, Qualified, Deck Sent, Follow Up, etc. |
+| **Vertical** | All 19 industry verticals |
+| **Status** | All, **⚡ Active Leads**, New Lead, Qualified, Deck Sent, Follow Up, etc. |
 | **Source** | All, Apollo, LinkedIn, Referral, etc. |
+
+**⚡ Active Leads Filter**: Shows leads that have been contacted at least once and are not Closed Won/Lost. Quick way to focus on leads you're actively working.
 
 ### Lead Detail Panel
 
 When a lead is selected, the right panel shows:
 
+#### Guided Workflow Panel
+
+A visual 4-step progress tracker at the top:
+- **Research → Call → Deck → Meeting**
+- Current step pulses/animates
+- Completed steps show green checkmarks
+- **Smart Next Action Button**: One prominent button showing your next step
+
+| Button | Color | When Shown |
+|--------|-------|------------|
+| 🔍 Research Company | Blue | Lead not yet researched |
+| 📞 Make First Call | Green | Researched, not yet called |
+| 🔄 Follow Up on Deck | Orange | Deck was sent |
+| 📞 Follow Up Call | Orange | Status is Follow Up or No Answer |
+| 📧 Send Deck / 📅 Book Meeting | Pink/Purple | Called, choose next action |
+| ✅ Meeting Booked! | Green | Workflow complete |
+
+#### Other Panels
+
 - **Contact Info**: Phone, email, title
-- **Progress Tracker**: Research → Call → Book CEO visual workflow
 - **Saved Research Panel**: If AI research exists, shows summary with talking points
 - **Quick Actions**: AI Research, Email Templates, Schedule CEO Meeting, Pop Out Scripts
 - **Call Script**: Context-aware suggested opening with SF/Non-SF toggle
