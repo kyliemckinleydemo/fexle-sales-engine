@@ -3327,7 +3327,13 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       <div>
                         <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Your Next Action <span className="text-amber-500 font-normal">({safeIndex + 1} of {prioritizedCalls.length})</span></div>
                         <div className="text-xl font-bold text-gray-900">{nextLead.company}</div>
-                        <div className="text-sm text-gray-600">{nextLead.contact} • {nextLead.title}</div>
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          <span>{nextLead.contact} • {nextLead.title}</span>
+                          {!nextLead.phone && <span className="text-red-500 text-xs font-semibold bg-red-50 px-1.5 py-0.5 rounded">⚠️ No phone</span>}
+                        </div>
+                        {nextLead.notes && (
+                          <div className="text-xs text-gray-400 mt-1 truncate max-w-[300px] italic">📝 {nextLead.notes.split('\n')[0].substring(0, 50)}...</div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 ml-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(nextLead.score)}`}>{nextLead.score}</span>
@@ -3684,7 +3690,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             }`}>{idx + 1}</span>
                             <div>
                               <div className="font-medium text-gray-900">{lead.company}</div>
-                              <div className="text-sm text-gray-500">{lead.contact} • {lead.title}</div>
+                              <div className="text-sm text-gray-500 flex items-center gap-1">
+                                <span>{lead.contact} • {lead.title}</span>
+                                {!lead.phone && <span className="text-red-400 text-xs font-medium">⚠️ No phone</span>}
+                              </div>
+                              {lead.notes && (
+                                <div className="text-xs text-gray-400 truncate max-w-[200px] italic" title={lead.notes}>
+                                  📝 {lead.notes.split('\n')[0].substring(0, 40)}...
+                                </div>
+                              )}
                             </div>
                             <span className={`px-2 py-0.5 rounded text-xs ${getVerticalColor(lead.vertical)}`}>
                               {verticalData[lead.vertical]?.icon}
@@ -4122,7 +4136,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </button>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500 mb-1">{lead.contact} • {lead.title}</div>
+                    <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                      <span>{lead.contact} • {lead.title}</span>
+                      {!lead.phone && <span className="text-red-400 font-medium" title="No phone number">⚠️ No phone</span>}
+                    </div>
+                    {/* Notes Preview */}
+                    {lead.notes && (
+                      <div className="text-xs text-gray-400 mb-1.5 truncate italic" title={lead.notes}>
+                        📝 {lead.notes.split('\n')[0].substring(0, 60)}{lead.notes.length > 60 ? '...' : ''}
+                      </div>
+                    )}
                     {/* Activity Snapshot */}
                     <div className="text-xs bg-gray-50 rounded-lg px-2 py-1.5 mb-2 flex items-center gap-2 flex-wrap">
                       {!lead.lastContactDate && !lead.research ? (
@@ -4508,19 +4531,36 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </div>
                       </div>
 
-                      {/* Phone - Very Prominent */}
-                      <div className="mt-4 flex items-center gap-6">
-                        <a href={`tel:${selectedLead.phone}`} className="flex items-center gap-2 text-2xl font-bold text-blue-600 hover:text-blue-800 transition-colors">
-                          <span className="text-2xl">📞</span>
-                          {selectedLead.phone || 'No phone'}
-                        </a>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span className={`px-2 py-0.5 rounded-full text-xs ${getVerticalColor(selectedLead.vertical)}`}>
-                            {vertical?.icon} {vertical?.name}
-                          </span>
-                          <span>•</span>
-                          <span>{selectedLead.lastContact}</span>
-                        </div>
+                      {/* Secondary info */}
+                      <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${getVerticalColor(selectedLead.vertical)}`}>
+                          {vertical?.icon} {vertical?.name}
+                        </span>
+                        <span>•</span>
+                        <span>{selectedLead.lastContact}</span>
+                      </div>
+                    </div>
+
+                    {/* Phone - Editable */}
+                    <div className="px-5 py-3 border-t border-gray-100 bg-white">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📞</span>
+                        <input
+                          type="tel"
+                          value={selectedLead.phone || ''}
+                          onChange={(e) => {
+                            const updatedLead = { ...selectedLead, phone: e.target.value };
+                            setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                            setSelectedLead(updatedLead);
+                          }}
+                          placeholder="Enter phone number..."
+                          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                        {selectedLead.phone && (
+                          <a href={`tel:${selectedLead.phone}`} className="px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2">
+                            📞 Call
+                          </a>
+                        )}
                       </div>
                     </div>
 
