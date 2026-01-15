@@ -1,6 +1,6 @@
 # Fexle Sales Engine - User Guide
 
-**Version 2.0** | Last Updated: January 2026
+**Version 2.1** | Last Updated: January 2026
 
 ---
 
@@ -13,16 +13,17 @@
 5. [Source Tracking & Analytics](#source-tracking--analytics)
 6. [Google Sheets Integration](#google-sheets-integration)
 7. [Dashboard - Today View](#dashboard---today-view)
-8. [Call Center](#call-center)
-9. [CEO Calendar](#ceo-calendar)
-10. [Playbooks & Scripts](#playbooks--scripts)
-11. [Email Templates](#email-templates)
-12. [AI Research](#ai-research)
-13. [Task Management](#task-management)
-14. [Data Management](#data-management)
-15. [Settings](#settings)
-16. [Keyboard Shortcuts & Tips](#keyboard-shortcuts--tips)
-17. [Troubleshooting](#troubleshooting)
+8. [Today's Call List](#todays-call-list)
+9. [Call Center](#call-center)
+10. [CEO Calendar](#ceo-calendar)
+11. [Industry Playbooks](#industry-playbooks)
+12. [Email Templates](#email-templates)
+13. [AI Research & Call Prep](#ai-research--call-prep)
+14. [Task Management](#task-management)
+15. [Data Management](#data-management)
+16. [Settings](#settings)
+17. [Keyboard Shortcuts & Tips](#keyboard-shortcuts--tips)
+18. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -39,10 +40,11 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 | 📈 **Source Tracking** | Track where leads come from and measure source effectiveness |
 | 📋 **Google Sheets Sync** | Share leads and tasks across your team via Google Sheets |
 | 🎯 **Today Dashboard** | Daily prioritized task list and performance metrics |
-| 📞 **Call Center** | Integrated calling interface with scripts and quick actions |
+| 📋 **Today's Call List** | Build focused daily call queues with filters |
+| 📞 **Call Center** | Integrated calling interface with scripts, research, and quick actions |
 | 📅 **CEO Calendar** | Visual availability booking for CEO meetings |
-| 📋 **Playbooks** | Industry-specific scripts and objection handling |
-| 🔍 **AI Research** | Claude-powered company research and call preparation |
+| 📚 **Industry Playbooks** | Tailored scripts and objection handling for 19 industry verticals |
+| 🔍 **AI Research** | Claude-powered company research with saved call prep |
 | ✉️ **Email Templates** | Pre-built templates for every stage of the sales process |
 
 ---
@@ -177,9 +179,10 @@ The lead scoring model evaluates five factors to generate a score from 0-100:
 | Vertical | Points |
 |----------|--------|
 | Healthcare, Financial Services | 15 |
-| Manufacturing, Professional Services | 12 |
-| Retail, Education, Real Estate, Logistics | 10 |
-| Nonprofit, Government, Hospitality | 8 |
+| Manufacturing, Professional Services, Telecommunications | 12 |
+| Retail, Education, Real Estate, Logistics, Energy, Automotive | 10 |
+| Nonprofit, Government, Hospitality, Media, Construction, Mining, Agriculture | 8 |
+| Other Industry | 5 |
 
 ### Score Interpretation
 
@@ -351,6 +354,54 @@ Tasks are automatically prioritized:
 
 ---
 
+## Today's Call List
+
+The Today's Call List lets you build a focused queue of leads to call each day, separate from the auto-prioritized list.
+
+### Building Your Call List
+
+1. Click **📋 Build Call List** button on the Today dashboard
+2. The lead picker modal opens with all available leads
+
+### Filtering Leads
+
+| Filter | Options |
+|--------|---------|
+| **Min Score** | Any, 40+, 60+, 80+ (Hot) |
+| **Status** | All, New Lead, Contacted, Follow Up, Deck Sent, Meeting Requested |
+| **Vertical** | All 19 industry verticals |
+
+### Selecting Leads
+
+- Click individual leads to toggle selection (checkbox)
+- Use **"Select All"** to select all leads matching current filters
+- Selected leads are highlighted in blue
+- Shows count of selected leads at bottom
+
+### Working Your Call List
+
+Once added, your call list appears on the Today dashboard:
+
+| Element | Description |
+|---------|-------------|
+| **Progress bar** | Shows X / Y calls completed |
+| **Lead cards** | Company, contact, score, status for each lead |
+| **📞 Call button** | Opens lead in Call Center |
+| **✓ button** | Manually mark as called |
+| **🗑️ button** | Remove from list |
+| **+ Add More** | Add more leads to the list |
+| **Clear** | Remove all leads from list |
+
+### Auto-Completion
+
+When you log a call outcome for a lead that's in your call list, it automatically marks as completed.
+
+### Persistence
+
+Your call list saves to localStorage and survives page refreshes. Start fresh each day by clicking "Clear".
+
+---
+
 ## Call Center
 
 ### Lead List
@@ -378,10 +429,27 @@ The left panel shows all leads with:
 When a lead is selected, the right panel shows:
 
 - **Contact Info**: Phone, email, title
-- **Quick Actions**: Call, Email, Research, Book Meeting
-- **Call Script**: Context-aware suggested opening
+- **Progress Tracker**: Research → Call → Book CEO visual workflow
+- **Saved Research Panel**: If AI research exists, shows summary with talking points
+- **Quick Actions**: AI Research, Email Templates, Schedule CEO Meeting, Pop Out Scripts
+- **Call Script**: Context-aware suggested opening with SF/Non-SF toggle
+- **Call Prep Panel**: Expandable section with full AI research (if available)
 - **Notes**: All communication history
 - **Log Call**: Record call outcomes
+
+### Call Prep: AI Research Panel
+
+When a lead has saved research, an expandable **"Call Prep: AI Research"** panel appears above the call logging form:
+
+- Click to expand/collapse
+- Shows priority badge (HIGH/MEDIUM/NURTURE)
+- **Company Overview**: What the company does
+- **Recommended Opening**: Best opening line for this prospect
+- **Key Talking Points**: Specific things to mention
+- **Pain Points to Probe**: Industry-specific challenges
+- **Trigger Events**: Things to investigate or ask about
+- **Key Contacts**: Additional contacts found during research
+- **Refresh Research**: Button to re-run AI research
 
 ### Call Outcomes
 
@@ -432,45 +500,60 @@ If a prospect needs a time outside normal availability:
 
 ---
 
-## Playbooks & Scripts
+## Industry Playbooks
 
-### Prospect Type Toggle
+### Overview
 
-The playbook includes two distinct script sets, accessible via the toggle at the top:
-
-| Mode | When to Use |
-|------|-------------|
-| **Existing SF User** | Prospect already uses Salesforce - focus on AI upgrades, optimization |
-| **Non-SF Prospect** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration, new implementation |
+The Industry Playbooks tab provides tailored scripts and objection handling for **19 industry verticals**. Each vertical includes industry-specific opening scripts, objection handlers, pain points, and AI use cases.
 
 ### Vertical Selection
 
-Select an industry vertical to see customized content:
-- Healthcare / Aged Care
-- Financial Services
-- Manufacturing
-- Professional Services (Legal, Accounting)
-- Retail / E-Commerce
-- Education
-- Nonprofit
-- Government
-- Real Estate
-- Logistics / Transport
-- Hospitality
+Use the dropdown to select an industry vertical:
 
-### Available Content
+| Icon | Vertical | Key Focus Areas |
+|------|----------|-----------------|
+| 🏥 | Healthcare / Aged Care | Staff burnout, family communication, compliance |
+| 💰 | Financial Services | Compliance, client onboarding, wealth handoff |
+| 🏭 | Manufacturing | Supply chain, plant floor visibility, quality |
+| ⚖️ | Professional Services | Billable hours, client portals, M&A integration |
+| 🛒 | Retail / E-Commerce | Omnichannel, inventory, loyalty programs |
+| 🎓 | Education | Student lifecycle, enrollment, alumni engagement |
+| 💚 | Nonprofit | Donor retention, grants, volunteer coordination |
+| 🏛️ | Government | Digital services, citizen experience, procurement |
+| 🏠 | Real Estate | Lead response time, transaction coordination |
+| 🚚 | Logistics / Transport | WISMO calls, proactive communication, tracking |
+| 🏨 | Hospitality | OTA dependency, guest recognition, group sales |
+| 📡 | Telecommunications | Churn, billing calls, 5G, self-service |
+| ⚡ | Energy & Utilities | Billing, outages, smart meters, energy transition |
+| 🎬 | Media & Entertainment | Subscriber churn, content discovery, audience data |
+| 🌾 | Agriculture | Spreadsheet migration, seasonal planning, growth |
+| 🏗️ | Construction | Bid win rate, pipeline visibility, client comms |
+| ⛏️ | Mining & Resources | Contracts, ESG reporting, remote coordination |
+| 🚗 | Automotive | Lead response, service-sales, lifecycle marketing |
+| 🏢 | Other Industry | General CRM value proposition |
 
-Each playbook includes:
+### Industry-Specific Content
+
+Each vertical includes:
 
 | Section | Content |
 |---------|---------|
-| **Opening Scripts** | Multiple approaches based on prospect type |
-| **Pivot Scripts** | How to transition after initial engagement |
-| **Close Scripts** | Getting to the CEO meeting or discovery call |
-| **Objection Handling** | Responses to 10+ common objections (SF and non-SF) |
+| **Opening Scripts** | 4 tailored opening lines with "why it works" explanation |
+| **Objection Handling** | 5 industry-specific objections with responses |
+| **Target Profile** | Ideal company size, revenue, decision makers |
 | **Pain Points** | Industry-specific problems to probe |
+| **Buying Triggers** | Events that signal readiness to buy |
 | **Agentforce Use Case** | AI application for this vertical |
-| **Follow-Up Strategy** | Day-by-day multi-touch sequence |
+| **Industry Stats** | Data points to use in conversations |
+
+### Prospect Type Toggle
+
+The playbook includes two distinct script sets for objection handling:
+
+| Mode | When to Use |
+|------|-------------|
+| **SF Users** | Prospect already uses Salesforce - focus on AI upgrades, optimization |
+| **Non-SF** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration |
 
 ---
 
@@ -585,7 +668,7 @@ Templates automatically replace:
 
 ---
 
-## AI Research
+## AI Research & Call Prep
 
 ### Requirements
 
@@ -594,28 +677,58 @@ Templates automatically replace:
 
 ### Running Research
 
-1. Select a lead
-2. Click **🔍 Research** button
+1. Select a lead in Call Center
+2. Click **🔍 AI Research** button (or "Refresh Research" if already done)
 3. Wait for Claude to analyze (15-30 seconds)
+4. Research modal displays results
 
 ### Research Output
 
 | Section | Content |
 |---------|---------|
-| **Priority Level** | HIGH / MEDIUM / LOW urgency rating |
-| **Company Overview** | What the company does, size, market |
-| **Pain Points** | Specific challenges they likely face |
+| **Priority Level** | HIGH / MEDIUM / NURTURE urgency rating |
+| **Company Overview** | What the company does, size, market position |
+| **Key Contacts** | Additional decision-makers found with phone/email |
 | **Salesforce Likelihood** | Assessment of their CRM readiness |
-| **Recommended Opening** | Customized first line for call |
-| **Talking Points** | Key discussion points for call |
-| **Questions to Ask** | Discovery questions |
-| **News & Triggers** | Recent events or changes |
+| **AI Readiness Signals** | Signs they're ready for Agentforce |
+| **Potential Pain Points** | Specific challenges to probe |
+| **Trigger Events** | Things to investigate or ask about |
+| **Recommended Opening** | Best opening line for this prospect |
+| **Talking Points** | Personalized discussion points |
 
-### Saving Research
+### Saved Research
 
-- Research auto-saves to the lead record
-- View saved research anytime by clicking Research button
-- Export includes research data in CSV
+Research automatically saves to the lead record and persists in localStorage.
+
+**Where to find saved research:**
+
+1. **Lead Header Panel**: Purple "Saved AI Research" box shows summary
+2. **Call Prep Panel**: Expandable section above call logging form
+3. **Research Modal**: Click "View Full" to see complete research
+
+### Call Prep Panel
+
+When preparing for a call, expand the **"Call Prep: AI Research"** panel to see:
+
+- Company overview
+- **Recommended opening** (highlighted)
+- Key talking points
+- Pain points to probe
+- Trigger events to investigate
+- Key contacts found
+- Research date
+
+### Refreshing Research
+
+- Click **"Refresh Research"** or **"🔄 Refresh Research"** to re-run
+- Useful if company situation has changed
+- Old research is replaced with new
+
+### Research Persistence
+
+- Saved to lead record in localStorage
+- Survives page refreshes and browser restarts
+- Included in CSV exports (priority level, key insights)
 
 ---
 
