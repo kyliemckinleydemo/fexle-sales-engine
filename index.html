@@ -1553,38 +1553,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       return [headers.join(','), ...rows].join('\n');
     };
 
-    // Generate full backup including tasks
-    const generateFullBackup = () => {
-      const timestamp = new Date().toISOString().split('T')[0];
-      
-      // Leads CSV
-      const leadsCSV = generateCSV(leads);
-      
-      // Tasks CSV
-      const taskHeaders = ['id', 'type', 'description', 'lead_company', 'lead_contact', 'due_date', 'due_time', 'completed', 'completed_at', 'created_at'];
-      const taskRows = tasks.map(task => {
-        const lead = leads.find(l => l.id === task.leadId);
-        return [
-          task.id,
-          task.type,
-          task.description,
-          lead?.company || '',
-          lead?.contact || '',
-          task.dueDate,
-          task.dueTime || '',
-          task.completed ? 'Yes' : 'No',
-          task.completedAt || '',
-          task.createdAt || ''
-        ].map(v => {
-          const str = String(v);
-          return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
-        }).join(',');
-      });
-      const tasksCSV = [taskHeaders.join(','), ...taskRows].join('\n');
-      
-      return { leadsCSV, tasksCSV, timestamp };
-    };
-
 
     // ==================== TASK MANAGEMENT ====================
     const calculateFollowUpDate = (lastContactDate, status) => {
@@ -2988,6 +2956,38 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           };
           reader.readAsText(file);
         }
+      };
+
+      // Generate full backup including tasks
+      const generateFullBackup = () => {
+        const timestamp = new Date().toISOString().split('T')[0];
+
+        // Leads CSV
+        const leadsCSV = generateCSV(leads);
+
+        // Tasks CSV
+        const taskHeaders = ['id', 'type', 'description', 'lead_company', 'lead_contact', 'due_date', 'due_time', 'completed', 'completed_at', 'created_at'];
+        const taskRows = tasks.map(task => {
+          const lead = leads.find(l => l.id === task.leadId);
+          return [
+            task.id,
+            task.type,
+            task.description,
+            lead?.company || '',
+            lead?.contact || '',
+            task.dueDate,
+            task.dueTime || '',
+            task.completed ? 'Yes' : 'No',
+            task.completedAt || '',
+            task.createdAt || ''
+          ].map(v => {
+            const str = String(v);
+            return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+          }).join(',');
+        });
+        const tasksCSV = [taskHeaders.join(','), ...taskRows].join('\n');
+
+        return { leadsCSV, tasksCSV, timestamp };
       };
 
       // Export CSV
