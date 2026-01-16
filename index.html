@@ -2432,6 +2432,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             leadTitle: selectedLead.title,
             company: selectedLead.company,
             email: selectedLead.email,
+            phone: selectedLead.phone,
             isScheduleChallenge: isScheduleChallenge,
             createdAt: new Date().toISOString()
           };
@@ -2563,6 +2564,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           leadTitle: lead.title,
           company: lead.company,
           email: lead.email,
+          phone: lead.phone,
           createdAt: new Date().toISOString()
         };
         
@@ -7038,6 +7040,7 @@ function jsonResponse(data) {
             leadTitle: selectedLead.title,
             company: selectedLead.company,
             email: selectedLead.email,
+            phone: selectedLead.phone,
             isScheduleChallenge: isScheduleChallenge,
             createdAt: new Date().toISOString()
           };
@@ -7223,7 +7226,7 @@ function jsonResponse(data) {
                                     : selectedLead ? 'hover:bg-amber-50 cursor-pointer border border-dashed border-gray-300' : 'hover:bg-gray-50 cursor-pointer'
                                 }`}
                               >
-                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={`${booked.company}\n${booked.leadName}${booked.leadTitle ? ' - ' + booked.leadTitle : ''}`}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
+                                {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={`${booked.company}\n${booked.leadName}${booked.leadTitle ? ' - ' + booked.leadTitle : ''}${booked.phone ? '\n📞 ' + booked.phone : ''}${booked.email ? '\n✉️ ' + booked.email : ''}`}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
                                 {available && !booked && <div className="text-xs text-blue-600 text-center">✓</div>}
                               </div>
                             );
