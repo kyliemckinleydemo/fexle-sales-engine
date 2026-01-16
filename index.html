@@ -3238,8 +3238,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
         };
       };
 
-      // ==================== DASHBOARD COMPONENT - TODAY FOCUSED ====================
-      const Dashboard = () => {
+      // ==================== DASHBOARD CONTENT - TODAY FOCUSED ====================
+      const dashboardContent = (() => {
         const todaysTasks = getTodaysTasks();
         const prioritizedCalls = getPrioritizedCalls();
         const today = new Date();
@@ -3599,7 +3599,11 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     </div>
                     <div className="divide-y divide-gray-50">
                       {getCallListLeads().map((item, idx) => (
-                        <div key={item.leadId} className={`p-4 transition-colors ${item.completed ? 'bg-green-50/50' : 'hover:bg-gray-50'}`}>
+                        <div
+                          key={item.leadId}
+                          className={`p-4 transition-colors cursor-pointer ${item.completed ? 'bg-green-50/50 hover:bg-green-100/50' : 'hover:bg-blue-50'}`}
+                          onClick={() => { if (item.lead) { setSelectedLead(item.lead); setActiveTab('callCenter'); } }}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -3627,13 +3631,13 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                               ) : (
                                 <>
                                   <button
-                                    onClick={() => { setSelectedLead(item.lead); setActiveTab('callCenter'); }}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedLead(item.lead); setActiveTab('callCenter'); }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
                                   >
                                     📞 Call
                                   </button>
                                   <button
-                                    onClick={() => markCallListItemComplete(item.leadId)}
+                                    onClick={(e) => { e.stopPropagation(); markCallListItemComplete(item.leadId); }}
                                     className="px-3 py-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                     title="Mark as called"
                                   >
@@ -3642,7 +3646,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                 </>
                               )}
                               <button
-                                onClick={() => removeFromCallList(item.leadId)}
+                                onClick={(e) => { e.stopPropagation(); removeFromCallList(item.leadId); }}
                                 className="px-2 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Remove from list"
                               >
@@ -3681,7 +3685,11 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   </div>
                   <div className="divide-y divide-gray-50">
                     {prioritizedCalls.map((lead, idx) => (
-                      <div key={lead.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div
+                        key={lead.id}
+                        className="p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                        onClick={() => { console.log('Priority lead clicked:', lead.company); setSelectedLead(lead); setActiveTab('callCenter'); }}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -3715,28 +3723,28 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             {(() => {
                               if (!lead.research) {
                                 return (
-                                  <button onClick={() => { setSelectedLead(lead); performResearch(lead); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); performResearch(lead); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1">
                                     🔍 Research
                                   </button>
                                 );
                               }
                               if (!lead.lastContactDate) {
                                 return (
-                                  <button onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1">
                                     📞 Call
                                   </button>
                                 );
                               }
                               if (hasDeckSent(lead)) {
                                 return (
-                                  <button onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-1">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-1">
                                     🔄 Follow Up
                                   </button>
                                 );
                               }
                               if (lead.status === 'Follow Up' || lead.status === 'No Answer') {
                                 return (
-                                  <button onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-1">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors flex items-center gap-1">
                                     📞 Follow Up
                                   </button>
                                 );
@@ -3749,7 +3757,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                 );
                               }
                               return (
-                                <button onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-1">
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveTab('callCenter'); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-1">
                                   📅 Book Meeting
                                 </button>
                               );
@@ -3775,7 +3783,11 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                       .sort((a, b) => (b.lastContactDate || '').localeCompare(a.lastContactDate || ''))
                       .slice(0, 5)
                       .map(lead => (
-                        <div key={lead.id} className="p-3 hover:bg-gray-50">
+                        <div
+                          key={lead.id}
+                          className="p-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                          onClick={() => { setSelectedLead(lead); setActiveTab('callCenter'); }}
+                        >
                           <div className="text-sm font-medium text-gray-900 truncate">{lead.company}</div>
                           <div className="text-xs text-gray-500">{lead.status} • {lead.lastContact}</div>
                         </div>
@@ -3832,10 +3844,10 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             </div>
           </div>
         );
-      };
+      })();
 
-      // ==================== CALL CENTER COMPONENT ====================
-      const CallCenter = () => {
+      // ==================== CALL CENTER CONTENT ====================
+      const callCenterContent = (() => {
         const vertical = selectedLead ? verticalData[selectedLead.vertical] : null;
 
         const personalizeScript = (script) => {
@@ -4478,8 +4490,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       {/* Source & Created */}
                       <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-gray-400">➕</span>
-                        <span>{selectedLead.source || 'Manual'} {selectedLead.createdAt ? `• ${new Date(selectedLead.createdAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : ''}</span>
+                        <span className="text-gray-400">{LEAD_SOURCES[selectedLead.source]?.icon || '✏️'}</span>
+                        <span>{LEAD_SOURCES[selectedLead.source]?.name || 'Manual Entry'}{selectedLead.createdAt ? ` • ${new Date(selectedLead.createdAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : ''}</span>
                       </div>
                       {/* Research Status */}
                       <div className={`flex items-center gap-2 ${selectedLead.research ? 'text-green-600' : 'text-gray-400'}`}>
@@ -4951,10 +4963,10 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             </div>
           </div>
         );
-      };
+      })();
 
-      // ==================== PLAYBOOKS COMPONENT ====================
-      const Playbooks = () => {
+      // ==================== PLAYBOOKS CONTENT ====================
+      const playbooksContent = (() => {
         const vertical = verticalData[selectedVertical];
 
         return (
@@ -5193,7 +5205,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             </div>
           </div>
         );
-      };
+      })();
 
       // ==================== MODALS ====================
 
@@ -6969,8 +6981,8 @@ function jsonResponse(data) {
           </div>
         );
 
-      // ==================== CEO CALENDAR COMPONENT ====================
-      const CEOCalendar = () => {
+      // ==================== CEO CALENDAR CONTENT ====================
+      const ceoCalendarContent = (() => {
         const timeSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
         
         const getWeekDays = () => {
@@ -7391,7 +7403,7 @@ function jsonResponse(data) {
             </div>
           </div>
         );
-      };
+      })();
 
       // ==================== MAIN RENDER ====================
       return (
@@ -7409,7 +7421,10 @@ function jsonResponse(data) {
           <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
             <div className="max-w-7xl mx-auto px-6 py-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={() => { console.log('Logo clicked'); setSelectedLead(null); setActiveTab('dashboard'); }}
+                >
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                     <span className="text-white text-lg font-bold">F</span>
                   </div>
@@ -7472,9 +7487,9 @@ function jsonResponse(data) {
 
           {/* Main Content */}
           <main className="max-w-7xl mx-auto px-6 py-6">
-            {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'callCenter' && <CallCenter />}
-            {activeTab === 'playbooks' && <Playbooks />}
+            {activeTab === 'dashboard' && dashboardContent}
+            {activeTab === 'callCenter' && callCenterContent}
+            {activeTab === 'playbooks' && playbooksContent}
           </main>
 
           {/* Modals */}
@@ -7489,7 +7504,7 @@ function jsonResponse(data) {
           {showTaskModal && taskModalContent}
           {showEmailModal && emailModalContent}
           {showMeetingModal && meetingModalContent}
-          {showCalendarModal && <CEOCalendar />}
+          {showCalendarModal && ceoCalendarContent}
           {callListPickerModal}
 
           {/* Onboarding Tour Modal */}
