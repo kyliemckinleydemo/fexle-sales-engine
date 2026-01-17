@@ -4733,8 +4733,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-xl">📞</span>
                         <input
                           type="tel"
-                          value={selectedLead.phone || ''}
-                          onChange={(e) => updateLeadField('phone', e.target.value)}
+                          defaultValue={selectedLead.phone || ''}
+                          key={`phone-${selectedLead.id}-${selectedLead.phone || ''}`}
+                          onBlur={(e) => updateLeadField('phone', e.target.value)}
                           placeholder="Enter phone number..."
                           className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
@@ -4752,8 +4753,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-gray-400">✉️</span>
                         <input
                           type="email"
-                          value={selectedLead.email || ''}
-                          onChange={(e) => updateLeadField('email', e.target.value)}
+                          defaultValue={selectedLead.email || ''}
+                          key={`email-${selectedLead.id}-${selectedLead.email || ''}`}
+                          onBlur={(e) => updateLeadField('email', e.target.value)}
                           placeholder="Enter email address..."
                           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
