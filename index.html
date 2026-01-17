@@ -4100,9 +4100,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             </head>
             <body>
               <div class="lead-info">
-                <h2>📞 ${escapeHtml(selectedLead.company)}</h2>
-                <div>${escapeHtml(selectedLead.contact)} • ${escapeHtml(selectedLead.title || 'N/A')}</div>
-                <div>${escapeHtml(selectedLead.phone || 'No phone')}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <h2 style="margin: 0 0 4px 0;">📞 ${escapeHtml(selectedLead.company)}</h2>
+                    <div style="font-size: 16px; opacity: 0.9;">${escapeHtml(selectedLead.contact)} • ${escapeHtml(selectedLead.title || 'N/A')}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 12px; opacity: 0.7; margin-bottom: 2px;">DIAL</div>
+                    <div style="font-size: 22px; font-weight: 700; letter-spacing: 1px;">${escapeHtml(selectedLead.phone || 'No phone')}</div>
+                  </div>
+                </div>
               </div>
 
               <div class="toggle-bar">
