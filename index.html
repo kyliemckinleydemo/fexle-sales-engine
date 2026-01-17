@@ -5585,6 +5585,20 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <div className="p-6 pt-4 overflow-y-auto flex-1 space-y-4 overscroll-contain">
+              {/* Tips Guide */}
+              <details className="bg-blue-50 border border-blue-200 rounded-lg">
+                <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-blue-800 hover:bg-blue-100 rounded-lg flex items-center gap-2">
+                  <span>💡</span>
+                  <span>Tips for adding effective leads</span>
+                </summary>
+                <div className="px-4 pb-3 pt-1 text-sm text-blue-700 space-y-1.5 border-t border-blue-200 mt-1">
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Phone number is critical</strong> for cold calling success</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Target C-level titles</strong> (CEO, CIO, COO, CFO) for best results</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Add context in Notes</strong> - why is this a good fit?</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Expand "More details"</strong> for better lead scoring</span></div>
+                </div>
+              </details>
+
               {/* Essential Fields */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
