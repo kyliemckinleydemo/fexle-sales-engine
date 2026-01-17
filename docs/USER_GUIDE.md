@@ -1,6 +1,6 @@
 # Fexle Sales Engine - User Guide
 
-**Version 2.1** | Last Updated: January 2026
+**Version 2.2** | Last Updated: January 2026
 
 ---
 
@@ -39,7 +39,7 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 | 📊 **Lead Scoring** | Automated scoring based on company size, revenue, title, intent signals, and vertical fit |
 | 📈 **Source Tracking** | Track where leads come from and measure source effectiveness |
 | 📋 **Google Sheets Sync** | Share leads and tasks across your team via Google Sheets |
-| 🎯 **Today Dashboard** | Daily prioritized task list and performance metrics |
+| 🎯 **Today Dashboard** | Daily prioritized task list, performance metrics, and rotating Pro Tips |
 | 📋 **Today's Call List** | Build focused daily call queues with filters |
 | 📞 **Call Center** | Integrated calling interface with scripts, research, and quick actions |
 | 📅 **CEO Calendar** | Visual availability booking for CEO meetings |
@@ -359,6 +359,31 @@ Leads are automatically prioritized:
 - **Hot Leads** - Leads scoring 80+
 - **Meetings** - CEO meetings booked
 - **Pipeline** - Leads in active stages
+
+### Pro Tip of the Day
+
+The dashboard displays a rotating **Pro Tip of the Day** to help improve your cold calling skills. The system includes 30 detailed, actionable tips covering:
+
+| Category | Example Tips |
+|----------|--------------|
+| **Voice & Energy** | Stand up when calling, smile while speaking, breathe from your diaphragm |
+| **Timing** | Best call times (4-5 PM), best days (Wed/Thu), warm up with easy calls first |
+| **Technique** | Mirror prospect's pace, pause after questions, use their name early |
+| **Mindset** | Rejection is redirection, visualize success, celebrate small wins |
+| **Process** | Research before calling, take notes, end with clear next steps |
+| **Voicemails** | Keep under 20 seconds, tease value, speak number twice slowly |
+
+Tips rotate automatically based on the day of year, so you'll see a fresh tip each day. Each tip includes not just what to do, but **why it works** and **how to apply it**.
+
+### Workday Guide
+
+The **"Here's a Normal Workday"** section provides a step-by-step guide to structuring your sales day. Click the header to expand and see the recommended workflow:
+
+1. **Morning** - Check priorities, review hot leads, prep research
+2. **Mid-Morning** - Power calling block (prime hours for connects)
+3. **Lunch** - Admin, email follow-ups, LinkedIn activity
+4. **Afternoon** - Second calling block (4-5 PM is peak)
+5. **End of Day** - Log outcomes, plan tomorrow, export backup
 
 ### Task List
 

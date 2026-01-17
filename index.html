@@ -22,6 +22,48 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
+    // ==================== COLD CALLING PRO TIPS ====================
+    const COLD_CALLING_PRO_TIPS = [
+      { tip: "Stand up when making calls. Standing opens your diaphragm and adds natural energy to your voice. Prospects can hear confidence — and sitting down literally compresses it. Try pacing slowly if you need to burn nervous energy.", icon: "🧍" },
+      { tip: "Smile while you speak, even though they can't see you. Smiling changes the shape of your mouth and vocal cords, creating a warmer, more trustworthy tone. Prospects can literally hear the difference — and they're more likely to stay on the line.", icon: "😊" },
+      { tip: "The best time to cold call is 4-5 PM in your prospect's timezone. Research shows calls made during this window are 71% more effective — decision-makers are wrapping up their day and more open to conversations before heading home.", icon: "⏰" },
+      { tip: "The average successful cold call is just 93 seconds. You don't need to explain everything — you need to spark enough curiosity to book a meeting. Get to your value proposition fast, then focus on qualifying and booking next steps.", icon: "⚡" },
+      { tip: "Use the prospect's first name within the first 15 seconds of the call. Hearing their own name triggers attention and builds instant rapport. But don't overuse it — once at the start and once more naturally is enough.", icon: "👋" },
+      { tip: "Mirror your prospect's speaking pace. If they talk fast, pick up your tempo. If they're measured and thoughtful, slow down. People naturally trust others who communicate like them — it signals you're on the same wavelength.", icon: "🪞" },
+      { tip: "After asking a question, pause and let the silence work for you. Most salespeople rush to fill quiet moments, but silence creates space for honest, thoughtful answers. Count to three in your head before speaking again.", icon: "🤫" },
+      { tip: "Wednesday and Thursday are statistically the best days for cold calling. Monday is too hectic, Friday minds are elsewhere. Mid-week, decision-makers are in work mode and more receptive to business conversations.", icon: "📅" },
+      { tip: "Take brief notes during every call — jot down key phrases, objections, and personal details they mention. It helps you listen actively, gives you gold for follow-ups, and shows you genuinely care about their situation.", icon: "📝" },
+      { tip: "Warm up with 3-5 lower-priority calls before hitting your A-list prospects. This gets your voice warmed up, your timing sharp, and your confidence flowing. Your best prospects deserve your best performance.", icon: "🔥" },
+      { tip: "Record yourself making calls (where legally permitted) and listen back weekly. You'll catch filler words, rushed sections, and missed opportunities you never noticed in the moment. It's uncomfortable but invaluable for improvement.", icon: "🎙️" },
+      { tip: "Rejection isn't failure — it's data. Every 'no' teaches you something and gets you statistically closer to 'yes'. Top performers get rejected more because they make more calls. Embrace it as part of the process.", icon: "💪" },
+      { tip: "Your goal on a cold call is NOT to pitch or close — it's to book a meeting. Resist the urge to explain everything. Create enough curiosity and value to earn 30 minutes of their time, then let the meeting do the heavy lifting.", icon: "🎯" },
+      { tip: "Ask open-ended questions that start with 'how' or 'what' — they invite real conversation. 'What's your biggest challenge with X?' beats 'Are you having challenges with X?' every time. Open questions reveal pain points.", icon: "❓" },
+      { tip: "Acknowledge you're making a cold call right upfront: 'I'll be honest, this is a cold call.' Counter-intuitively, this honesty disarms resistance. Prospects respect transparency and are more likely to give you a fair hearing.", icon: "🤝" },
+      { tip: "Give prospects an easy out early: '...or is this a bad time?' Paradoxically, offering an escape makes people more likely to engage. It removes pressure, shows respect for their time, and positions you as someone worth talking to.", icon: "🚪" },
+      { tip: "Spend 2 minutes researching before each call. Find one personal hook — a recent company announcement, LinkedIn post, or news mention. Opening with something specific to them shows you're not just dialing numbers.", icon: "🔍" },
+      { tip: "Breathe deeply from your diaphragm before dialing. Shallow chest breathing creates a tense, rushed tone. Deep belly breaths activate your parasympathetic nervous system, keeping your voice calm, confident, and authoritative.", icon: "🌬️" },
+      { tip: "Replace filler words like 'um,' 'uh,' and 'like' with brief pauses. Silence sounds confident and thoughtful; filler words signal uncertainty. Practice pausing — it feels longer to you than it sounds to them.", icon: "🛑" },
+      { tip: "Never end a call without a clear next step. 'I'll follow up sometime' is weak. 'I'll send you the case study now and call you Thursday at 2pm to discuss' is strong. Specificity creates commitment and momentum.", icon: "✅" },
+      { tip: "Track your numbers religiously: calls made, connections, conversations, meetings booked. What gets measured gets improved. After a few weeks, you'll see patterns — your best times, openers that work, and where deals stall.", icon: "📊" },
+      { tip: "Keep water at your desk and drink between calls. A dry throat affects your tone and energy more than you realize. Staying hydrated keeps your voice clear and your energy consistent through long calling blocks.", icon: "💧" },
+      { tip: "Celebrate small wins throughout the day. Got a callback scheduled? That's a win. Had a great conversation even if they said no? Win. Positive momentum builds confidence, and confidence is contagious on calls.", icon: "🎉" },
+      { tip: "Treat gatekeepers as allies, not obstacles. They know who's busy, who's receptive, and when to call back. Be friendly, use their name, and ask for their help: 'I'm hoping you can point me in the right direction...'", icon: "🏰" },
+      { tip: "Keep voicemails under 20 seconds. State your name, company, one intriguing reason to call back, and your number (twice, slowly). Don't explain everything — create just enough curiosity to earn a callback.", icon: "📱" },
+      { tip: "Follow up within 24 hours of a good call while you're still fresh in their mind. Send a brief email referencing something specific from your conversation. Speed signals professionalism and keeps momentum alive.", icon: "⏳" },
+      { tip: "Your first 10 seconds determine whether they stay on the line or look for an exit. Don't waste them on 'How are you?' or throat-clearing. Lead with something relevant to them that earns the right to continue.", icon: "🎬" },
+      { tip: "Curiosity converts better than pressure. Instead of pushing features, ask questions that help them discover their own pain points. When they articulate the problem themselves, your solution becomes the obvious answer.", icon: "🧲" },
+      { tip: "Block 2-3 hours of dedicated calling time with zero distractions. Close email, silence Slack, put your phone away. Context switching kills momentum — you need to get into a flow state where calls feel natural.", icon: "📵" },
+      { tip: "Before your first call, take 60 seconds to visualize success. Picture a great conversation, a booked meeting, a receptive prospect. Mental rehearsal primes your brain for confidence and helps you perform at your best.", icon: "🧠" }
+    ];
+
+    // Get today's pro tip (rotates daily)
+    const getTodaysProTip = () => {
+      const startOfYear = new Date(new Date().getFullYear(), 0, 0);
+      const diff = new Date() - startOfYear;
+      const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+      return COLD_CALLING_PRO_TIPS[dayOfYear % COLD_CALLING_PRO_TIPS.length];
+    };
+
     // ==================== LEAD SOURCES ====================
     const LEAD_SOURCES = {
       apollo: { name: 'Apollo.io', icon: '🚀', color: 'purple' },
@@ -3938,17 +3980,21 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   </div>
                 </div>
 
-                {/* Optimal Call Time Reminder */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span>💡</span>
-                    <span className="font-semibold text-amber-900 text-sm">Pro Tip</span>
-                  </div>
-                  <p className="text-xs text-amber-800">
-                    Best call time: <strong>4-5 PM</strong> in prospect's timezone (71% more effective). 
-                    Average successful call: <strong>93 seconds</strong> — get to value fast!
-                  </p>
-                </div>
+                {/* Daily Pro Tip */}
+                {(() => {
+                  const todaysTip = getTodaysProTip();
+                  return (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>{todaysTip.icon}</span>
+                        <span className="font-semibold text-amber-900 text-sm">Pro Tip of the Day</span>
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        {todaysTip.tip}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
