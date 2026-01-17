@@ -1669,6 +1669,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [showTaskModal, setShowTaskModal] = useState(false);
       const [newTask, setNewTask] = useState({ leadId: null, type: 'call', description: '', dueDate: '', dueTime: '' });
       const fileInputRef = useRef(null);
+      const playbookPopupRef = useRef(null);
 
       // Today's Call List State
       const [todayCallList, setTodayCallList] = useState([]);
@@ -3965,6 +3966,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             .replace(/\[COMPANY\]/g, selectedLead.company);
         };
 
+        // Sync contact field to popup if open
+        const syncToPopup = (field, value) => {
+          try {
+            if (playbookPopupRef.current && !playbookPopupRef.current.closed) {
+              const input = playbookPopupRef.current.document.getElementById(`edit-${field}`);
+              if (input) input.value = value || '';
+            }
+          } catch (e) { /* popup may be closed or cross-origin */ }
+        };
+
         // Expose update function for popup to call back
         window.updateLeadContact = (leadId, field, value) => {
           const updatedLeads = leads.map(l =>
@@ -3974,6 +3985,14 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
           if (selectedLead?.id === leadId) {
             setSelectedLead({ ...selectedLead, [field]: value });
           }
+        };
+
+        // Update lead contact from main page (also syncs to popup)
+        const updateLeadField = (field, value) => {
+          const updatedLead = { ...selectedLead, [field]: value };
+          setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+          setSelectedLead(updatedLead);
+          syncToPopup(field, value);
         };
 
         const openPlaybookPopup = () => {
@@ -4237,6 +4256,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             popup.document.body.appendChild(scriptEl);
             popup.document.close();
             popup.focus();
+            // Store reference for two-way sync
+            playbookPopupRef.current = popup;
           } catch (err) {
             console.error('Error writing to popup:', err);
             showNotification('Error opening playbook popup', 'error');
@@ -4712,13 +4733,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-xl">📞</span>
                         <input
                           type="tel"
-                          defaultValue={selectedLead.phone || ''}
-                          key={`phone-${selectedLead.id}`}
-                          onBlur={(e) => {
-                            const updatedLead = { ...selectedLead, phone: e.target.value };
-                            setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
-                            setSelectedLead(updatedLead);
-                          }}
+                          value={selectedLead.phone || ''}
+                          onChange={(e) => updateLeadField('phone', e.target.value)}
                           placeholder="Enter phone number..."
                           className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
@@ -4736,13 +4752,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         <span className="text-gray-400">✉️</span>
                         <input
                           type="email"
-                          defaultValue={selectedLead.email || ''}
-                          key={`email-${selectedLead.id}`}
-                          onBlur={(e) => {
-                            const updatedLead = { ...selectedLead, email: e.target.value };
-                            setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
-                            setSelectedLead(updatedLead);
-                          }}
+                          value={selectedLead.email || ''}
+                          onChange={(e) => updateLeadField('email', e.target.value)}
                           placeholder="Enter email address..."
                           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
