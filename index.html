@@ -231,6 +231,7 @@
         source,
         sourceId: apolloPerson.id,
         importedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().split('T')[0],
         status: 'New Lead',
         lastContact: 'Never',
         notes: `Imported from ${LEAD_SOURCES[source]?.name || source}\nIndustry: ${org.industry || 'N/A'}\nEmployees: ${employees || 'N/A'}\nTechnologies: ${(org.technologies || []).slice(0, 5).join(', ') || 'N/A'}`,
@@ -1440,7 +1441,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
             score: parseInt(cleanValues[headers.indexOf('score')]) || Math.floor(Math.random() * 30) + 50,
             status: cleanValues[headers.indexOf('status')] || 'New Lead',
             lastContact: 'Never',
-            research: null
+            research: null,
+            createdAt: new Date().toISOString().split('T')[0]
           };
           
           // Normalize vertical
@@ -1592,13 +1594,13 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
 
     // ==================== SAMPLE LEADS ====================
     const defaultLeads = [
-      { id: 1, company: "Sunrise Aged Care Group", vertical: "healthcare", score: 87, status: "Call Scheduled", contact: "Sarah Chen", title: "COO", phone: "02 9555 1234", email: "schen@sunrisecare.com.au", lastContact: "2 days ago", notes: "Expanding to 3 new facilities. Current system can't scale. ACHS review coming Q2.", research: null },
-      { id: 2, company: "Mitchell Partners Legal", vertical: "professionalServices", score: 72, status: "Qualified", contact: "James Mitchell", title: "Managing Partner", phone: "02 9555 2345", email: "jmitchell@mitchellpartners.com.au", lastContact: "1 week ago", notes: "New partner joined from Clayton Utz. Reviewing all systems. 45 staff, 3 practice areas.", research: null },
-      { id: 3, company: "Pacific Industrial Components", vertical: "manufacturing", score: 91, status: "Discovery Call Done", contact: "Michael Torres", title: "Sales Director", phone: "02 4555 3456", email: "mtorres@pacificind.com.au", lastContact: "Yesterday", notes: "Forecast accuracy at 60% variance. Lost two major accounts. Ready for change.", research: null },
-      { id: 4, company: "CarePlus Health Services", vertical: "healthcare", score: 65, status: "New Lead", contact: "Lisa Wong", title: "CEO", phone: "02 9555 4567", email: "lwong@careplus.com.au", lastContact: "Never", notes: "Found via LinkedIn - posted about digital transformation. 150-bed facility in Parramatta.", research: null },
-      { id: 5, company: "Fortis Accounting", vertical: "professionalServices", score: 78, status: "Follow Up", contact: "David Park", title: "CEO", phone: "02 9555 5678", email: "dpark@fortisaccounting.com.au", lastContact: "3 days ago", notes: "Interested but Q2 is busy (tax season). 35 staff, growing 20% YoY.", research: null },
-      { id: 6, company: "Precision Metal Works", vertical: "manufacturing", score: 82, status: "Qualified", contact: "Tony Nguyen", title: "General Manager", phone: "02 9555 6789", email: "tnguyen@precisionmetal.com.au", lastContact: "4 days ago", notes: "Moving from MYOB to new ERP. 85 employees, $25M revenue.", research: null },
-      { id: 7, company: "Sydney Wealth Partners", vertical: "financial", score: 74, status: "New Lead", contact: "Rebecca Liu", title: "Director of Operations", phone: "02 9555 7890", email: "rliu@sydneywealth.com.au", lastContact: "Never", notes: "15 advisors, client onboarding taking too long. APRA compliance concerns.", research: null },
+      { id: 1, company: "Sunrise Aged Care Group", vertical: "healthcare", score: 87, status: "Call Scheduled", contact: "Sarah Chen", title: "COO", phone: "02 9555 1234", email: "schen@sunrisecare.com.au", lastContact: "2 days ago", notes: "Expanding to 3 new facilities. Current system can't scale. ACHS review coming Q2.", research: null, createdAt: "2025-01-10" },
+      { id: 2, company: "Mitchell Partners Legal", vertical: "professionalServices", score: 72, status: "Qualified", contact: "James Mitchell", title: "Managing Partner", phone: "02 9555 2345", email: "jmitchell@mitchellpartners.com.au", lastContact: "1 week ago", notes: "New partner joined from Clayton Utz. Reviewing all systems. 45 staff, 3 practice areas.", research: null, createdAt: "2025-01-10" },
+      { id: 3, company: "Pacific Industrial Components", vertical: "manufacturing", score: 91, status: "Discovery Call Done", contact: "Michael Torres", title: "Sales Director", phone: "02 4555 3456", email: "mtorres@pacificind.com.au", lastContact: "Yesterday", notes: "Forecast accuracy at 60% variance. Lost two major accounts. Ready for change.", research: null, createdAt: "2025-01-10" },
+      { id: 4, company: "CarePlus Health Services", vertical: "healthcare", score: 65, status: "New Lead", contact: "Lisa Wong", title: "CEO", phone: "02 9555 4567", email: "lwong@careplus.com.au", lastContact: "Never", notes: "Found via LinkedIn - posted about digital transformation. 150-bed facility in Parramatta.", research: null, createdAt: "2025-01-10" },
+      { id: 5, company: "Fortis Accounting", vertical: "professionalServices", score: 78, status: "Follow Up", contact: "David Park", title: "CEO", phone: "02 9555 5678", email: "dpark@fortisaccounting.com.au", lastContact: "3 days ago", notes: "Interested but Q2 is busy (tax season). 35 staff, growing 20% YoY.", research: null, createdAt: "2025-01-10" },
+      { id: 6, company: "Precision Metal Works", vertical: "manufacturing", score: 82, status: "Qualified", contact: "Tony Nguyen", title: "General Manager", phone: "02 9555 6789", email: "tnguyen@precisionmetal.com.au", lastContact: "4 days ago", notes: "Moving from MYOB to new ERP. 85 employees, $25M revenue.", research: null, createdAt: "2025-01-10" },
+      { id: 7, company: "Sydney Wealth Partners", vertical: "financial", score: 74, status: "New Lead", contact: "Rebecca Liu", title: "Director of Operations", phone: "02 9555 7890", email: "rliu@sydneywealth.com.au", lastContact: "Never", notes: "15 advisors, client onboarding taking too long. APRA compliance concerns.", research: null, createdAt: "2025-01-10" },
     ];
 
     // ==================== MAIN APP ====================
@@ -1683,7 +1685,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       // Onboarding Tour State
       const [showOnboarding, setShowOnboarding] = useState(false);
       const [onboardingStep, setOnboardingStep] = useState(0);
-      const [showWorkdayGuide, setShowWorkdayGuide] = useState(true);
+      const [workdayGuideUserPref, setWorkdayGuideUserPref] = useState(null); // null = auto (collapse if lead added today)
       const onboardingSteps = [
         { title: 'Welcome to Fexle Sales Engine!', description: 'This quick tour will show you the key features. The app follows a simple workflow: Add leads → Research → Call → Book CEO meetings.', target: null },
         { title: '1. Add Your Leads', description: 'Click "Add Lead" to add prospects with company, contact name, and title. You can also import CSV or search Apollo.io.', target: 'add-lead-btn' },
@@ -2739,7 +2741,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             score,
             status: 'New Lead',
             lastContact: 'Never',
-            createdDate: new Date().toISOString(),
+            createdAt: new Date().toISOString().split('T')[0],
             research: null
           };
           setLeads([...leads, lead]);
@@ -3260,6 +3262,12 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
           .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
           .slice(0, 5);
 
+        // Check if any lead was added today (for workday guide auto-collapse)
+        const todayStr = today.toISOString().split('T')[0];
+        const hasLeadAddedToday = leads.some(l => l.createdAt === todayStr);
+        // Auto-collapse if lead added today, otherwise expand (unless user manually toggled)
+        const showWorkdayGuide = workdayGuideUserPref !== null ? workdayGuideUserPref : !hasLeadAddedToday;
+
         const getLeadForTask = (task) => leads.find(l => l.id === task.leadId);
 
         const TaskTypeIcon = ({ type }) => {
@@ -3447,7 +3455,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             {/* Getting Started - Workday Guide */}
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-200 overflow-hidden">
               <button
-                onClick={() => setShowWorkdayGuide(!showWorkdayGuide)}
+                onClick={() => setWorkdayGuideUserPref(!showWorkdayGuide)}
                 className="w-full px-6 py-4 flex items-center justify-between hover:bg-emerald-100/50 transition-colors"
               >
                 <h3 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
