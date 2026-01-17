@@ -4259,6 +4259,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             scriptEl.textContent = popupScript;
             popup.document.body.appendChild(scriptEl);
             popup.document.close();
+            popup.scrollTo(0, 0);
             popup.focus();
             // Store reference for two-way sync
             playbookPopupRef.current = popup;
