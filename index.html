@@ -3389,21 +3389,21 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         }
                         if (!nextLead.lastContactDate) {
                           return (
-                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); }} className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl text-base font-semibold hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); setShouldOpenPlaybook(true); }} className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl text-base font-semibold hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
                               <span className="text-xl">📞</span> Make Call
                             </button>
                           );
                         }
                         if (hasDeckSent(nextLead)) {
                           return (
-                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); }} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-base font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); setShouldOpenPlaybook(true); }} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-base font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
                               <span className="text-xl">🔄</span> Follow Up on Deck
                             </button>
                           );
                         }
                         if (nextLead.status === 'Follow Up' || nextLead.status === 'No Answer') {
                           return (
-                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); }} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-base font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                            <button onClick={() => { setSelectedLead(nextLead); setActiveTab('callCenter'); setShouldOpenPlaybook(true); }} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-base font-semibold hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
                               <span className="text-xl">📞</span> Follow Up Call
                             </button>
                           );
@@ -4452,7 +4452,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           }
                           if (!selectedLead.lastContactDate) {
                             return (
-                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                                 <span className="text-lg">📞</span> Make First Call
                               </button>
                             );
@@ -4460,14 +4460,14 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           if (hasDeckSent(selectedLead) && !hasMeetingBooked(selectedLead)) {
                             // Deck was sent - next action is follow up
                             return (
-                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                                 <span className="text-lg">🔄</span> Follow Up on Deck
                               </button>
                             );
                           }
                           if (selectedLead.status === 'Follow Up' || selectedLead.status === 'No Answer') {
                             return (
-                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                                 <span className="text-lg">📞</span> Follow Up Call
                               </button>
                             );
