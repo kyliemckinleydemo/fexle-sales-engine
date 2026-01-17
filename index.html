@@ -2370,8 +2370,15 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       const [calendarWeekStart, setCalendarWeekStart] = useState(() => {
         const today = new Date();
         const day = today.getDay();
+        // Get Monday of current week
         const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(today.setDate(diff));
+        const monday = new Date(today);
+        monday.setDate(diff);
+        // If it's weekend (Sat/Sun), show next week instead
+        if (day === 0 || day === 6) {
+          monday.setDate(monday.getDate() + 7);
+        }
+        return monday;
       });
       const [selectedSlotForBooking, setSelectedSlotForBooking] = useState(null);
       const [editAvailabilityMode, setEditAvailabilityMode] = useState(false);
