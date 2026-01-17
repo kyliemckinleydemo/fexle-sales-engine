@@ -7321,11 +7321,11 @@ function jsonResponse(data) {
                               <div
                                 key={`${dateStr}-${time}`}
                                 onClick={() => !isPast && handleSlotClick(day, time)}
-                                className={`p-1 border-r border-gray-100 last:border-r-0 min-h-[40px] transition-all ${
-                                  isPast ? 'bg-gray-100 cursor-not-allowed' 
+                                className={`p-1 border-r border-gray-200 last:border-r-0 min-h-[40px] transition-all ${
+                                  isPast ? 'bg-gray-50 cursor-not-allowed'
                                     : booked ? (booked.isScheduleChallenge ? 'bg-amber-100 cursor-pointer hover:bg-amber-200' : 'bg-green-100 cursor-pointer hover:bg-green-200')
-                                    : available ? 'bg-blue-100 cursor-pointer hover:bg-blue-200 border-2 border-blue-300' 
-                                    : selectedLead ? 'hover:bg-amber-50 cursor-pointer border border-dashed border-gray-300' : 'hover:bg-gray-50 cursor-pointer'
+                                    : available ? 'bg-blue-100 cursor-pointer hover:bg-blue-200 border-2 border-blue-300'
+                                    : selectedLead ? 'hover:bg-amber-50 cursor-pointer border border-dashed border-gray-300' : 'bg-white hover:bg-gray-50 cursor-pointer'
                                 }`}
                               >
                                 {booked && <div className={`text-xs p-1 ${booked.isScheduleChallenge ? 'bg-amber-500' : 'bg-green-600'} text-white rounded truncate`} title={`${booked.company}\n${booked.leadName}${booked.leadTitle ? ' - ' + booked.leadTitle : ''}${booked.phone ? '\n📞 ' + booked.phone : ''}${booked.email ? '\n✉️ ' + booked.email : ''}`}>{booked.isScheduleChallenge ? '⚠️ ' : ''}{booked.company}</div>}
