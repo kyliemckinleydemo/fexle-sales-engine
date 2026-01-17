@@ -5728,22 +5728,48 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               <h3 className="text-xl font-bold">📥 Import Leads from CSV</h3>
               <button onClick={() => setShowImportModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <p className="text-gray-600 mb-4">Upload a CSV file with your leads. Minimum required: company and contact columns.</p>
+            {/* Tips Guide */}
+            <details className="bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-blue-800 hover:bg-blue-100 rounded-lg flex items-center gap-2">
+                <span>💡</span>
+                <span>CSV format requirements & tips</span>
+              </summary>
+              <div className="px-4 pb-3 pt-2 text-sm text-blue-700 space-y-3 border-t border-blue-200 mt-1">
+                <div>
+                  <div className="font-medium text-blue-800 mb-1">Required columns:</div>
+                  <code className="text-xs bg-blue-100 px-2 py-1 rounded">company, contact</code>
+                </div>
+                <div>
+                  <div className="font-medium text-blue-800 mb-1">Recommended columns:</div>
+                  <code className="text-xs bg-blue-100 px-2 py-1 rounded">title, phone, email, vertical, notes</code>
+                </div>
+                <div>
+                  <div className="font-medium text-blue-800 mb-1">Optional columns:</div>
+                  <code className="text-xs bg-blue-100 px-2 py-1 rounded">source, companySize, revenue, website, linkedinUrl</code>
+                </div>
+                <div className="pt-2 border-t border-blue-200 space-y-1.5">
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>First row must be headers</strong> (column names)</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Comma-separated values</strong> - use quotes around values containing commas</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Vertical values:</strong> healthcare, finance, manufacturing, retail, realestate, professional, other</span></div>
+                  <div className="flex gap-2"><span className="text-blue-500">•</span><span><strong>Include phone numbers</strong> - critical for cold calling success</span></div>
+                </div>
+              </div>
+            </details>
+
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
               <input type="file" accept=".csv" onChange={handleFileImport} ref={fileInputRef} className="hidden" />
               <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                 Choose CSV File
               </button>
             </div>
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">CSV Format:</span>
-                <button onClick={downloadCsvTemplate} className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-                  ⬇️ Download Template
-                </button>
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium text-gray-700">Need a starting point?</span>
+                <p className="text-xs text-gray-500">Download our template with all columns pre-configured</p>
               </div>
-              <code className="text-xs text-gray-600 block whitespace-pre-wrap">company,contact,title,phone,email,vertical,notes</code>
-              <p className="text-xs text-gray-500 mt-2">Optional columns: source, companySize, revenue, website, linkedinUrl</p>
+              <button onClick={downloadCsvTemplate} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 font-medium flex items-center gap-2">
+                ⬇️ Download Template
+              </button>
             </div>
             <button onClick={() => setShowImportModal(false)} className="mt-6 w-full py-3 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Close</button>
           </div>
