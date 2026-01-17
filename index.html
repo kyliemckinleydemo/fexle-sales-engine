@@ -3474,54 +3474,60 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               </button>
               {showWorkdayGuide && (
                 <div className="px-6 pb-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Build Your Lead Database</div>
-                        <div className="text-sm text-emerald-700">Import a CSV file or manually add leads. Use Apollo.io search if configured.</div>
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Left column: Steps 1-4 */}
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Build Your Lead Database</div>
+                          <div className="text-sm text-emerald-700">Import a CSV file or manually add leads. Use Apollo.io search if configured.</div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">2</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Choose Leads for the Day</div>
+                          <div className="text-sm text-emerald-700">Build a call list from your priority leads. Focus on 10-15 calls per day.</div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">3</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Research Before Calling</div>
+                          <div className="text-sm text-emerald-700">Use AI Research to understand each company before you call.</div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">4</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Make Calls & Log Outcomes</div>
+                          <div className="text-sm text-emerald-700">Use the Call Center and Playbook. Update status after each call.</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">2</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Choose Leads for the Day</div>
-                        <div className="text-sm text-emerald-700">Build a call list from your priority leads. Focus on 10-15 calls per day.</div>
+                    {/* Right column: Steps 5-7 */}
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">5</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Book CEO Meetings</div>
+                          <div className="text-sm text-emerald-700">The goal is to book meetings with decision makers.</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">3</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Research Before Calling</div>
-                        <div className="text-sm text-emerald-700">Use AI Research to understand each company before you call.</div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">6</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Keep CEO Calendar Updated</div>
+                          <div className="text-sm text-emerald-700">Ensure availability is current to book meetings on the spot.</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">4</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Make Calls & Log Outcomes</div>
-                        <div className="text-sm text-emerald-700">Use the Call Center and Playbook. Update status after each call.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">5</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Book CEO Meetings</div>
-                        <div className="text-sm text-emerald-700">The goal is to book meetings with decision makers.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">6</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Keep CEO Calendar Updated</div>
-                        <div className="text-sm text-emerald-700">Ensure availability is current to book meetings on the spot.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">7</span>
-                      <div>
-                        <div className="font-semibold text-emerald-900">Follow Up Consistently</div>
-                        <div className="text-sm text-emerald-700">Check "Action Required Today" daily.</div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">7</span>
+                        <div>
+                          <div className="font-semibold text-emerald-900">Follow Up Consistently</div>
+                          <div className="text-sm text-emerald-700">Check "Action Required Today" daily.</div>
+                        </div>
                       </div>
                     </div>
                   </div>
