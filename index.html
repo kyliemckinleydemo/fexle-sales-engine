@@ -3965,6 +3965,17 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             .replace(/\[COMPANY\]/g, selectedLead.company);
         };
 
+        // Expose update function for popup to call back
+        window.updateLeadContact = (leadId, field, value) => {
+          const updatedLeads = leads.map(l =>
+            l.id === leadId ? { ...l, [field]: value } : l
+          );
+          setLeads(updatedLeads);
+          if (selectedLead?.id === leadId) {
+            setSelectedLead({ ...selectedLead, [field]: value });
+          }
+        };
+
         const openPlaybookPopup = () => {
           if (!selectedLead || !vertical) {
             showNotification('Select a lead first to open the playbook');
@@ -4100,14 +4111,34 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             </head>
             <body>
               <div class="lead-info">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                  <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                  <div style="flex: 1;">
                     <h2 style="margin: 0 0 4px 0;">📞 ${escapeHtml(selectedLead.company)}</h2>
                     <div style="font-size: 16px; opacity: 0.9;">${escapeHtml(selectedLead.contact)} • ${escapeHtml(selectedLead.title || 'N/A')}</div>
                   </div>
-                  <div style="text-align: right;">
-                    <div style="font-size: 12px; opacity: 0.7; margin-bottom: 2px;">DIAL</div>
-                    <div style="font-size: 22px; font-weight: 700; letter-spacing: 1px;">${escapeHtml(selectedLead.phone || 'No phone')}</div>
+                  <div style="display: flex; gap: 12px;">
+                    <div>
+                      <div style="font-size: 11px; opacity: 0.7; margin-bottom: 2px;">PHONE</div>
+                      <input
+                        type="text"
+                        id="edit-phone"
+                        value="${escapeHtml(selectedLead.phone || '')}"
+                        placeholder="Add phone..."
+                        onchange="if(window.opener && window.opener.updateLeadContact) window.opener.updateLeadContact(${selectedLead.id}, 'phone', this.value)"
+                        style="font-size: 18px; font-weight: 700; letter-spacing: 0.5px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 4px 8px; color: white; width: 140px;"
+                      />
+                    </div>
+                    <div>
+                      <div style="font-size: 11px; opacity: 0.7; margin-bottom: 2px;">EMAIL</div>
+                      <input
+                        type="text"
+                        id="edit-email"
+                        value="${escapeHtml(selectedLead.email || '')}"
+                        placeholder="Add email..."
+                        onchange="if(window.opener && window.opener.updateLeadContact) window.opener.updateLeadContact(${selectedLead.id}, 'email', this.value)"
+                        style="font-size: 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 4px 8px; color: white; width: 180px;"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
