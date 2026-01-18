@@ -63,6 +63,47 @@ The Fexle Sales Engine is a purpose-built sales productivity platform designed f
 
 ---
 
+## 🇦🇺 Built for the Australian Market
+
+This platform is specifically designed for selling to Australian businesses, with localization throughout:
+
+### Phone Number Handling
+
+Australian phone numbers are automatically formatted for click-to-dial:
+
+| Input Format | Converted To | Type |
+|--------------|--------------|------|
+| `0412 345 678` | `+61412345678` | Mobile |
+| `02 1234 5678` | `+61212345678` | Sydney landline |
+| `(03) 9876 5432` | `+61398765432` | Melbourne landline |
+| `07 1234 5678` | `+61712345678` | Brisbane landline |
+| `08 1234 5678` | `+61812345678` | Perth landline |
+| `9876 5432` (8 digits) | `+61298765432` | Assumes Sydney |
+| `1300 123 456` | `1300123456` | Business number (no +61) |
+
+### Australian-Focused Cold Calling Scripts
+
+- **Opening scripts** tested for Australian business culture (direct but respectful)
+- **Objection handling** tailored to common Australian responses
+- **Industry playbooks** for 19 verticals common in the AU market
+- **Timezone awareness** - Best call times (4-5 PM AEST) highlighted in Pro Tips
+- **Local proof points** - Australian client success stories and stats
+
+### Currency & Scoring
+
+- Revenue brackets in **AUD** ($5M-$200M+ ranges)
+- Lead scoring calibrated for Australian mid-market (sweet spot: 201-500 employees)
+- Company size expectations aligned with AU business landscape
+
+### Australian Business Context
+
+- AI research assumes Australian location by default
+- State-based area codes recognized (NSW, VIC, QLD, WA/SA)
+- Local industry terminology and pain points
+- References to Australian compliance requirements (APRA, ACHS, etc.)
+
+---
+
 ## 🚀 Quick Start
 
 ### Option 1: Direct Use
