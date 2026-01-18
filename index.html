@@ -4526,7 +4526,16 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           {hasDeckSent(lead) || hasMeetingBooked(lead) ? '✓' : '○'}📧
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setActiveTab('calendar'); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLead(lead);
+                            setMeetingDetails(prev => ({
+                              ...prev,
+                              title: `Fexle CEO Call - ${lead.company}`,
+                              description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                            }));
+                            setShowMeetingModal(true);
+                          }}
                           className={`px-1 py-0.5 rounded hover:bg-gray-100 transition-colors ${hasMeetingBooked(lead) ? 'text-green-600' : 'text-gray-400 hover:text-purple-600'}`}
                           title={hasMeetingBooked(lead) ? 'Meeting booked ✓' : 'Click to book meeting'}
                         >
@@ -4626,7 +4635,14 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                                 <span>📧</span> Send Deck
                               </button>
                               <span className="text-gray-400 text-xs">or</span>
-                              <button onClick={() => setActiveTab('calendar')} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                              <button onClick={() => {
+                                setMeetingDetails(prev => ({
+                                  ...prev,
+                                  title: `Fexle CEO Call - ${selectedLead.company}`,
+                                  description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                                }));
+                                setShowMeetingModal(true);
+                              }} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                                 <span>📅</span> Book Meeting
                               </button>
                             </div>
