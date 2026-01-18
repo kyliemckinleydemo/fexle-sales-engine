@@ -509,6 +509,25 @@ A visual 4-step progress tracker at the top:
 - **Call Prep Panel**: Expandable section with full AI research (if available)
 - **Notes**: All communication history
 - **Log Call**: Record call outcomes
+- **Stage & Major Milestones**: Track lead progression
+
+### Stage & Major Milestones
+
+The lead detail panel includes a Stage selector and Major Milestones checkboxes:
+
+**Stage** (select one):
+- New Lead, Qualified, Follow Up, Closed Won, Closed Lost
+
+**Major Milestones** (check multiple as achieved):
+
+| Milestone | Description |
+|-----------|-------------|
+| **Discovery Call** | Initial discovery conversation completed |
+| **Deck Sent** | AI Implementation deck sent to prospect |
+| **CEO Meeting Held** | CEO meeting took place (not just requested) |
+| **Proposal Sent** | Formal proposal delivered |
+
+Note: "CEO Meeting Held" is different from the "Meeting Requested" call outcome. The call outcome tracks when they ask for a meeting; the milestone tracks when it actually happened.
 
 ### Call Prep: AI Research Panel
 
@@ -531,7 +550,7 @@ Log the result of each call using these outcome buttons (available in both the m
 | Outcome | Icon | Follow-up Created | Notes |
 |---------|------|-------------------|-------|
 | **Meeting Requested** | 📅 | None | Best outcome - they want a CEO meeting |
-| **Deck Requested** | 📧 | 5-day follow-up | Auto-marks Deck Sent milestone |
+| **Deck Requested** | 📧 | 5-day follow-up | Auto-marks Deck Sent major milestone |
 | **Call Back** | 🔄 | 2-day follow-up | They asked to call later |
 | **Voicemail** | 📱 | 2-day follow-up | Left a message |
 | **No Answer** | 📵 | 1-day follow-up | Try again tomorrow |
