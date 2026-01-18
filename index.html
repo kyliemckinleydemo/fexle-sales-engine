@@ -4939,6 +4939,55 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     </div>
                   </div>
 
+                  {/* Notes Section */}
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-yellow-600">📝</span>
+                        <h3 className="font-semibold text-gray-900 text-sm">Notes</h3>
+                        {selectedLead.notes && (
+                          <span className="text-xs text-gray-400">({selectedLead.notes.split('\n\n').filter(n => n.trim()).length} entries)</span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Add Note Input */}
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        id="call-notes-input"
+                        type="text"
+                        value={callNotes}
+                        onChange={(e) => setCallNotes(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && callNotes.trim()) {
+                            e.preventDefault();
+                            addCallNotes();
+                          }
+                        }}
+                        placeholder="Add a note... (Enter to save)"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      />
+                      <button
+                        onClick={addCallNotes}
+                        disabled={!callNotes.trim()}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+                      >
+                        💾 Save
+                      </button>
+                    </div>
+                    {/* Notes History */}
+                    {selectedLead.notes ? (
+                      <div className="max-h-40 overflow-y-auto space-y-2 text-sm">
+                        {selectedLead.notes.split('\n\n').filter(n => n.trim()).map((note, idx) => (
+                          <div key={idx} className="p-2 bg-yellow-50 rounded-lg text-gray-700 border-l-2 border-yellow-400">
+                            {note}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-400 italic">No notes yet. Add your first note above.</div>
+                    )}
+                  </div>
+
                   {/* Contact Info - Prominent */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     {/* Primary Contact Info - Large & Prominent */}
@@ -5034,15 +5083,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           </a>
                         )}
                       </div>
-                      {selectedLead.notes && (
-                        <details className="text-xs">
-                          <summary className="cursor-pointer text-gray-500 hover:text-gray-700">📝 Notes</summary>
-                          <div className="absolute mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-200 max-w-md text-sm text-gray-700 whitespace-pre-line z-10">
-                            {selectedLead.notes}
-                          </div>
-                        </details>
-                      )}
-                    </div>
+                                          </div>
                   </div>
 
                   {/* Call Script Toggle */}
@@ -5393,44 +5434,31 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         </button>
                       ))}
                     </div>
-                    <div className="flex gap-3">
-                      <textarea
-                        id="call-notes-input"
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type="text"
                         value={callNotes}
                         onChange={(e) => setCallNotes(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                          if (e.key === 'Enter' && callOutcome) {
                             e.preventDefault();
-                            if (callOutcome) {
-                              logCall();
-                            } else if (callNotes.trim()) {
-                              addCallNotes();
-                            }
+                            logCall();
                           }
                         }}
-                        placeholder="What did you discuss? Next steps? (Ctrl+Enter to save)"
-                        className="flex-1 p-3 border border-gray-200 rounded-lg text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Optional: quick note about this call..."
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <div className="flex flex-col gap-2 self-end">
-                        <button
-                          onClick={logCall}
-                          disabled={!callOutcome}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                        >
-                          📝 Log Call
-                        </button>
-                        <button
-                          onClick={addCallNotes}
-                          disabled={!callNotes.trim()}
-                          className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
-                        >
-                          💾 Notes Only
-                        </button>
-                      </div>
+                      <button
+                        onClick={logCall}
+                        disabled={!callOutcome}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >
+                        📝 Log Call
+                      </button>
                     </div>
                     {callOutcome && (
                       <div className="mt-2 text-sm text-blue-600">
-                        Selected: <strong>{callOutcome}</strong> - Click "Log Call" to save
+                        Selected: <strong>{callOutcome}</strong> - Press Enter or click "Log Call"
                       </div>
                     )}
                   </div>
