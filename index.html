@@ -2828,29 +2828,43 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
           const outcomeNote = `[${timestamp}] 📞 ${callOutcome}${callNotes ? ': ' + callNotes : ''}`;
 
+          // Build updated lead object
+          const updatedLeadData = {
+            lastContact: 'Just now',
+            lastContactDate: new Date().toISOString(),
+            lastCallOutcome: callOutcome,
+            notes: outcomeNote + (selectedLead.notes ? '\n\n' + selectedLead.notes : '')
+          };
+
+          // If deck requested, mark milestone
+          if (callOutcome === 'Deck Requested') {
+            updatedLeadData.milestones = { ...selectedLead.milestones, deckSent: true };
+          }
+
           setLeads(leads.map(lead =>
             lead.id === selectedLead.id
-              ? {
-                  ...lead,
-                  lastContact: 'Just now',
-                  lastContactDate: new Date().toISOString(),
-                  lastCallOutcome: callOutcome,
-                  notes: outcomeNote + (lead.notes ? '\n\n' + lead.notes : '')
-                }
+              ? { ...lead, ...updatedLeadData }
               : lead
           ));
 
           // Auto-create follow-up task based on outcome
-          if (['Voicemail', 'No Answer'].includes(callOutcome)) {
-            const followUpDays = { 'Voicemail': 2, 'No Answer': 1 };
+          const followUpConfig = {
+            'Voicemail': { days: 2, description: 'Follow up after voicemail' },
+            'No Answer': { days: 1, description: 'Retry call - no answer' },
+            'Call Back': { days: 2, description: 'Call back as requested' },
+            'Deck Requested': { days: 5, description: 'Follow up on deck' }
+          };
+
+          if (followUpConfig[callOutcome]) {
+            const config = followUpConfig[callOutcome];
             const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + followUpDays[callOutcome]);
+            dueDate.setDate(dueDate.getDate() + config.days);
 
             const newFollowUp = {
               id: Date.now(),
               leadId: selectedLead.id,
-              type: 'follow-up-call',
-              description: callOutcome === 'Voicemail' ? 'Follow up after voicemail' : 'Retry call - no answer',
+              type: callOutcome === 'Deck Requested' ? 'follow-up-deck' : 'follow-up-call',
+              description: config.description,
               dueDate: dueDate.toISOString().split('T')[0],
               dueTime: '16:00',
               completed: false,
@@ -2901,29 +2915,40 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
         const outcomeNote = `[${timestamp}] 📞 ${outcome}${notes ? ': ' + notes : ''}`;
 
-        setLeads(prevLeads => prevLeads.map(lead =>
-          lead.id === leadId
-            ? {
-                ...lead,
-                lastContact: 'Just now',
-                lastContactDate: new Date().toISOString(),
-                lastCallOutcome: outcome,
-                notes: outcomeNote + (lead.notes ? '\n\n' + lead.notes : '')
-              }
-            : lead
-        ));
+        setLeads(prevLeads => prevLeads.map(lead => {
+          if (lead.id !== leadId) return lead;
+          const updatedLead = {
+            ...lead,
+            lastContact: 'Just now',
+            lastContactDate: new Date().toISOString(),
+            lastCallOutcome: outcome,
+            notes: outcomeNote + (lead.notes ? '\n\n' + lead.notes : '')
+          };
+          // If deck requested, mark milestone
+          if (outcome === 'Deck Requested') {
+            updatedLead.milestones = { ...lead.milestones, deckSent: true };
+          }
+          return updatedLead;
+        }));
 
         // Auto-create follow-up task based on outcome
-        if (['Voicemail', 'No Answer'].includes(outcome)) {
-          const followUpDays = { 'Voicemail': 2, 'No Answer': 1 };
+        const followUpConfig = {
+          'Voicemail': { days: 2, description: 'Follow up after voicemail' },
+          'No Answer': { days: 1, description: 'Retry call - no answer' },
+          'Call Back': { days: 2, description: 'Call back as requested' },
+          'Deck Requested': { days: 5, description: 'Follow up on deck' }
+        };
+
+        if (followUpConfig[outcome]) {
+          const config = followUpConfig[outcome];
           const dueDate = new Date();
-          dueDate.setDate(dueDate.getDate() + followUpDays[outcome]);
+          dueDate.setDate(dueDate.getDate() + config.days);
 
           const newFollowUp = {
             id: Date.now(),
             leadId: leadId,
-            type: 'follow-up-call',
-            description: outcome === 'Voicemail' ? 'Follow up after voicemail' : 'Retry call - no answer',
+            type: outcome === 'Deck Requested' ? 'follow-up-deck' : 'follow-up-call',
+            description: config.description,
             dueDate: dueDate.toISOString().split('T')[0],
             dueTime: '16:00',
             completed: false,
@@ -4337,11 +4362,13 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
 
               <h2>📞 Log Call Outcome</h2>
               <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; position: sticky; bottom: 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
-                  <button onclick="logOutcome('Connected')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #dcfce7; color: #166534; border: 2px solid #86efac; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">✅ Connected</button>
-                  <button onclick="logOutcome('Voicemail')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">📱 Voicemail</button>
-                  <button onclick="logOutcome('No Answer')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #f3f4f6; color: #374151; border: 2px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">📵 No Answer</button>
-                  <button onclick="logOutcome('Not Interested')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">❌ Not Interested</button>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                  <button onclick="logOutcome('Meeting Requested')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #f3e8ff; color: #6b21a8; border: 2px solid #c4b5fd; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">📅 Meeting</button>
+                  <button onclick="logOutcome('Deck Requested')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #dbeafe; color: #1e40af; border: 2px solid #93c5fd; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">📧 Deck</button>
+                  <button onclick="logOutcome('Call Back')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #dcfce7; color: #166534; border: 2px solid #86efac; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">🔄 Call Back</button>
+                  <button onclick="logOutcome('Voicemail')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">📱 Voicemail</button>
+                  <button onclick="logOutcome('No Answer')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #f3f4f6; color: #374151; border: 2px solid #d1d5db; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">📵 No Answer</button>
+                  <button onclick="logOutcome('Not Interested')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">❌ Not Interested</button>
                 </div>
                 <div style="display: flex; gap: 8px;">
                   <input type="text" id="popup-notes" placeholder="Quick notes (optional)..." style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" />
@@ -5266,7 +5293,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                     {/* Call Outcome Buttons */}
                     <div className="flex flex-wrap gap-2 mb-3">
                       {[
-                        { outcome: 'Connected', icon: '✅', color: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
+                        { outcome: 'Meeting Requested', icon: '📅', color: 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200' },
+                        { outcome: 'Deck Requested', icon: '📧', color: 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200' },
+                        { outcome: 'Call Back', icon: '🔄', color: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
                         { outcome: 'Voicemail', icon: '📱', color: 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200' },
                         { outcome: 'No Answer', icon: '📵', color: 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200' },
                         { outcome: 'Not Interested', icon: '❌', color: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' }
