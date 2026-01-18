@@ -2653,7 +2653,16 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           const daysSinceBackup = lastBackup ? Math.floor((Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)) : 999;
           if (daysSinceBackup >= 7 && saved.leads?.length > 0) {
             setTimeout(() => {
-              showNotification(`⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`, 'warning');
+              showNotification(
+                `⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`,
+                'warning',
+                () => {
+                  const current = JSON.parse(localStorage.getItem('fexleSalesEngine') || '{}');
+                  current.lastBackupDate = new Date().toISOString();
+                  localStorage.setItem('fexleSalesEngine', JSON.stringify(current));
+                },
+                'Got it'
+              );
             }, 2000);
           }
         } else {
@@ -2692,9 +2701,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       };
 
       // Show notification
-      const showNotification = (message, type = 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 3000);
+      const showNotification = (message, type = 'success', action = null, actionLabel = null) => {
+        setNotification({ message, type, action, actionLabel });
+        if (!action) {
+          setTimeout(() => setNotification(null), 3000);
+        }
       };
 
       // Utility functions
@@ -3596,7 +3607,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 📥 Import Leads
               </button>
               <button onClick={handleExport} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                📤 Export CSV
+                💾 Backup Data
               </button>
               <button onClick={() => setShowSettings(true)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
                 ⚙️ Settings
@@ -7247,7 +7258,7 @@ function jsonResponse(data) {
                   <li>• ✓ Persists when you close the browser</li>
                   <li>• ✓ Survives computer restarts</li>
                   <li>• ⚠️ Cleared if you clear browser data</li>
-                  <li>• 💡 Use Export CSV to backup leads!</li>
+                  <li>• 💡 Use Backup Data to save your leads!</li>
                 </ul>
               </div>
 
@@ -8132,10 +8143,18 @@ function jsonResponse(data) {
         <div className="min-h-screen bg-gray-50">
           {/* Notification */}
           {notification && (
-            <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white ${
-              notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'
+            <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white flex items-center gap-3 ${
+              notification.type === 'error' ? 'bg-red-600' : notification.type === 'warning' ? 'bg-amber-600' : 'bg-green-600'
             }`}>
               {notification.message}
+              {notification.action && (
+                <button
+                  onClick={() => { notification.action(); setNotification(null); }}
+                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm font-medium transition-colors"
+                >
+                  {notification.actionLabel || 'Dismiss'}
+                </button>
+              )}
             </div>
           )}
 

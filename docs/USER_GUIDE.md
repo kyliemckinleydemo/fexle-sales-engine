@@ -1,6 +1,6 @@
 # Fexle Sales Engine - User Guide
 
-**Version 2.4** | Last Updated: January 2026
+**Version 2.5** | Last Updated: January 2026
 
 ---
 
@@ -71,7 +71,7 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 - ✅ All data persists in your browser's localStorage
 - ✅ Survives browser restarts and computer reboots
 - ⚠️ Cleared if you clear browser data/cache
-- 💡 **Recommended**: Export CSV backup every 3 days (you'll get a reminder)
+- 💡 **Recommended**: Use "Backup Data" weekly (you'll get a reminder with a "Got it" button to dismiss)
 
 ---
 
@@ -390,7 +390,7 @@ The **"Here's a Normal Workday"** section provides a step-by-step guide to struc
 - Click any task to open the associated lead
 - Check off tasks when complete
 - Overdue tasks show in red
-- Backup reminders appear every 3 days
+- Backup reminders appear weekly (with "Got it" dismiss button)
 
 ---
 
@@ -507,7 +507,7 @@ A visual 4-step progress tracker at the top:
 - **Quick Actions**: AI Research, Email Templates, Schedule CEO Meeting, Pop Out Scripts
 - **Call Script**: Context-aware suggested opening with SF/Non-SF toggle
 - **Call Prep Panel**: Expandable section with full AI research (if available)
-- **Notes**: All communication history
+- **Notes**: All communication history (delete with 🗑️ icon, confirmation required)
 - **Log Call**: Record call outcomes
 - **Major Milestones**: Track lead progression through the sales cycle
 
@@ -840,7 +840,7 @@ When preparing for a call, expand the **"Call Prep: AI Research"** panel to see:
 | Follow-up on Deck | 📧 | Check if they reviewed the deck |
 | Email | ✉️ | Send an email |
 | Meeting | 📅 | Scheduled meeting or call |
-| Backup Reminder | 💾 | Export data backup |
+| Backup Reminder | 💾 | Backup data reminder |
 
 ### Creating Tasks
 
@@ -857,7 +857,7 @@ The system automatically creates tasks for:
 - Follow-ups after "Deck Sent" (7 days)
 - Follow-ups after "No Answer" (2 days)
 - Meeting prep before CEO meetings (1 day before)
-- Backup reminders (every 3 days)
+- Backup reminders (weekly)
 
 ### Managing Tasks
 
@@ -951,9 +951,10 @@ A confirmation prompt appears before deletion. **Note**: Deleted leads cannot be
 
 ### Exporting Data
 
-**Quick Export:**
-1. Click **Export CSV** button
-2. File downloads with all lead data
+**Quick Backup:**
+1. Click **💾 Backup Data** button
+2. CSV file downloads with all lead data
+3. This also resets the weekly backup reminder timer
 
 **Full Backup:**
 1. Click **📥 Full Backup** button
