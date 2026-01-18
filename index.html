@@ -2775,6 +2775,27 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         return lead.milestones?.deckSent || lead.status === 'Deck Sent';
       };
 
+      // Helper: Format Australian phone number for tel: link
+      const formatPhoneForTel = (phone) => {
+        if (!phone) return '';
+        // Remove all non-digit characters
+        const digits = phone.replace(/\D/g, '');
+
+        // Already international format with 61
+        if (digits.startsWith('61') && digits.length >= 11) {
+          return '+' + digits;
+        }
+
+        // Australian mobile (04xx xxx xxx) or landline (0X xxxx xxxx)
+        if (digits.startsWith('0') && digits.length === 10) {
+          // Drop the leading 0, add +61
+          return '+61' + digits.substring(1);
+        }
+
+        // Return cleaned digits if format not recognized
+        return phone.replace(/\s/g, '');
+      };
+
       // Filter leads
       const filteredLeads = leads.filter(lead => {
         const matchesSearch = lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -4280,7 +4301,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                           onchange="if(window.opener && window.opener.updateLeadContact) window.opener.updateLeadContact(${selectedLead.id}, 'phone', this.value)"
                           style="font-size: 18px; font-weight: 700; letter-spacing: 0.5px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 4px 8px; color: white; width: 140px;"
                         />
-                        ${selectedLead.phone ? `<a href="tel:${selectedLead.phone}" style="background: #22c55e; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">📞 Dial</a><button onclick="navigator.clipboard.writeText('${selectedLead.phone.replace(/'/g, '')}').then(()=>{this.textContent='✓';setTimeout(()=>{this.textContent='📋';},1500);})" style="background: #6b7280; color: white; padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-left: 4px;" title="Copy phone number">📋</button>` : ''}
+                        ${selectedLead.phone ? `<a href="tel:${formatPhoneForTel(selectedLead.phone)}" style="background: #22c55e; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">📞 Dial</a><button onclick="navigator.clipboard.writeText('${selectedLead.phone.replace(/'/g, '')}').then(()=>{this.textContent='✓';setTimeout(()=>{this.textContent='📋';},1500);})" style="background: #6b7280; color: white; padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-left: 4px;" title="Copy phone number">📋</button>` : ''}
                       </div>
                     </div>
                     <div>
