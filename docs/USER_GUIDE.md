@@ -1,6 +1,6 @@
 # Fexle Sales Engine - User Guide
 
-**Version 2.2** | Last Updated: January 2026
+**Version 2.3** | Last Updated: January 2026
 
 ---
 
@@ -526,14 +526,19 @@ When a lead has saved research, an expandable **"Call Prep: AI Research"** panel
 
 ### Call Outcomes
 
-| Outcome | Follow-up Created |
-|---------|-------------------|
-| **Deck Sent** | 7-day follow-up task |
-| **Follow Up** | 3-day follow-up task |
-| **No Answer** | 2-day follow-up task |
-| **Call Scheduled** | No auto task |
-| **CEO Meeting Booked** | Prep task created |
-| **Not Interested** | No task |
+Log the result of each call using these outcome buttons (available in both the main call page and the popup script):
+
+| Outcome | Icon | Follow-up Created | Notes |
+|---------|------|-------------------|-------|
+| **Meeting Requested** | 📅 | None | Best outcome - they want a CEO meeting |
+| **Deck Requested** | 📧 | 5-day follow-up | Auto-marks Deck Sent milestone |
+| **Call Back** | 🔄 | 2-day follow-up | They asked to call later |
+| **Voicemail** | 📱 | 2-day follow-up | Left a message |
+| **No Answer** | 📵 | 1-day follow-up | Try again tomorrow |
+| **Not Interested** | ❌ | None | End of the line |
+
+Each logged call adds a timestamped entry to the lead's notes, e.g.:
+`[18/1/26, 2:30 pm] 📞 Deck Requested: Great conversation, sending AI deck`
 
 ---
 
