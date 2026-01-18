@@ -8175,23 +8175,38 @@ function jsonResponse(data) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <nav className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-                    {[
-                      { id: 'dashboard', label: '🎯 Today' },
-                      { id: 'callCenter', label: '📞 Call Center' },
-                      { id: 'playbooks', label: '📋 Industry Playbooks' },
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </nav>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setActiveTab('dashboard')}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        activeTab === 'dashboard'
+                          ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-200'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      🎯 Today
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('callCenter')}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        activeTab === 'callCenter'
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-200'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      📞 Call Center
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('playbooks')}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        activeTab === 'playbooks'
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-200'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      📋 Playbooks
+                    </button>
+                  </div>
                   
                   {/* Google Sheets Sync Button */}
                   {sheetsConnected && (
