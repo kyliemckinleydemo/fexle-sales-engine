@@ -7350,7 +7350,18 @@ function jsonResponse(data) {
                   <div className="text-sm text-blue-600 mt-1">
                     {selectedLead.email && <span>📧 {selectedLead.email}</span>}
                     {selectedLead.email && selectedLead.phone && <span className="mx-2">•</span>}
-                    {selectedLead.phone && <span>📞 {selectedLead.phone}</span>}
+                    {selectedLead.phone && (
+                      <span className="inline-flex items-center gap-1">
+                        📞 {selectedLead.phone}
+                        <a
+                          href={`tel:${formatPhoneForTel(selectedLead.phone)}`}
+                          className="ml-1 px-2 py-0.5 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Dial
+                        </a>
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
