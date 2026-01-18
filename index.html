@@ -2826,29 +2826,31 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       const logCall = () => {
         if (selectedLead && callOutcome) {
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
+          const outcomeNote = `[${timestamp}] 📞 ${callOutcome}${callNotes ? ': ' + callNotes : ''}`;
+
           setLeads(leads.map(lead =>
             lead.id === selectedLead.id
               ? {
                   ...lead,
-                  status: callOutcome,
                   lastContact: 'Just now',
                   lastContactDate: new Date().toISOString(),
-                  notes: callNotes ? `[${timestamp}] ${callNotes}\n\n${lead.notes}` : lead.notes
+                  lastCallOutcome: callOutcome,
+                  notes: outcomeNote + (lead.notes ? '\n\n' + lead.notes : '')
                 }
               : lead
           ));
 
           // Auto-create follow-up task based on outcome
-          if (['Deck Sent', 'Follow Up', 'No Answer'].includes(callOutcome)) {
-            const followUpDays = { 'Deck Sent': 7, 'Follow Up': 3, 'No Answer': 2 };
+          if (['Voicemail', 'No Answer'].includes(callOutcome)) {
+            const followUpDays = { 'Voicemail': 2, 'No Answer': 1 };
             const dueDate = new Date();
             dueDate.setDate(dueDate.getDate() + followUpDays[callOutcome]);
 
             const newFollowUp = {
               id: Date.now(),
               leadId: selectedLead.id,
-              type: callOutcome === 'Deck Sent' ? 'follow-up-deck' : 'follow-up-call',
-              description: callOutcome === 'Deck Sent' ? 'Follow up on AI Implementation Deck' : 'Follow up call',
+              type: 'follow-up-call',
+              description: callOutcome === 'Voicemail' ? 'Follow up after voicemail' : 'Retry call - no answer',
               dueDate: dueDate.toISOString().split('T')[0],
               dueTime: '16:00',
               completed: false,
@@ -2863,7 +2865,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             markCallListItemComplete(selectedLead.id);
           }
 
-          showNotification('Call logged successfully');
+          showNotification(`Call logged: ${callOutcome}`);
           setCallNotes('');
           setCallOutcome('');
         }
@@ -2893,6 +2895,53 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setCallNotes('');
         }
       };
+
+      // Log call from popup window
+      const logCallFromPopup = (leadId, outcome, notes) => {
+        const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
+        const outcomeNote = `[${timestamp}] 📞 ${outcome}${notes ? ': ' + notes : ''}`;
+
+        setLeads(prevLeads => prevLeads.map(lead =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                lastContact: 'Just now',
+                lastContactDate: new Date().toISOString(),
+                lastCallOutcome: outcome,
+                notes: outcomeNote + (lead.notes ? '\n\n' + lead.notes : '')
+              }
+            : lead
+        ));
+
+        // Auto-create follow-up task based on outcome
+        if (['Voicemail', 'No Answer'].includes(outcome)) {
+          const followUpDays = { 'Voicemail': 2, 'No Answer': 1 };
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + followUpDays[outcome]);
+
+          const newFollowUp = {
+            id: Date.now(),
+            leadId: leadId,
+            type: 'follow-up-call',
+            description: outcome === 'Voicemail' ? 'Follow up after voicemail' : 'Retry call - no answer',
+            dueDate: dueDate.toISOString().split('T')[0],
+            dueTime: '16:00',
+            completed: false,
+            createdAt: new Date().toISOString()
+          };
+          setTasks(prevTasks => [...prevTasks, newFollowUp]);
+        }
+
+        // Auto-mark as complete in today's call list
+        if (todayCallList.some(item => item.leadId === leadId)) {
+          markCallListItemComplete(leadId);
+        }
+
+        showNotification(`Call logged: ${outcome}`);
+      };
+
+      // Expose logCallFromPopup to window for popup access
+      window.logCallFromPopup = logCallFromPopup;
 
       // Task management functions
       const addTask = () => {
@@ -4274,6 +4323,20 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                 </ul>
               </div>
 
+              <h2>📞 Log Call Outcome</h2>
+              <div style="background: white; border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; position: sticky; bottom: 0; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+                  <button onclick="logOutcome('Connected')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #dcfce7; color: #166534; border: 2px solid #86efac; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">✅ Connected</button>
+                  <button onclick="logOutcome('Voicemail')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #fef3c7; color: #92400e; border: 2px solid #fcd34d; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">📱 Voicemail</button>
+                  <button onclick="logOutcome('No Answer')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #f3f4f6; color: #374151; border: 2px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">📵 No Answer</button>
+                  <button onclick="logOutcome('Not Interested')" style="flex: 1; min-width: 120px; padding: 12px 16px; background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">❌ Not Interested</button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="popup-notes" placeholder="Quick notes (optional)..." style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" />
+                </div>
+                <div id="outcome-status" style="margin-top: 12px; text-align: center; font-size: 14px; color: #6b7280;"></div>
+              </div>
+
             </body>
             </html>
           `;
@@ -4289,6 +4352,19 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               } else {
                 document.querySelector('.toggle-btn.nonsf').classList.add('active');
                 document.querySelector('.nonsf-content').classList.add('active');
+              }
+            }
+
+            function logOutcome(outcome) {
+              var notes = document.getElementById('popup-notes').value;
+              var statusEl = document.getElementById('outcome-status');
+              if (window.opener && window.opener.logCallFromPopup) {
+                window.opener.logCallFromPopup(${selectedLead.id}, outcome, notes);
+                statusEl.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Logged: ' + outcome + '</span>';
+                document.getElementById('popup-notes').value = '';
+                setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
+              } else {
+                statusEl.innerHTML = '<span style="color: #dc2626;">Main window not available</span>';
               }
             }
           `;
@@ -5155,8 +5231,29 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   {/* Call Logging */}
                   <div id="call-section" className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <span>📝</span> Call Notes
+                      <span>📞</span> Log Call Outcome
                     </h3>
+                    {/* Call Outcome Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {[
+                        { outcome: 'Connected', icon: '✅', color: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
+                        { outcome: 'Voicemail', icon: '📱', color: 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200' },
+                        { outcome: 'No Answer', icon: '📵', color: 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200' },
+                        { outcome: 'Not Interested', icon: '❌', color: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' }
+                      ].map(({ outcome, icon, color }) => (
+                        <button
+                          key={outcome}
+                          onClick={() => setCallOutcome(callOutcome === outcome ? '' : outcome)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                            callOutcome === outcome
+                              ? 'ring-2 ring-blue-500 ring-offset-1 ' + color
+                              : color
+                          }`}
+                        >
+                          {icon} {outcome}
+                        </button>
+                      ))}
+                    </div>
                     <div className="flex gap-3">
                       <textarea
                         value={callNotes}
@@ -5164,14 +5261,28 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                         placeholder="What did you discuss? Next steps? Which script worked?"
                         className="flex-1 p-3 border border-gray-200 rounded-lg text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <button
-                        onClick={addCallNotes}
-                        disabled={!callNotes.trim()}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
-                      >
-                        💾 Save
-                      </button>
+                      <div className="flex flex-col gap-2 self-end">
+                        <button
+                          onClick={logCall}
+                          disabled={!callOutcome}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                        >
+                          📝 Log Call
+                        </button>
+                        <button
+                          onClick={addCallNotes}
+                          disabled={!callNotes.trim()}
+                          className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+                        >
+                          💾 Notes Only
+                        </button>
+                      </div>
                     </div>
+                    {callOutcome && (
+                      <div className="mt-2 text-sm text-blue-600">
+                        Selected: <strong>{callOutcome}</strong> - Click "Log Call" to save
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
