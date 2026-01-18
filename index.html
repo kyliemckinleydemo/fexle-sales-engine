@@ -2944,8 +2944,22 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         showNotification(`Call logged: ${outcome}`);
       };
 
-      // Expose logCallFromPopup to window for popup access
+      // Add notes only from popup (no outcome)
+      const addCallNotesFromPopup = (leadId, notes) => {
+        const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
+        setLeads(prevLeads => prevLeads.map(lead => {
+          if (lead.id !== leadId) return lead;
+          return {
+            ...lead,
+            notes: `[${timestamp}] ${notes}\n\n${lead.notes || ''}`
+          };
+        }));
+        showNotification('Notes saved');
+      };
+
+      // Expose functions to window for popup access
       window.logCallFromPopup = logCallFromPopup;
+      window.addCallNotesFromPopup = addCallNotesFromPopup;
 
       // Task management functions
       const addTask = () => {
@@ -4367,7 +4381,8 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                   <button onclick="logOutcome('Not Interested')" style="flex: 1; min-width: 100px; padding: 10px 12px; background: #fee2e2; color: #991b1b; border: 2px solid #fca5a5; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">❌ Not Interested</button>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <input type="text" id="popup-notes" placeholder="Quick notes (optional)..." style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" />
+                  <input type="text" id="popup-notes" placeholder="Quick notes... (Enter to save)" style="flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveNotesOnly();}" />
+                  <button onclick="saveNotesOnly()" style="padding: 10px 14px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; cursor: pointer;">💾 Notes</button>
                 </div>
                 <div id="outcome-status" style="margin-top: 12px; text-align: center; font-size: 14px; color: #6b7280;"></div>
               </div>
@@ -4396,6 +4411,24 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               if (window.opener && window.opener.logCallFromPopup) {
                 window.opener.logCallFromPopup(${selectedLead.id}, outcome, notes);
                 statusEl.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Logged: ' + outcome + '</span>';
+                document.getElementById('popup-notes').value = '';
+                setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
+              } else {
+                statusEl.innerHTML = '<span style="color: #dc2626;">Main window not available</span>';
+              }
+            }
+
+            function saveNotesOnly() {
+              var notes = document.getElementById('popup-notes').value;
+              var statusEl = document.getElementById('outcome-status');
+              if (!notes.trim()) {
+                statusEl.innerHTML = '<span style="color: #f59e0b;">Enter some notes first</span>';
+                setTimeout(function() { statusEl.innerHTML = ''; }, 2000);
+                return;
+              }
+              if (window.opener && window.opener.addCallNotesFromPopup) {
+                window.opener.addCallNotesFromPopup(${selectedLead.id}, notes);
+                statusEl.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Notes saved</span>';
                 document.getElementById('popup-notes').value = '';
                 setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
               } else {
