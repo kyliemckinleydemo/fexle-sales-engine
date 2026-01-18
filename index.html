@@ -2650,11 +2650,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
           // Check if backup is needed (weekly reminder)
           const lastBackup = saved.lastBackupDate ? new Date(saved.lastBackupDate) : null;
-          const daysSinceBackup = lastBackup ? Math.floor((Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)) : 999;
-          if (daysSinceBackup >= 7 && saved.leads?.length > 0) {
+          const daysSinceBackup = lastBackup ? Math.floor((Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)) : null;
+          if ((daysSinceBackup === null || daysSinceBackup >= 7) && saved.leads?.length > 0) {
             setTimeout(() => {
               showNotification(
-                `⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`,
+                daysSinceBackup === null
+                  ? `⚠️ You haven't backed up your data yet. Use "Backup Data" to export.`
+                  : `⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`,
                 'warning',
                 () => {
                   const current = JSON.parse(localStorage.getItem('fexleSalesEngine') || '{}');
@@ -3602,6 +3604,9 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               </button>
               <button onClick={() => setShowTaskModal(true)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
                 ➕ Add Task
+              </button>
+              <button onClick={() => setShowAddLead(true)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+                ➕ Add Lead
               </button>
               <button onClick={() => setShowImportModal(true)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
                 📥 Import Leads
@@ -5610,19 +5615,26 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
         return (
           <div className="space-y-6">
             {/* Vertical Selector */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-600">Select Industry:</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{verticalData[selectedVertical]?.icon}</span>
+                  <div>
+                    <div className="text-white/70 text-sm font-medium">Select Industry</div>
+                    <div className="text-white text-lg font-bold">{verticalData[selectedVertical]?.name}</div>
+                  </div>
+                </div>
                 <select
                   value={selectedVertical}
                   onChange={(e) => setSelectedVertical(e.target.value)}
-                  className="flex-1 max-w-md px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="flex-1 max-w-md px-4 py-3 border-2 border-white/30 rounded-xl text-base font-semibold bg-white/20 text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 cursor-pointer"
+                  style={{ colorScheme: 'dark' }}
                 >
                   {Object.entries(verticalData).map(([key, data]) => (
-                    <option key={key} value={key}>{data.icon} {data.name}</option>
+                    <option key={key} value={key} className="text-gray-900 bg-white">{data.icon} {data.name}</option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-400">({Object.keys(verticalData).length} industries)</span>
+                <span className="text-white/60 text-sm">({Object.keys(verticalData).length} industries)</span>
               </div>
             </div>
 
