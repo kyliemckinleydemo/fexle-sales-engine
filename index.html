@@ -7346,7 +7346,12 @@ function jsonResponse(data) {
               {selectedLead && (
                 <div className="mb-4 p-4 bg-blue-50 rounded-lg">
                   <div className="font-semibold text-blue-900">{selectedLead.company}</div>
-                  <div className="text-sm text-blue-700">{selectedLead.contact} • {selectedLead.email}</div>
+                  <div className="text-sm text-blue-700">{selectedLead.contact} • {selectedLead.title}</div>
+                  <div className="text-sm text-blue-600 mt-1">
+                    {selectedLead.email && <span>📧 {selectedLead.email}</span>}
+                    {selectedLead.email && selectedLead.phone && <span className="mx-2">•</span>}
+                    {selectedLead.phone && <span>📞 {selectedLead.phone}</span>}
+                  </div>
                 </div>
               )}
 
