@@ -38,7 +38,7 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 | 🚀 **Apollo.io Integration** | Search and import qualified leads from Apollo's database |
 | 📊 **Lead Scoring** | Automated scoring based on company size, revenue, title, intent signals, and vertical fit |
 | 📈 **Source Tracking** | Track where leads come from and measure source effectiveness |
-| 📋 **Google Sheets Sync** | Share leads and tasks across your team via Google Sheets |
+| 📋 **Google Sheets** | Connect to Google Sheets for team collaboration |
 | 🎯 **Today Dashboard** | Daily prioritized task list, performance metrics, and rotating Pro Tips |
 | 📋 **Today's Call List** | Build focused daily call queues with filters |
 | 📞 **Call Center** | Integrated calling interface with scripts, research, and quick actions |
@@ -232,17 +232,14 @@ In the Call Center, use the Source dropdown filter to view leads from a specific
 
 ## Google Sheets Integration
 
-The Google Sheets integration enables your team to share leads and tasks in real-time through a shared Google Sheet.
+The Google Sheets integration enables your team to collaborate through a shared Google Sheet.
 
 ### Benefits
 
 | Feature | Description |
 |---------|-------------|
-| **Team Sharing** | All team members can access and update the same leads |
-| **Real-time Sync** | Changes sync automatically or on-demand |
-| **Backup** | Google Sheets serves as automatic cloud backup |
-| **Offline Work** | Work offline, sync when connected |
-| **Conflict Resolution** | Smart merging prevents data loss |
+| **Team Sharing** | All team members can access the same data via Google Sheets |
+| **Backup** | Google Sheets serves as cloud backup |
 
 ### Setup Guide
 
@@ -275,43 +272,10 @@ The Google Sheets integration enables your team to share leads and tasks in real
 
 1. Open Fexle Sales Engine
 2. Go to **Settings** (gear icon)
-3. Scroll to **Google Sheets Sync**
+3. Scroll to **Google Sheets**
 4. Paste the Web App URL
 5. Click **Test Connection**
 6. You should see "✓ Connected"
-
-### Using Sync
-
-#### Manual Sync
-
-| Button | Action |
-|--------|--------|
-| **⬆️ Push to Sheets** | Upload local leads and tasks to Google Sheets |
-| **⬇️ Pull from Sheets** | Download leads and tasks from Google Sheets |
-| **📊 Sync** (header button) | Quick push to sheets |
-
-#### Auto-Sync
-
-1. Enable **Auto-sync** toggle in Settings
-2. Choose sync interval (1, 5, 15, or 30 minutes)
-3. Data syncs automatically in the background
-
-### Sync Behavior
-
-| Scenario | Result |
-|----------|--------|
-| New local lead | Added to Google Sheets |
-| Modified local lead | Updates Google Sheets (if newer) |
-| New remote lead | Added to local database |
-| Conflict | Most recent change wins |
-| Deleted locally | NOT deleted from Sheets (safety) |
-
-### Multi-User Workflow
-
-1. **Team Setup**: Each team member installs the app and connects to the same Sheet
-2. **Assign Leads**: Use the "Assigned To" field to divide work
-3. **Pull Updates**: Click "Pull from Sheets" to get team changes
-4. **Push Changes**: After calls, click "Push to Sheets" to share updates
 
 ### Troubleshooting Google Sheets
 
@@ -319,9 +283,7 @@ The Google Sheets integration enables your team to share leads and tasks in real
 |-------|----------|
 | **CORS Error** | Ensure "Who has access" is set to "Anyone" |
 | **Authorization Error** | Re-deploy after making code changes |
-| **Data not syncing** | Check sheet names are exactly "Leads" and "Tasks" |
 | **Connection failed** | Verify the Web App URL is correct and accessible |
-| **Duplicates** | The system uses ID matching; don't manually edit IDs |
 
 ---
 

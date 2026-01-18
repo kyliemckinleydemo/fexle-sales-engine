@@ -1723,8 +1723,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       // Google Sheets Integration State
       const [googleSheetsUrl, setGoogleSheetsUrl] = useState('');
       const [sheetsConnected, setSheetsConnected] = useState(false);
-      const [syncStatus, setSyncStatus] = useState({ lastSync: null, syncing: false, error: null });
-      const [showSheetsModal, setShowSheetsModal] = useState(false);
+            const [showSheetsModal, setShowSheetsModal] = useState(false);
 
       // Onboarding Tour State
       const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1742,72 +1741,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         { title: '4. Use the Playbook', description: 'Click the Playbook button to open call scripts in a popup. Industry-specific openings, objection handlers, and closes.', target: null },
         { title: '5. Track Major Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, CEO Meeting Held, Proposal, Won, Lost. Multiple can be selected.', target: null },
         { title: '6. Book CEO Meetings', description: 'Use Schedule CEO Meeting or check the CEO Meeting milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
-        { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo) and Google Sheets sync for team collaboration. Good luck!', target: null }
+        { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo). Good luck!', target: null }
       ];
-      const [autoSync, setAutoSync] = useState(false);
-      const [syncInterval, setSyncInterval] = useState(5); // minutes
-      const syncIntervalRef = useRef(null);
-
-      // Google Sheets Sync Functions
-      const syncToSheets = async (showNotif = true) => {
-        if (!googleSheetsUrl) {
-          if (showNotif) showNotification('Please configure Google Sheets URL in Settings', 'error');
-          return false;
-        }
-
-        setSyncStatus(prev => ({ ...prev, syncing: true, error: null }));
-        
-        try {
-          // Sync leads
-          await GoogleSheetsAPI.syncLeads(googleSheetsUrl, leads, callerName || 'Unknown');
-          
-          // Sync tasks
-          await GoogleSheetsAPI.syncTasks(googleSheetsUrl, tasks, callerName || 'Unknown');
-          
-          const now = new Date().toISOString();
-          setSyncStatus({ lastSync: now, syncing: false, error: null });
-          setSheetsConnected(true);
-          
-          if (showNotif) showNotification(`✓ Synced ${leads.length} leads and ${tasks.length} tasks to Google Sheets`);
-          return true;
-        } catch (error) {
-          setSyncStatus(prev => ({ ...prev, syncing: false, error: error.message }));
-          if (showNotif) showNotification(`Sync failed: ${error.message}`, 'error');
-          return false;
-        }
-      };
-
-      const pullFromSheets = async () => {
-        if (!googleSheetsUrl) {
-          showNotification('Please configure Google Sheets URL in Settings', 'error');
-          return;
-        }
-
-        setSyncStatus(prev => ({ ...prev, syncing: true, error: null }));
-        
-        try {
-          // Fetch remote data
-          const remoteLeads = await GoogleSheetsAPI.fetchLeads(googleSheetsUrl);
-          const remoteTasks = await GoogleSheetsAPI.fetchTasks(googleSheetsUrl);
-          
-          // Merge with local data
-          const mergedLeads = mergeLeads(leads, remoteLeads, 'merge');
-          const mergedTasks = mergeLeads(tasks, remoteTasks, 'merge');
-          
-          setLeads(mergedLeads);
-          setTasks(mergedTasks);
-          
-          const now = new Date().toISOString();
-          setSyncStatus({ lastSync: now, syncing: false, error: null });
-          setSheetsConnected(true);
-          
-          showNotification(`✓ Pulled ${remoteLeads.length} leads and ${remoteTasks.length} tasks from Google Sheets`);
-        } catch (error) {
-          setSyncStatus(prev => ({ ...prev, syncing: false, error: error.message }));
-          showNotification(`Pull failed: ${error.message}`, 'error');
-        }
-      };
-
       const testSheetsConnection = async () => {
         if (!googleSheetsUrl) {
           showNotification('Please enter a Google Sheets Web App URL', 'error');
@@ -1825,21 +1760,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           return false;
         }
       };
-
-      // Auto-sync effect
-      useEffect(() => {
-        if (autoSync && googleSheetsUrl && syncInterval > 0) {
-          syncIntervalRef.current = setInterval(() => {
-            syncToSheets(false); // Silent sync
-          }, syncInterval * 60 * 1000);
-          
-          return () => {
-            if (syncIntervalRef.current) {
-              clearInterval(syncIntervalRef.current);
-            }
-          };
-        }
-      }, [autoSync, googleSheetsUrl, syncInterval, leads, tasks]);
 
       // Apollo.io Search Function
       const searchApollo = async () => {
@@ -2631,8 +2551,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setAnthropicApiKey(saved.anthropicApiKey || '');
           setApolloApiKey(saved.apolloApiKey || '');
           setGoogleSheetsUrl(saved.googleSheetsUrl || '');
-          setAutoSync(saved.autoSync || false);
-          setSyncInterval(saved.syncInterval || 5);
           setTasks(saved.tasks || []);
           setTodayCallList(saved.todayCallList || []);
 
@@ -2680,11 +2598,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         if (leads.length > 0 || callerName || tasks.length > 0 || anthropicApiKey || apolloApiKey || googleSheetsUrl || !useTestData || todayCallList.length > 0) {
           saveToStorage({
             leads, callerName, anthropicApiKey, apolloApiKey,
-            googleSheetsUrl, autoSync, syncInterval,
+            googleSheetsUrl,
             tasks, useTestData, todayCallList
           });
         }
-      }, [leads, callerName, anthropicApiKey, apolloApiKey, googleSheetsUrl, autoSync, syncInterval, tasks, useTestData, todayCallList]);
+      }, [leads, callerName, anthropicApiKey, apolloApiKey, googleSheetsUrl, tasks, useTestData, todayCallList]);
 
       // Handle test data toggle
       const toggleTestData = (enabled) => {
@@ -7139,7 +7057,7 @@ function jsonResponse(data) {
               <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    📊 Google Sheets Sync
+                    📊 Google Sheets
                     <span className="text-xs text-gray-500 font-normal ml-2">(Team Shared Data)</span>
                   </label>
                   {sheetsConnected && (
@@ -7173,70 +7091,6 @@ function jsonResponse(data) {
                   </button>
                 </div>
 
-                {sheetsConnected && (
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-gray-700">Auto-sync</span>
-                        <p className="text-xs text-gray-500">Automatically sync data</p>
-                      </div>
-                      <button
-                        onClick={() => setAutoSync(!autoSync)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          autoSync ? 'bg-green-600' : 'bg-gray-300'
-                        }`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          autoSync ? 'translate-x-6' : 'translate-x-1'
-                        }`} />
-                      </button>
-                    </div>
-                    
-                    {autoSync && (
-                      <div>
-                        <label className="text-xs text-gray-600">Sync interval (minutes)</label>
-                        <select
-                          value={syncInterval}
-                          onChange={(e) => setSyncInterval(parseInt(e.target.value))}
-                          className="w-full mt-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg"
-                        >
-                          <option value={1}>Every 1 minute</option>
-                          <option value={5}>Every 5 minutes</option>
-                          <option value={15}>Every 15 minutes</option>
-                          <option value={30}>Every 30 minutes</option>
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => syncToSheets()}
-                        disabled={syncStatus.syncing}
-                        className="flex-1 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
-                      >
-                        {syncStatus.syncing ? '⏳ Syncing...' : '⬆️ Push to Sheets'}
-                      </button>
-                      <button
-                        onClick={pullFromSheets}
-                        disabled={syncStatus.syncing}
-                        className="flex-1 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50"
-                      >
-                        {syncStatus.syncing ? '⏳ Syncing...' : '⬇️ Pull from Sheets'}
-                      </button>
-                    </div>
-
-                    {syncStatus.lastSync && (
-                      <p className="text-xs text-gray-500 text-center">
-                        Last synced: {new Date(syncStatus.lastSync).toLocaleString('en-AU')}
-                      </p>
-                    )}
-                    {syncStatus.error && (
-                      <p className="text-xs text-red-600 text-center">
-                        Error: {syncStatus.error}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Test Data Toggle */}
@@ -8220,22 +8074,6 @@ function jsonResponse(data) {
                       📋 Playbooks
                     </button>
                   </div>
-                  
-                  {/* Google Sheets Sync Button */}
-                  {sheetsConnected && (
-                    <button 
-                      onClick={() => syncToSheets()}
-                      disabled={syncStatus.syncing}
-                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-1 ${
-                        syncStatus.syncing 
-                          ? 'bg-gray-100 text-gray-400' 
-                          : 'bg-green-100 text-green-700 hover:bg-green-200'
-                      }`}
-                      title={syncStatus.lastSync ? `Last sync: ${new Date(syncStatus.lastSync).toLocaleTimeString()}` : 'Sync to Google Sheets'}
-                    >
-                      {syncStatus.syncing ? '⏳' : '📊'} Sync
-                    </button>
-                  )}
                   
                   <button onClick={() => setShowApolloModal(true)} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-lg shadow-purple-200">
                     🚀 Apollo Search
