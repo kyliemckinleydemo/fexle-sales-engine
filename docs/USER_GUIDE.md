@@ -1,6 +1,6 @@
 # Fexle Sales Engine - User Guide
 
-**Version 2.3** | Last Updated: January 2026
+**Version 2.4** | Last Updated: January 2026
 
 ---
 
@@ -474,10 +474,10 @@ Icons turn green with checkmarks as you complete each step. The checklist auto-u
 |--------|---------|
 | **Search** | Search by company or contact name |
 | **Vertical** | All 19 industry verticals |
-| **Status** | All, **⚡ Active Leads**, New Lead, Qualified, Deck Sent, Follow Up, etc. |
+| **Status** | All Leads, **⚡ Active**, 🎉 Won, ❌ Lost |
 | **Source** | All, Apollo, LinkedIn, Referral, etc. |
 
-**⚡ Active Leads Filter**: Shows leads that have been contacted at least once and are not Closed Won/Lost. Quick way to focus on leads you're actively working.
+**⚡ Active Filter**: Shows leads that have been contacted at least once and are not Won/Lost. Quick way to focus on leads you're actively working.
 
 ### Lead Detail Panel
 
@@ -509,25 +509,25 @@ A visual 4-step progress tracker at the top:
 - **Call Prep Panel**: Expandable section with full AI research (if available)
 - **Notes**: All communication history
 - **Log Call**: Record call outcomes
-- **Stage & Major Milestones**: Track lead progression
+- **Major Milestones**: Track lead progression through the sales cycle
 
-### Stage & Major Milestones
+### Major Milestones
 
-The lead detail panel includes a Stage selector and Major Milestones checkboxes:
+The lead detail panel includes Major Milestones checkboxes to track progress. Multiple milestones can be selected as the deal progresses:
 
-**Stage** (select one):
-- New Lead, Qualified, Follow Up, Closed Won, Closed Lost
+| Milestone | Color | Description |
+|-----------|-------|-------------|
+| **Discovery Call** | Green | Initial discovery conversation completed |
+| **Deck Sent** | Pink | AI Implementation deck sent to prospect |
+| **CEO Meeting Held** | Purple | CEO meeting took place (not just requested) |
+| **Proposal Sent** | Amber | Formal proposal delivered |
+| **Won** | Emerald | Deal closed successfully 🎉 |
+| **Lost** | Red | Deal lost or prospect declined |
 
-**Major Milestones** (check multiple as achieved):
-
-| Milestone | Description |
-|-----------|-------------|
-| **Discovery Call** | Initial discovery conversation completed |
-| **Deck Sent** | AI Implementation deck sent to prospect |
-| **CEO Meeting Held** | CEO meeting took place (not just requested) |
-| **Proposal Sent** | Formal proposal delivered |
-
-Note: "CEO Meeting Held" is different from the "Meeting Requested" call outcome. The call outcome tracks when they ask for a meeting; the milestone tracks when it actually happened.
+**Notes:**
+- "CEO Meeting Held" is different from the "Meeting Requested" call outcome. The call outcome tracks when they ask for a meeting; the milestone tracks when it actually happened.
+- "Won" and "Lost" are mutually exclusive - selecting one automatically unchecks the other.
+- The milestones replace the old "Stage" dropdown for a simpler, more flexible tracking system.
 
 ### Call Prep: AI Research Panel
 
