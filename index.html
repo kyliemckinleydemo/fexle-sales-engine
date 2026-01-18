@@ -1218,246 +1218,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       }
     };
 
-    // ==================== GOOGLE SHEETS INTEGRATION ====================
-    // Uses Google Apps Script Web App as backend
-    // Deploy the Apps Script and paste the URL in settings
-    
-    const SHEETS_COLUMNS = {
-      leads: [
-        'id', 'company', 'contact', 'title', 'phone', 'email', 'vertical', 
-        'score', 'status', 'source', 'companySize', 'revenue', 'employeeCount',
-        'website', 'linkedinUrl', 'city', 'state', 'industry', 'lastContact',
-        'lastContactDate', 'createdDate', 'importedAt', 'notes', 'assignedTo',
-        'syncedAt', 'localModified'
-      ],
-      tasks: [
-        'id', 'leadId', 'type', 'description', 'dueDate', 'dueTime', 
-        'completed', 'completedAt', 'createdAt', 'assignedTo', 'syncedAt'
-      ]
-    };
-
-    // Convert lead object to row array for Sheets
-    const leadToRow = (lead) => {
-      return SHEETS_COLUMNS.leads.map(col => {
-        const val = lead[col];
-        if (val === null || val === undefined) return '';
-        if (typeof val === 'object') return JSON.stringify(val);
-        return String(val);
-      });
-    };
-
-    // Convert row array from Sheets to lead object
-    const rowToLead = (row, headers) => {
-      const lead = {};
-      headers.forEach((header, i) => {
-        let val = row[i] || '';
-        // Parse JSON fields
-        if (['intentSignals', 'research', 'technologies', 'intentTopics'].includes(header)) {
-          try {
-            val = val ? JSON.parse(val) : null;
-          } catch (e) {
-            val = null;
-          }
-        }
-        // Parse numbers
-        if (['score', 'employeeCount', 'id', 'leadId'].includes(header)) {
-          val = val ? parseInt(val) : (header === 'score' ? 50 : 0);
-        }
-        // Parse booleans
-        if (header === 'completed') {
-          val = val === 'true' || val === true;
-        }
-        lead[header] = val;
-      });
-      return lead;
-    };
-
-    // Google Sheets API wrapper
-    const GoogleSheetsAPI = {
-      // Fetch all leads from Google Sheet
-      fetchLeads: async (webAppUrl) => {
-        try {
-          const response = await fetch(`${webAppUrl}?action=getLeads`, {
-            method: 'GET',
-            mode: 'cors'
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          if (data.error) throw new Error(data.error);
-          
-          const headers = data.headers || SHEETS_COLUMNS.leads;
-          return (data.rows || []).map(row => rowToLead(row, headers));
-        } catch (error) {
-          console.error('Error fetching leads from Sheets:', error);
-          throw error;
-        }
-      },
-
-      // Fetch all tasks from Google Sheet
-      fetchTasks: async (webAppUrl) => {
-        try {
-          const response = await fetch(`${webAppUrl}?action=getTasks`, {
-            method: 'GET',
-            mode: 'cors'
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          if (data.error) throw new Error(data.error);
-          
-          const headers = data.headers || SHEETS_COLUMNS.tasks;
-          return (data.rows || []).map(row => rowToLead(row, headers));
-        } catch (error) {
-          console.error('Error fetching tasks from Sheets:', error);
-          throw error;
-        }
-      },
-
-      // Sync leads to Google Sheet (upsert)
-      syncLeads: async (webAppUrl, leads, userName) => {
-        try {
-          const rows = leads.map(lead => ({
-            ...lead,
-            assignedTo: lead.assignedTo || userName,
-            syncedAt: new Date().toISOString(),
-            localModified: false
-          })).map(leadToRow);
-
-          const response = await fetch(webAppUrl, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'syncLeads',
-              headers: SHEETS_COLUMNS.leads,
-              rows: rows,
-              userName: userName
-            })
-          });
-          
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          if (data.error) throw new Error(data.error);
-          return data;
-        } catch (error) {
-          console.error('Error syncing leads to Sheets:', error);
-          throw error;
-        }
-      },
-
-      // Sync tasks to Google Sheet
-      syncTasks: async (webAppUrl, tasks, userName) => {
-        try {
-          const rows = tasks.map(task => {
-            const row = {};
-            SHEETS_COLUMNS.tasks.forEach(col => {
-              row[col] = task[col] !== undefined ? task[col] : '';
-            });
-            row.assignedTo = task.assignedTo || userName;
-            row.syncedAt = new Date().toISOString();
-            return SHEETS_COLUMNS.tasks.map(col => String(row[col] || ''));
-          });
-
-          const response = await fetch(webAppUrl, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'syncTasks',
-              headers: SHEETS_COLUMNS.tasks,
-              rows: rows,
-              userName: userName
-            })
-          });
-          
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          if (data.error) throw new Error(data.error);
-          return data;
-        } catch (error) {
-          console.error('Error syncing tasks to Sheets:', error);
-          throw error;
-        }
-      },
-
-      // Delete a lead
-      deleteLead: async (webAppUrl, leadId) => {
-        try {
-          const response = await fetch(webAppUrl, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'deleteLead',
-              leadId: leadId
-            })
-          });
-          
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return await response.json();
-        } catch (error) {
-          console.error('Error deleting lead from Sheets:', error);
-          throw error;
-        }
-      },
-
-      // Get sync status
-      getSyncStatus: async (webAppUrl) => {
-        try {
-          const response = await fetch(`${webAppUrl}?action=status`, {
-            method: 'GET',
-            mode: 'cors'
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return await response.json();
-        } catch (error) {
-          console.error('Error getting sync status:', error);
-          throw error;
-        }
-      }
-    };
-
-    // Merge strategy for syncing
-    const mergeLeads = (localLeads, remoteLeads, strategy = 'remote-wins') => {
-      const merged = new Map();
-      
-      // Index remote leads by ID
-      remoteLeads.forEach(lead => {
-        if (lead.id) merged.set(String(lead.id), { ...lead, source: 'remote' });
-      });
-      
-      // Merge local leads
-      localLeads.forEach(lead => {
-        const id = String(lead.id);
-        const existing = merged.get(id);
-        
-        if (!existing) {
-          // New local lead
-          merged.set(id, { ...lead, localModified: true });
-        } else if (strategy === 'local-wins') {
-          // Local takes precedence
-          merged.set(id, { ...existing, ...lead });
-        } else if (strategy === 'remote-wins') {
-          // Remote takes precedence, but keep local modifications if newer
-          const localDate = new Date(lead.lastContactDate || lead.createdDate || 0);
-          const remoteDate = new Date(existing.syncedAt || 0);
-          if (localDate > remoteDate) {
-            merged.set(id, { ...existing, ...lead, localModified: true });
-          }
-        } else if (strategy === 'merge') {
-          // Merge non-empty fields
-          const mergedLead = { ...existing };
-          Object.keys(lead).forEach(key => {
-            if (lead[key] && (!existing[key] || existing[key] === '')) {
-              mergedLead[key] = lead[key];
-            }
-          });
-          merged.set(id, mergedLead);
-        }
-      });
-      
-      return Array.from(merged.values());
-    };
-
     // ==================== CSV FUNCTIONS ====================
     const parseCSV = (csvText) => {
       const lines = csvText.trim().split('\n');
@@ -1720,11 +1480,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [showCallListPicker, setShowCallListPicker] = useState(false);
       const [callListFilter, setCallListFilter] = useState({ minScore: 0, status: 'all', vertical: 'all' });
 
-      // Google Sheets Integration State
-      const [googleSheetsUrl, setGoogleSheetsUrl] = useState('');
-      const [sheetsConnected, setSheetsConnected] = useState(false);
-            const [showSheetsModal, setShowSheetsModal] = useState(false);
-
       // Onboarding Tour State
       const [showOnboarding, setShowOnboarding] = useState(false);
       const [onboardingStep, setOnboardingStep] = useState(0);
@@ -1743,23 +1498,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         { title: '6. Book CEO Meetings', description: 'Use Schedule CEO Meeting or check the CEO Meeting milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
         { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo). Good luck!', target: null }
       ];
-      const testSheetsConnection = async () => {
-        if (!googleSheetsUrl) {
-          showNotification('Please enter a Google Sheets Web App URL', 'error');
-          return false;
-        }
-
-        try {
-          const status = await GoogleSheetsAPI.getSyncStatus(googleSheetsUrl);
-          setSheetsConnected(true);
-          showNotification(`✓ Connected to "${status.sheetName || 'Google Sheet'}"`);
-          return true;
-        } catch (error) {
-          setSheetsConnected(false);
-          showNotification(`Connection failed: ${error.message}`, 'error');
-          return false;
-        }
-      };
 
       // Apollo.io Search Function
       const searchApollo = async () => {
@@ -2550,16 +2288,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setCallerName(saved.callerName || '');
           setAnthropicApiKey(saved.anthropicApiKey || '');
           setApolloApiKey(saved.apolloApiKey || '');
-          setGoogleSheetsUrl(saved.googleSheetsUrl || '');
           setTasks(saved.tasks || []);
           setTodayCallList(saved.todayCallList || []);
-
-          // Check sheets connection on load
-          if (saved.googleSheetsUrl) {
-            GoogleSheetsAPI.getSyncStatus(saved.googleSheetsUrl)
-              .then(() => setSheetsConnected(true))
-              .catch(() => setSheetsConnected(false));
-          }
 
           // Show onboarding if not completed
           if (!saved.onboardingCompleted) {
@@ -2595,14 +2325,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
       // Save data whenever it changes
       useEffect(() => {
-        if (leads.length > 0 || callerName || tasks.length > 0 || anthropicApiKey || apolloApiKey || googleSheetsUrl || !useTestData || todayCallList.length > 0) {
+        if (leads.length > 0 || callerName || tasks.length > 0 || anthropicApiKey || apolloApiKey || !useTestData || todayCallList.length > 0) {
           saveToStorage({
             leads, callerName, anthropicApiKey, apolloApiKey,
-            googleSheetsUrl,
             tasks, useTestData, todayCallList
           });
         }
-      }, [leads, callerName, anthropicApiKey, apolloApiKey, googleSheetsUrl, tasks, useTestData, todayCallList]);
+      }, [leads, callerName, anthropicApiKey, apolloApiKey, tasks, useTestData, todayCallList]);
 
       // Handle test data toggle
       const toggleTestData = (enabled) => {
@@ -6437,260 +6166,6 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
         );
       })();
 
-      // Google Sheets Setup Guide Modal
-      const sheetsSetupModalContent = (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" key="sheets-setup-modal">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold">📊 Google Sheets Integration Setup</h3>
-                  <p className="text-green-100 text-sm">Share leads and tasks across your team</p>
-                </div>
-                <button onClick={() => setShowSheetsModal(false)} className="text-white hover:bg-white/20 rounded-lg p-2 text-xl">&times;</button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-6">
-                {/* Step 1 */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm">1</span>
-                    Create a Google Sheet
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Create a new Google Sheet with two sheets named exactly: <strong>Leads</strong> and <strong>Tasks</strong>
-                  </p>
-                  <a 
-                    href="https://sheets.new" 
-                    target="_blank" 
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
-                  >
-                    Create New Sheet →
-                  </a>
-                </div>
-
-                {/* Step 2 */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm">2</span>
-                    Add the Apps Script
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Go to <strong>Extensions → Apps Script</strong> and paste the following code:
-                  </p>
-                  <details className="bg-gray-900 rounded-lg overflow-hidden">
-                    <summary className="px-4 py-2 text-green-400 cursor-pointer hover:bg-gray-800 text-sm">
-                      Click to show Apps Script code
-                    </summary>
-                    <pre className="p-4 text-xs text-green-300 overflow-x-auto whitespace-pre">{`// Fexle Sales Engine - Google Sheets Backend
-// Paste this code in Extensions → Apps Script
-
-function doGet(e) {
-  const action = e.parameter.action;
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  try {
-    if (action === 'getLeads') {
-      return getSheetData(ss, 'Leads');
-    } else if (action === 'getTasks') {
-      return getSheetData(ss, 'Tasks');
-    } else if (action === 'status') {
-      return jsonResponse({ 
-        status: 'connected', 
-        sheetName: ss.getName(),
-        leadsCount: getRowCount(ss, 'Leads'),
-        tasksCount: getRowCount(ss, 'Tasks')
-      });
-    }
-    return jsonResponse({ error: 'Unknown action' });
-  } catch (error) {
-    return jsonResponse({ error: error.message });
-  }
-}
-
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const data = JSON.parse(e.postData.contents);
-  
-  try {
-    if (data.action === 'syncLeads') {
-      return syncData(ss, 'Leads', data.headers, data.rows);
-    } else if (data.action === 'syncTasks') {
-      return syncData(ss, 'Tasks', data.headers, data.rows);
-    } else if (data.action === 'deleteLead') {
-      return deleteRow(ss, 'Leads', data.leadId);
-    }
-    return jsonResponse({ error: 'Unknown action' });
-  } catch (error) {
-    return jsonResponse({ error: error.message });
-  }
-}
-
-function getSheetData(ss, sheetName) {
-  let sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
-    return jsonResponse({ headers: [], rows: [] });
-  }
-  
-  const data = sheet.getDataRange().getValues();
-  if (data.length === 0) {
-    return jsonResponse({ headers: [], rows: [] });
-  }
-  
-  const headers = data[0];
-  const rows = data.slice(1);
-  
-  return jsonResponse({ headers, rows });
-}
-
-function syncData(ss, sheetName, headers, rows) {
-  let sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
-  }
-  
-  // Get existing data
-  const existingData = sheet.getDataRange().getValues();
-  const existingHeaders = existingData[0] || [];
-  const existingRows = existingData.slice(1);
-  
-  // Create ID index for existing rows
-  const idIndex = existingHeaders.indexOf('id');
-  const existingById = {};
-  if (idIndex >= 0) {
-    existingRows.forEach((row, i) => {
-      existingById[row[idIndex]] = i + 2; // +2 for 1-indexed + header
-    });
-  }
-  
-  // Set headers if empty
-  if (existingHeaders.length === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  }
-  
-  // Upsert rows
-  let updated = 0, inserted = 0;
-  rows.forEach(row => {
-    const rowId = row[headers.indexOf('id')];
-    if (existingById[rowId]) {
-      // Update existing row
-      sheet.getRange(existingById[rowId], 1, 1, row.length).setValues([row]);
-      updated++;
-    } else {
-      // Insert new row
-      sheet.appendRow(row);
-      inserted++;
-    }
-  });
-  
-  return jsonResponse({ 
-    success: true, 
-    updated, 
-    inserted,
-    total: rows.length 
-  });
-}
-
-function deleteRow(ss, sheetName, id) {
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return jsonResponse({ error: 'Sheet not found' });
-  
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const idIndex = headers.indexOf('id');
-  
-  if (idIndex < 0) return jsonResponse({ error: 'No ID column' });
-  
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][idIndex]) === String(id)) {
-      sheet.deleteRow(i + 1);
-      return jsonResponse({ success: true, deleted: id });
-    }
-  }
-  
-  return jsonResponse({ error: 'ID not found' });
-}
-
-function getRowCount(ss, sheetName) {
-  const sheet = ss.getSheetByName(sheetName);
-  return sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
-}
-
-function jsonResponse(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}`}</pre>
-                  </details>
-                </div>
-
-                {/* Step 3 */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm">3</span>
-                    Deploy as Web App
-                  </h4>
-                  <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
-                    <li>Click <strong>Deploy → New deployment</strong></li>
-                    <li>Click the gear icon → select <strong>Web app</strong></li>
-                    <li>Set <strong>"Execute as"</strong> to <strong>Me</strong></li>
-                    <li>Set <strong>"Who has access"</strong> to <strong>Anyone</strong></li>
-                    <li>Click <strong>Deploy</strong></li>
-                    <li>Authorize the app when prompted</li>
-                    <li>Copy the <strong>Web app URL</strong></li>
-                  </ol>
-                </div>
-
-                {/* Step 4 */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm">4</span>
-                    Paste URL in Settings
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Go back to Settings and paste the Web App URL. Click "Test Connection" to verify.
-                  </p>
-                </div>
-
-                {/* Features */}
-                <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                  <h4 className="font-semibold text-green-900 mb-3">✨ What You Get</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm text-green-800">
-                    <div className="flex items-center gap-2">✓ Share leads across team</div>
-                    <div className="flex items-center gap-2">✓ Real-time sync</div>
-                    <div className="flex items-center gap-2">✓ Automatic backups</div>
-                    <div className="flex items-center gap-2">✓ Works offline</div>
-                    <div className="flex items-center gap-2">✓ Conflict resolution</div>
-                    <div className="flex items-center gap-2">✓ Task sharing</div>
-                  </div>
-                </div>
-
-                {/* Troubleshooting */}
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                  <h4 className="font-semibold text-amber-900 mb-3">⚠️ Troubleshooting</h4>
-                  <ul className="text-sm text-amber-800 space-y-2">
-                    <li><strong>CORS Error:</strong> Make sure "Who has access" is set to "Anyone"</li>
-                    <li><strong>Authorization Error:</strong> Re-deploy after making code changes</li>
-                    <li><strong>Data not syncing:</strong> Check that sheet names are exactly "Leads" and "Tasks"</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-gray-200">
-              <button 
-                onClick={() => setShowSheetsModal(false)} 
-                className="w-full py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium"
-              >
-                Got it, Close
-              </button>
-            </div>
-          </div>
-        </div>
-      );
 
       // Score Breakdown Modal
       const scoreBreakdownModalContent = (() => {
@@ -7051,46 +6526,6 @@ function jsonResponse(data) {
                     ✓ Apollo API key saved
                   </p>
                 )}
-              </div>
-
-              {/* Google Sheets Integration */}
-              <div className="pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    📊 Google Sheets
-                    <span className="text-xs text-gray-500 font-normal ml-2">(Team Shared Data)</span>
-                  </label>
-                  {sheetsConnected && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Connected</span>
-                  )}
-                </div>
-                <input 
-                  type="url" 
-                  value={googleSheetsUrl} 
-                  onChange={(e) => setGoogleSheetsUrl(e.target.value)} 
-                  placeholder="https://script.google.com/macros/s/..."
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-xs" 
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Paste the Web App URL from your deployed Apps Script
-                </p>
-                
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={testSheetsConnection}
-                    disabled={!googleSheetsUrl}
-                    className="flex-1 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    🔗 Test Connection
-                  </button>
-                  <button
-                    onClick={() => setShowSheetsModal(true)}
-                    className="flex-1 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  >
-                    ⚙️ Setup Guide
-                  </button>
-                </div>
-
               </div>
 
               {/* Test Data Toggle */}
@@ -8105,7 +7540,6 @@ function jsonResponse(data) {
           {showApolloModal && apolloModalContent}
           {showSourceStats && sourceStatsModalContent}
           {showScoreBreakdown && scoreBreakdownModalContent}
-          {showSheetsModal && sheetsSetupModalContent}
           {showResearchModal && researchModalContent}
           {showSettings && settingsModalContent}
           {showTaskModal && taskModalContent}

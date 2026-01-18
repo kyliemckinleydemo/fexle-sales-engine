@@ -11,19 +11,18 @@
 3. [Apollo.io Integration](#apolloio-integration)
 4. [Lead Scoring Model](#lead-scoring-model)
 5. [Source Tracking & Analytics](#source-tracking--analytics)
-6. [Google Sheets Integration](#google-sheets-integration)
-7. [Dashboard - Today View](#dashboard---today-view)
-8. [Today's Call List](#todays-call-list)
-9. [Call Center](#call-center)
-10. [CEO Calendar](#ceo-calendar)
-11. [Industry Playbooks](#industry-playbooks)
-12. [Email Templates](#email-templates)
-13. [AI Research & Call Prep](#ai-research--call-prep)
-14. [Task Management](#task-management)
-15. [Data Management](#data-management)
-16. [Settings](#settings)
-17. [Keyboard Shortcuts & Tips](#keyboard-shortcuts--tips)
-18. [Troubleshooting](#troubleshooting)
+6. [Dashboard - Today View](#dashboard---today-view)
+7. [Today's Call List](#todays-call-list)
+8. [Call Center](#call-center)
+9. [CEO Calendar](#ceo-calendar)
+10. [Industry Playbooks](#industry-playbooks)
+11. [Email Templates](#email-templates)
+12. [AI Research & Call Prep](#ai-research--call-prep)
+13. [Task Management](#task-management)
+14. [Data Management](#data-management)
+15. [Settings](#settings)
+16. [Keyboard Shortcuts & Tips](#keyboard-shortcuts--tips)
+17. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -38,7 +37,6 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 | 🚀 **Apollo.io Integration** | Search and import qualified leads from Apollo's database |
 | 📊 **Lead Scoring** | Automated scoring based on company size, revenue, title, intent signals, and vertical fit |
 | 📈 **Source Tracking** | Track where leads come from and measure source effectiveness |
-| 📋 **Google Sheets** | Connect to Google Sheets for team collaboration |
 | 🎯 **Today Dashboard** | Daily prioritized task list, performance metrics, and rotating Pro Tips |
 | 📋 **Today's Call List** | Build focused daily call queues with filters |
 | 📞 **Call Center** | Integrated calling interface with scripts, research, and quick actions |
@@ -227,63 +225,6 @@ Click the **📊** button in the header to view source analytics:
 ### Filtering by Source
 
 In the Call Center, use the Source dropdown filter to view leads from a specific source.
-
----
-
-## Google Sheets Integration
-
-The Google Sheets integration enables your team to collaborate through a shared Google Sheet.
-
-### Benefits
-
-| Feature | Description |
-|---------|-------------|
-| **Team Sharing** | All team members can access the same data via Google Sheets |
-| **Backup** | Google Sheets serves as cloud backup |
-
-### Setup Guide
-
-#### Step 1: Create the Google Sheet
-
-1. Go to [sheets.new](https://sheets.new) to create a new spreadsheet
-2. Rename it (e.g., "Fexle Sales Engine Data")
-3. Create two sheets named exactly: **Leads** and **Tasks**
-
-#### Step 2: Add the Apps Script
-
-1. In your Google Sheet, go to **Extensions → Apps Script**
-2. Delete any existing code
-3. Paste the code from the Setup Guide (click ⚙️ Setup Guide in Settings)
-4. Click **Save** (Ctrl+S)
-
-#### Step 3: Deploy as Web App
-
-1. Click **Deploy → New deployment**
-2. Click the gear icon ⚙️ → Select **Web app**
-3. Configure:
-   - **Description**: "Fexle Sales Engine Backend"
-   - **Execute as**: Me
-   - **Who has access**: Anyone
-4. Click **Deploy**
-5. Authorize the app when prompted (click through warnings)
-6. **Copy the Web App URL** (looks like `https://script.google.com/macros/s/...`)
-
-#### Step 4: Connect in Settings
-
-1. Open Fexle Sales Engine
-2. Go to **Settings** (gear icon)
-3. Scroll to **Google Sheets**
-4. Paste the Web App URL
-5. Click **Test Connection**
-6. You should see "✓ Connected"
-
-### Troubleshooting Google Sheets
-
-| Issue | Solution |
-|-------|----------|
-| **CORS Error** | Ensure "Who has access" is set to "Anyone" |
-| **Authorization Error** | Re-deploy after making code changes |
-| **Connection failed** | Verify the Web App URL is correct and accessible |
 
 ---
 
