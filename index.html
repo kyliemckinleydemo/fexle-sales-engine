@@ -2647,6 +2647,15 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           if (!saved.onboardingCompleted) {
             setShowOnboarding(true);
           }
+
+          // Check if backup is needed (weekly reminder)
+          const lastBackup = saved.lastBackupDate ? new Date(saved.lastBackupDate) : null;
+          const daysSinceBackup = lastBackup ? Math.floor((Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)) : 999;
+          if (daysSinceBackup >= 7 && saved.leads?.length > 0) {
+            setTimeout(() => {
+              showNotification(`⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`, 'warning');
+            }, 2000);
+          }
         } else {
           setLeads(defaultLeads);
           // First time user - show onboarding
@@ -4988,13 +4997,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             <span className="flex-1">{note}</span>
                             <button
                               onClick={() => {
-                                const notesArray = selectedLead.notes.split('\n\n').filter(n => n.trim());
-                                notesArray.splice(idx, 1);
-                                const newNotes = notesArray.join('\n\n');
-                                const updatedLead = { ...selectedLead, notes: newNotes };
-                                setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
-                                setSelectedLead(updatedLead);
-                                showNotification('Note deleted');
+                                if (confirm('Delete this note?')) {
+                                  const notesArray = selectedLead.notes.split('\n\n').filter(n => n.trim());
+                                  notesArray.splice(idx, 1);
+                                  const newNotes = notesArray.join('\n\n');
+                                  const updatedLead = { ...selectedLead, notes: newNotes };
+                                  setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
+                                  setSelectedLead(updatedLead);
+                                  showNotification('Note deleted');
+                                }
                               }}
                               className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
                               title="Delete this note"
