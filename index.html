@@ -1740,7 +1740,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         { title: '2. Your Next Action', description: 'The Today dashboard shows your #1 priority lead with a Smart Next Action button. Use the arrows to see other priority leads.', target: 'today-tab' },
         { title: '3. Call Center', description: 'Select a lead to see Quick Actions (Email, Schedule Meeting, Research, Playbook) and update the Stage & Milestones with one click.', target: 'call-center-tab' },
         { title: '4. Use the Playbook', description: 'Click the Playbook button to open call scripts in a popup. Industry-specific openings, objection handlers, and closes.', target: null },
-        { title: '5. Track Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, CEO Meeting, Proposal. Multiple can be selected.', target: null },
+        { title: '5. Track Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, CEO Meeting Held, Proposal. Multiple can be selected.', target: null },
         { title: '6. Book CEO Meetings', description: 'Use Schedule CEO Meeting or check the CEO Meeting milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
         { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo) and Google Sheets sync for team collaboration. Good luck!', target: null }
       ];
@@ -4772,7 +4772,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             />
                             Deck Sent
                           </label>
-                          {/* CEO Meeting */}
+                          {/* CEO Meeting Held */}
                           <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
                             hasMeetingBooked(selectedLead)
                               ? 'bg-purple-100 border-purple-400 text-purple-800'
@@ -4799,7 +4799,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                               }}
                               className="w-3 h-3 rounded"
                             />
-                            CEO Meeting
+                            CEO Meeting Held
                           </label>
                           {/* Proposal Sent */}
                           <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
