@@ -1931,13 +1931,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           setApolloSelectedLeads(apolloResults.map(l => l.id));
         }
       };
-
-      // Recalculate lead score
-      const recalculateScore = (lead) => {
-        const { score } = calculateLeadScore(lead);
-        return { ...lead, score };
-      };
-
       // Get source statistics
       const getSourceStats = () => {
         const stats = {};
@@ -2539,23 +2532,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           ? '⚠️ Schedule Challenge booked! Confirm CEO availability.'
           : 'Meeting booked and calendar invite created!');
       };
-
-      const getMeetingQuickDates = () => {
-        const dates = [];
-        const today = new Date();
-        for (let i = 1; i <= 10; i++) {
-          const date = new Date(today);
-          date.setDate(date.getDate() + i);
-          if (date.getDay() !== 0 && date.getDay() !== 6) {
-            dates.push({
-              value: date.toISOString().split('T')[0],
-              label: date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })
-            });
-          }
-        }
-        return dates.slice(0, 5);
-      };
-
       // Load/save availability and meetings
       useEffect(() => {
         const saved = loadFromStorage();
@@ -2610,29 +2586,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       const isSlotBooked = (date, time) => {
         return bookedMeetings.find(m => m.date === date && m.time === time);
       };
-
-      const bookSlot = (slot, lead) => {
-        const meeting = {
-          id: `meeting-${Date.now()}`,
-          date: slot.date,
-          time: slot.time,
-          duration: slot.duration || 20,
-          leadId: lead.id,
-          leadName: lead.contact,
-          leadTitle: lead.title,
-          company: lead.company,
-          email: lead.email,
-          phone: lead.phone,
-          createdAt: new Date().toISOString()
-        };
-        
-        setBookedMeetings([...bookedMeetings, meeting]);
-        // Remove from availability
-        setCeoAvailability(ceoAvailability.filter(s => s.id !== slot.id));
-        
-        return meeting;
-      };
-
       const cancelMeeting = (meetingId) => {
         const meeting = bookedMeetings.find(m => m.id === meetingId);
         if (meeting && confirm(`Delete meeting with ${meeting.company}?`)) {
