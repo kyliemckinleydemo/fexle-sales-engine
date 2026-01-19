@@ -215,7 +215,7 @@
       else revenue = '$200M+';
 
       // Map industry to vertical
-      let vertical = 'professionalServices';
+      let vertical = 'general';
       const industry = (org.industry || '').toLowerCase();
       if (industry.includes('health') || industry.includes('medical') || industry.includes('hospital') || industry.includes('aged care')) {
         vertical = 'healthcare';
@@ -1155,8 +1155,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           "Margins are too tight for new technology": "Tight margins mean you can't afford to lose a single lead. One extra car sale per month pays for the entire system. The math works."
         }
       },
-      other: {
-        name: "Other Industry",
+      general: {
+        name: "General",
         icon: "🏢",
         salesforceSolution: "Sales Cloud + Service Cloud + Agentforce",
         idealCompanySize: "50-500 employees",
@@ -1238,7 +1238,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
             title: cleanValues[headers.indexOf('title')] || cleanValues[headers.indexOf('role')] || cleanValues[2] || '',
             phone: cleanValues[headers.indexOf('phone')] || cleanValues[3] || '',
             email: cleanValues[headers.indexOf('email')] || cleanValues[4] || '',
-            vertical: cleanValues[headers.indexOf('vertical')] || cleanValues[headers.indexOf('industry')] || 'professionalServices',
+            vertical: cleanValues[headers.indexOf('vertical')] || cleanValues[headers.indexOf('industry')] || 'general',
             notes: cleanValues[headers.indexOf('notes')] || '',
             score: parseInt(cleanValues[headers.indexOf('score')]) || Math.floor(Math.random() * 30) + 50,
             status: cleanValues[headers.indexOf('status')] || 'New Lead',
@@ -1438,7 +1438,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         title: '', 
         phone: '', 
         email: '', 
-        vertical: 'professionalServices', 
+        vertical: 'general', 
         notes: '',
         source: 'manual',
         companySize: '51-200',
@@ -2462,7 +2462,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             title: '', 
             phone: '', 
             email: '', 
-            vertical: 'professionalServices', 
+            vertical: 'general', 
             notes: '',
             source: 'manual',
             companySize: '51-200',
@@ -2945,7 +2945,28 @@ Based on the company name and industry, provide a pre-call research brief with:
 
 10. **Priority Level**: HIGH (strong signals, call immediately), MEDIUM (good potential, worth pursuing), or NURTURE (early stage, lead with value/deck)
 
-Format your response as JSON with these keys: companyOverview, keyContacts (array of {name, title, phone, email}), salesforceLikelihood, aiReadinessSignals (array), potentialPainPoints (array), triggerEvents (array), recommendedOpening, talkingPoints (array), recentNews (array or null if no major news), priorityLevel, priorityReason`;
+11. **Industry Classification**: Based on what the company actually does, classify them into ONE of these industry verticals (return the exact key):
+   - healthcare: Healthcare, hospitals, aged care, medical
+   - professionalServices: Legal, accounting, consulting, professional services firms
+   - manufacturing: Manufacturing, industrial, production
+   - financial: Banking, finance, wealth management, insurance
+   - retail: Retail, e-commerce, consumer goods
+   - education: Education, training, universities, schools
+   - nonprofit: Nonprofits, charities, NGOs
+   - government: Government, public sector
+   - realEstate: Real estate, property
+   - logistics: Logistics, transport, supply chain
+   - hospitality: Hotels, tourism, hospitality
+   - telecom: Telecommunications, telco, ISPs
+   - energy: Energy, utilities, power
+   - media: Media, entertainment, publishing
+   - agriculture: Agriculture, farming
+   - construction: Construction, building
+   - mining: Mining, resources
+   - automotive: Automotive, car dealerships
+   - general: Use ONLY if the company truly doesn't fit any of the above categories
+
+Format your response as JSON with these keys: companyOverview, keyContacts (array of {name, title, phone, email}), salesforceLikelihood, aiReadinessSignals (array), potentialPainPoints (array), triggerEvents (array), recommendedOpening, talkingPoints (array), recentNews (array or null if no major news), priorityLevel, priorityReason, recommendedVertical (one of the industry keys listed above)`;
 
         try {
           const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -3008,11 +3029,25 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
           };
           
           setResearchResult(research);
-          
-          // Save research to lead
-          setLeads(leads.map(l => 
-            l.id === lead.id ? { ...l, research } : l
+
+          // Save research to lead and update vertical if AI classified it differently
+          const newVertical = parsed.recommendedVertical && verticalData[parsed.recommendedVertical]
+            ? parsed.recommendedVertical
+            : lead.vertical;
+          const verticalChanged = newVertical !== lead.vertical;
+
+          setLeads(leads.map(l =>
+            l.id === lead.id ? { ...l, research, vertical: newVertical } : l
           ));
+
+          // Also update selectedLead if it's the same lead
+          if (selectedLead?.id === lead.id) {
+            setSelectedLead(prev => ({ ...prev, research, vertical: newVertical }));
+          }
+
+          if (verticalChanged) {
+            showNotification(`Industry updated to ${verticalData[newVertical].name} based on AI research`);
+          }
           
         } catch (error) {
           console.error('Research API error:', error);
