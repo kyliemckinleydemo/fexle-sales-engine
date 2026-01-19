@@ -66,7 +66,18 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
    - **Anthropic API Key**: Required for AI Research feature ([Get key](https://console.anthropic.com/settings/keys))
    - **Apollo API Key**: Required for Apollo.io lead search ([Get key](https://app.apollo.io/#/settings/integrations/api))
 
-3. **Sample Data**
+3. **Set Up iPhone Calling from Mac** (Optional but recommended)
+
+   Click "Dial" buttons to call directly from your Mac using your iPhone's cellular plan:
+
+   1. Ensure both devices use the **same Apple ID**
+   2. Connect both devices to the **same WiFi network**
+   3. **On iPhone**: Settings → Phone → Calls on Other Devices → Allow Calls on Other Devices → toggle ON your Mac
+   4. **On Mac**: Open FaceTime app → Settings → check "Calls from iPhone"
+
+   Once configured, clicking any "Dial" button in the app will ring through your Mac using your iPhone. Free to set up - uses your existing phone plan.
+
+4. **Sample Data**
    - Sample leads are included by default to help you explore
    - Turn OFF "Sample Test Data" in Settings for production use
 
