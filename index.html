@@ -3029,7 +3029,10 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             timestamp: new Date().toISOString(),
             aiGenerated: true
           };
-          
+
+          // Debug: log what AI returned for vertical classification
+          console.log('AI recommended vertical:', parsed.recommendedVertical, '| Valid:', !!verticalData[parsed.recommendedVertical]);
+
           setResearchResult(research);
 
           // Save research to lead and update vertical if AI classified it differently
@@ -3038,14 +3041,18 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
             : lead.vertical;
           const verticalChanged = newVertical !== lead.vertical;
 
-          setLeads(leads.map(l =>
+          // Use functional updates to avoid stale closure issues
+          setLeads(prevLeads => prevLeads.map(l =>
             l.id === lead.id ? { ...l, research, vertical: newVertical } : l
           ));
 
-          // Also update selectedLead if it's the same lead
-          if (selectedLead?.id === lead.id) {
-            setSelectedLead(prev => ({ ...prev, research, vertical: newVertical }));
-          }
+          // Also update selectedLead if it's the same lead (use functional update)
+          setSelectedLead(prev => {
+            if (prev?.id === lead.id) {
+              return { ...prev, research, vertical: newVertical };
+            }
+            return prev;
+          });
 
           if (verticalChanged) {
             showNotification(`Industry updated to ${verticalData[newVertical].name} based on AI research`);
