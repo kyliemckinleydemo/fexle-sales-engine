@@ -56,7 +56,13 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
    - The app runs entirely in your browser - no server required
 
 2. **Configure Settings** (Click the ⚙️ gear icon)
-   - **Your Name**: Enter your name for personalized scripts and emails
+
+   **Your Profile** (used in scripts & email signatures):
+   - **Your Name**: Enter your full name (e.g., "Kylie McKinley")
+   - **Your Email**: Enter your work email (e.g., "kylie@fexle.com")
+   - **Your Phone**: Enter your phone number (e.g., "+61 4XX XXX XXX")
+
+   **API Keys**:
    - **Anthropic API Key**: Required for AI Research feature ([Get key](https://console.anthropic.com/settings/keys))
    - **Apollo API Key**: Required for Apollo.io lead search ([Get key](https://app.apollo.io/#/settings/integrations/api))
 
@@ -881,13 +887,27 @@ The CSV export includes:
 
 Access settings via the **⚙️** button.
 
-### Available Options
+### Your Profile
+
+Set up your profile information for use in call scripts and email signatures:
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| **Your Name** | Used in scripts and email signatures | Kylie McKinley |
+| **Your Email** | Included in email signature block | kylie@fexle.com |
+| **Your Phone** | Included in email signature block | +61 4XX XXX XXX |
+
+### API Keys
 
 | Setting | Purpose |
 |---------|---------|
-| **Your Name** | Used in scripts and email templates |
 | **Anthropic API Key** | Enables AI Research feature |
 | **Apollo API Key** | Enables Apollo.io lead search |
+
+### Other Options
+
+| Setting | Purpose |
+|---------|---------|
 | **Sample Test Data** | Toggle sample leads on/off |
 
 ### Statistics
