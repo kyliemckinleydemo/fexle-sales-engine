@@ -1850,8 +1850,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           .replace(/\[FIRST_NAME\]/g, firstName)
           .replace(/\[COMPANY\]/g, selectedLead.company)
           .replace(/\[YOUR_NAME\]/g, callerName || '[Your Name]')
-          .replace(/\[INDUSTRY\]/g, vertical?.name || 'your industry')
-          .replace(/\[PAIN_POINT\]/g, vertical?.painPoints[0] || 'operational challenges')
+          .replace(/\[INDUSTRY\]/g, (vertical?.name || 'your industry').toLowerCase())
+          .replace(/\[PAIN_POINT\]/g, (vertical?.painPoints[0] || 'operational challenges').toLowerCase())
           .replace(/\[DATE\]/g, '[DATE]')
           .replace(/\[TIME\]/g, '[TIME]')
           .replace(/\[CEO_NAME\]/g, 'our CEO')
@@ -1885,8 +1885,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           .replace(/\[FIRST_NAME\]/g, firstName)
           .replace(/\[COMPANY\]/g, selectedLead.company)
           .replace(/\[YOUR_NAME\]/g, callerName || '[Your Name]')
-          .replace(/\[INDUSTRY\]/g, vertical?.name || 'your industry')
-          .replace(/\[PAIN_POINT\]/g, vertical?.painPoints[0] || 'operational challenges');
+          .replace(/\[INDUSTRY\]/g, (vertical?.name || 'your industry').toLowerCase())
+          .replace(/\[PAIN_POINT\]/g, (vertical?.painPoints[0] || 'operational challenges').toLowerCase());
 
         // Add attachment reminder at the top
         body = `[📎 REMEMBER: Attach the Agentforce Implementation Guide PDF before sending]\n\n${body}`;
