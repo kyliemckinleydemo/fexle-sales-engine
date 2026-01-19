@@ -1414,6 +1414,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [shouldOpenPlaybook, setShouldOpenPlaybook] = useState(false);
       const [heroLeadIndex, setHeroLeadIndex] = useState(0);
       const [showAddLead, setShowAddLead] = useState(false);
+      const [showEditLead, setShowEditLead] = useState(false);
+      const [editingLead, setEditingLead] = useState(null);
       const [showImportModal, setShowImportModal] = useState(false);
       const [showApolloModal, setShowApolloModal] = useState(false);
       const [showSourceStats, setShowSourceStats] = useState(false);
@@ -4745,6 +4747,15 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
                             {selectedLead.score}
                           </div>
                           <button
+                            onClick={() => { setEditingLead({...selectedLead}); setShowEditLead(true); }}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit lead"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
                             onClick={() => deleteLead(selectedLead.id)}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete lead"
@@ -5846,6 +5857,149 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
               <button onClick={() => setShowAddLead(false)} className="py-3 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
               <button onClick={() => { addNewLead(); setNewLead({ company: '', contact: '', title: '', phone: '', email: '', vertical: 'healthcare', notes: '', source: 'manual', companySize: '51-200', revenue: '$5M-$20M', website: '', linkedinUrl: '', intentSignals: [] }); }} disabled={!newLead.company || !newLead.contact} className="py-3 px-4 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium disabled:bg-gray-300" title="Add and keep form open for another">Quick Add +</button>
               <button onClick={() => { addNewLead(); setShowAddLead(false); }} disabled={!newLead.company || !newLead.contact} className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium disabled:bg-gray-300">Add & Close</button>
+            </div>
+          </div>
+        </div>
+      );
+
+      // Save edited lead function
+      const saveEditedLead = () => {
+        if (!editingLead) return;
+        const updatedLeads = leads.map(l => l.id === editingLead.id ? { ...editingLead, score: calculateLeadScore(editingLead).score } : l);
+        setLeads(updatedLeads);
+        if (selectedLead?.id === editingLead.id) {
+          setSelectedLead({ ...editingLead, score: calculateLeadScore(editingLead).score });
+        }
+        setShowEditLead(false);
+        setEditingLead(null);
+        showNotification('Lead updated successfully');
+      };
+
+      const editLeadModalContent = editingLead && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden" key="edit-lead-modal" onClick={() => setShowEditLead(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
+              <h3 className="text-xl font-bold">✏️ Edit Lead</h3>
+              <button onClick={() => setShowEditLead(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-6 pt-4 overflow-y-auto flex-1 space-y-4 overscroll-contain">
+              {/* Essential Fields */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                <input type="text" value={editingLead.company} onChange={(e) => setEditingLead({...editingLead, company: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+                  <input type="text" value={editingLead.contact} onChange={(e) => setEditingLead({...editingLead, contact: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input type="text" value={editingLead.title || ''} onChange={(e) => setEditingLead({...editingLead, title: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input type="text" value={editingLead.phone || ''} onChange={(e) => setEditingLead({...editingLead, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input type="email" value={editingLead.email || ''} onChange={(e) => setEditingLead({...editingLead, email: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              {/* Industry - Prominent */}
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <label className="block text-sm font-medium text-amber-800 mb-2">Industry / Vertical</label>
+                <select value={editingLead.vertical || 'general'} onChange={(e) => setEditingLead({...editingLead, vertical: e.target.value})} className="w-full px-4 py-2.5 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-base font-medium">
+                  {Object.entries(verticalData).map(([key, data]) => (
+                    <option key={key} value={key}>{data.icon} {data.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-amber-600 mt-2">This determines which industry scripts and pain points are shown</p>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select value={editingLead.status || 'New Lead'} onChange={(e) => setEditingLead({...editingLead, status: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="New Lead">New Lead</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Qualified">Qualified</option>
+                  <option value="Follow Up">Follow Up</option>
+                  <option value="No Answer">No Answer</option>
+                  <option value="Deck Sent">Deck Sent</option>
+                  <option value="Meeting Booked">Meeting Booked</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
+                </select>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea value={editingLead.notes || ''} onChange={(e) => setEditingLead({...editingLead, notes: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+
+              {/* Additional Details */}
+              <details className="border border-gray-200 rounded-lg" open>
+                <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                  More details
+                </summary>
+                <div className="p-4 pt-2 space-y-4 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
+                      <select value={editingLead.companySize || '51-200'} onChange={(e) => setEditingLead({...editingLead, companySize: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1-50">1-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="501-1000">501-1000 employees</option>
+                        <option value="1000+">1000+ employees</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
+                      <select value={editingLead.revenue || '$20M-$50M'} onChange={(e) => setEditingLead({...editingLead, revenue: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Under $5M">Under $5M</option>
+                        <option value="$5M-$20M">$5M-$20M</option>
+                        <option value="$20M-$50M">$20M-$50M</option>
+                        <option value="$50M-$200M">$50M-$200M</option>
+                        <option value="$200M+">$200M+</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                      <select value={editingLead.source || 'manual'} onChange={(e) => setEditingLead({...editingLead, source: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {Object.entries(LEAD_SOURCES).map(([key, src]) => (
+                          <option key={key} value={key}>{src.icon} {src.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                      <input type="url" value={editingLead.website || ''} onChange={(e) => setEditingLead({...editingLead, website: e.target.value})} placeholder="https://..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                    <input type="url" value={editingLead.linkedinUrl || ''} onChange={(e) => setEditingLead({...editingLead, linkedinUrl: e.target.value})} placeholder="https://linkedin.com/..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                </div>
+              </details>
+
+              {/* Score Preview */}
+              <div className="p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+                <span className="text-sm font-medium text-blue-900">Lead Score:</span>
+                <span className="text-xl font-bold text-blue-600">{calculateLeadScore(editingLead).score}</span>
+              </div>
+            </div>
+            <div className="flex gap-3 p-6 pt-4 border-t border-gray-100 shrink-0">
+              <button onClick={() => setShowEditLead(false)} className="py-3 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
+              <button onClick={saveEditedLead} disabled={!editingLead.company || !editingLead.contact} className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium disabled:bg-gray-300">Save Changes</button>
             </div>
           </div>
         </div>
@@ -7578,6 +7732,7 @@ Format your response as JSON with these keys: companyOverview, keyContacts (arra
 
           {/* Modals */}
           {showAddLead && addLeadModalContent}
+          {showEditLead && editLeadModalContent}
           {showImportModal && importModalContent}
           {showApolloModal && apolloModalContent}
           {showSourceStats && sourceStatsModalContent}
