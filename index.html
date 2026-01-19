@@ -4454,6 +4454,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                             ✉️ Email
                           </button>
                           <button
+                            onClick={openDeckEmail}
+                            className="px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all text-sm font-medium shadow-sm"
+                          >
+                            📧 Send Deck
+                          </button>
+                          <button
                             onClick={() => {
                               setMeetingDetails({
                                 startDate: '',
