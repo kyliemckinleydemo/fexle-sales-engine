@@ -1623,38 +1623,41 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       // Email Templates
       const emailTemplates = {
         aiDeck: {
-          name: "📧 Send AI Implementation Deck",
-          subject: "Salesforce AI Implementation Guide - As Discussed",
-          description: "Send after call when prospect wants the AI deck",
+          name: "📧 Send Agentforce Guide",
+          subject: "Agentforce Implementation Guide - As Discussed",
+          description: "Send after call when prospect wants the Agentforce leave-behind",
           body: `Hi [FIRST_NAME],
 
-Great speaking with you today. As promised, I'm sending over our AI Implementation Guide for Salesforce.
+Great speaking with you today. As promised, I'm attaching our Agentforce Implementation Guide.
 
-This deck covers:
-• How companies are using Agentforce to cut support costs (one client saw 40% reduction in 8 weeks)
-• Einstein Copilot use cases for sales teams
-• Practical implementation frameworks - not theory, real results
+The booklet covers what we're seeing work right now:
 
-I think the section on [INDUSTRY] will be particularly relevant given what you mentioned about [PAIN_POINT].
+• Real results from production deployments - Wiley (213% ROI), Reddit (46% case deflection), Accenture (35% productivity gain)
+• Our proven 10-18 week implementation approach - Discovery through to Deploy
+• Six principles that separate successful AI deployments from expensive disappointments
+• AI readiness assessment - how to know if your organisation is ready
+• Agentforce vs custom AI - honest comparison to help you choose the right path
 
-Take a look when you have a chance. I'll follow up next week to see if anything resonated and whether it makes sense to set up a quick call with our CEO to explore further.
+I think the section on [INDUSTRY] use cases will resonate given what you mentioned about [PAIN_POINT].
+
+Have a look when you get a chance. Happy to set up a quick call with our team to go deeper on anything that stands out.
 
 Best,
 [YOUR_NAME]
 Fexle Services
-Australia's Most Cost-Effective Salesforce Implementation Partner`
+Salesforce Platinum Partner | Sydney • Melbourne • Gold Coast`
         },
         deckFollowUp: {
-          name: "🔄 Follow Up on Deck",
-          subject: "Quick question about the AI deck",
-          description: "Follow up 5-7 days after sending the deck",
+          name: "🔄 Follow Up on Guide",
+          subject: "Quick question about the Agentforce guide",
+          description: "Follow up 5-7 days after sending the guide",
           body: `Hi [FIRST_NAME],
 
-I sent over our Salesforce AI implementation deck last week. Curious if anything resonated — particularly the sections on support cost reduction and sales performance improvement.
+I sent over our Agentforce Implementation Guide last week. Curious if anything resonated — particularly the case studies (Wiley's 213% ROI, Reddit's 46% deflection rate) or the AI readiness assessment.
 
-The key takeaway is how companies are using Agentforce to handle customer inquiries autonomously (70% case deflection) and Einstein to improve sales team productivity (35% gains).
+The key message: organisations deploying Agentforce are seeing 70% case deflection and 84% faster resolution — and our approach gets you there in 10-18 weeks, not quarters.
 
-If it's useful, I'd love to connect you with our CEO for a 20-minute conversation to go deeper. No pitch — just a practical discussion about what might work for [COMPANY].
+If it's useful, I'd love to connect you with our team for a 20-minute conversation to go deeper. No pitch — just a practical discussion about what might work for [COMPANY].
 
 If the timing's not right, no worries — just let me know and I'll check back in a few months.
 
@@ -1886,7 +1889,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           .replace(/\[PAIN_POINT\]/g, vertical?.painPoints[0] || 'operational challenges');
 
         // Add attachment reminder at the top
-        body = `[📎 REMEMBER: Attach the AI Implementation Deck before sending]\n\n${body}`;
+        body = `[📎 REMEMBER: Attach the Agentforce Implementation Guide PDF before sending]\n\n${body}`;
 
         let subject = template.subject
           .replace(/\[COMPANY\]/g, selectedLead.company)
@@ -1896,7 +1899,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const mailtoUrl = `mailto:${selectedLead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.open(mailtoUrl, '_blank');
 
-        showNotification('Email client opened - remember to attach the deck!', 'info');
+        showNotification('Email client opened - remember to attach the Agentforce guide!', 'info');
       };
 
       // ==================== ICS CALENDAR FILE GENERATION ====================
