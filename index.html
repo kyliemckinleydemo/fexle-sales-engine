@@ -2102,6 +2102,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
       }, [selectedLead, showMeetingModal]);
 
+      // Scroll to top when Call Center tab opens
+      useEffect(() => {
+        if (activeTab === 'callCenter') {
+          window.scrollTo(0, 0);
+        }
+      }, [activeTab]);
+
       // Meeting modal helper functions (moved from MeetingModal)
       const handleMeetingDownload = () => {
         if (!meetingDetails.startDate || !meetingDetails.startTime) {
