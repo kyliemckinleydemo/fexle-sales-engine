@@ -1870,6 +1870,35 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         showNotification('Email copied to clipboard!');
       };
 
+      // Open email client directly with AI Deck template
+      const openDeckEmail = () => {
+        if (!selectedLead) return;
+
+        const template = emailTemplates.aiDeck;
+        const vertical = verticalData[selectedLead.vertical];
+        const firstName = selectedLead.contact.split(' ')[0];
+
+        let body = template.body
+          .replace(/\[FIRST_NAME\]/g, firstName)
+          .replace(/\[COMPANY\]/g, selectedLead.company)
+          .replace(/\[YOUR_NAME\]/g, callerName || '[Your Name]')
+          .replace(/\[INDUSTRY\]/g, vertical?.name || 'your industry')
+          .replace(/\[PAIN_POINT\]/g, vertical?.painPoints[0] || 'operational challenges');
+
+        // Add attachment reminder at the top
+        body = `[📎 REMEMBER: Attach the AI Implementation Deck before sending]\n\n${body}`;
+
+        let subject = template.subject
+          .replace(/\[COMPANY\]/g, selectedLead.company)
+          .replace(/\[FIRST_NAME\]/g, firstName);
+
+        // Open email client
+        const mailtoUrl = `mailto:${selectedLead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoUrl, '_blank');
+
+        showNotification('Email client opened - remember to attach the deck!', 'info');
+      };
+
       // ==================== ICS CALENDAR FILE GENERATION ====================
       const generateICSFile = (meetingDetails) => {
         const { 
@@ -4381,7 +4410,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                           // Called but not Deck Sent and not Meeting Booked - offer choices
                           return (
                             <div className="flex items-center gap-2">
-                              <button onClick={() => document.getElementById('call-section')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                              <button onClick={openDeckEmail} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                                 <span>📧</span> Send Deck
                               </button>
                               <span className="text-gray-400 text-xs">or</span>
