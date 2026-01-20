@@ -698,7 +698,8 @@ Use this tab to pitch Fexle as a **full-stack system integrator** — not just S
 
 | Template | When to Use |
 |----------|-------------|
-| **📧 Send AI Deck** | After call when prospect wants the deck |
+| **📧 Send Agentforce Guide** | After call when Salesforce prospect wants the deck |
+| **📧 Send AI Success Guide** | After call when general AI prospect wants the deck |
 | **🔄 Follow Up on Deck** | 5-7 days after sending deck |
 | **📅 CEO Meeting Confirm** | Confirm booked CEO meeting |
 | **📞 Voicemail Follow Up** | After leaving a voicemail |
@@ -706,6 +707,35 @@ Use this tab to pitch Fexle as a **full-stack system integrator** — not just S
 | **👋 Breakup Email** | Final email after multiple attempts |
 | **🤝 LinkedIn Connection** | Personalized LinkedIn message |
 | **🏥 Health Check Offer** | Offer free Salesforce assessment |
+
+### Two Marketing Leave-Behinds
+
+The app supports two different PDF guides depending on the lead type:
+
+| Guide | PDF File | Best For |
+|-------|----------|----------|
+| **☁️ Agentforce Guide** | Your-Customers-Wont-Wait-Neither-Should-You.pdf | Salesforce/Agentforce leads |
+| **🤖 AI Success Guide** | How-to-Succeed-with-AI-Implementation.pdf | General AI leads (non-Salesforce) |
+
+**Agentforce Guide highlights:**
+- 70% case deflection, 84% faster resolution, 213% ROI
+- Wiley, Reddit, Accenture case studies
+- AI readiness assessment
+- Agentforce vs custom AI comparison
+
+**AI Success Guide highlights:**
+- 80% of AI projects fail, only 5% achieve meaningful impact
+- 3.6x higher returns for those who master fundamentals
+- Lessons from IBM Watson, McDonald's AI, Volkswagen failures
+- 90-day implementation roadmap
+
+### Send Deck Button
+
+Click the **📧 Send Deck** button to see a dropdown with both options:
+1. **Agentforce Guide** - Opens email with Salesforce-focused template
+2. **AI Success Guide** - Opens email with general AI template
+
+The email client opens with the template pre-populated. Remember to attach the appropriate PDF before sending.
 
 ### Using Templates
 
