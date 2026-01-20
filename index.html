@@ -1471,6 +1471,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [showEmailModal, setShowEmailModal] = useState(false);
       const [selectedEmailTemplate, setSelectedEmailTemplate] = useState(null);
       const [generatedEmail, setGeneratedEmail] = useState('');
+      const [showDeckMenu, setShowDeckMenu] = useState(false);
       const [notification, setNotification] = useState(null);
       const [tasks, setTasks] = useState([]);
       const [showTaskModal, setShowTaskModal] = useState(false);
@@ -1627,7 +1628,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         aiDeck: {
           name: "📧 Send Agentforce Guide",
           subject: "Agentforce Implementation Guide - As Discussed",
-          description: "Send after call when prospect wants the Agentforce leave-behind",
+          description: "Send after call when prospect wants the Agentforce leave-behind (for Salesforce leads)",
           body: `Hi [FIRST_NAME],
 
 Great speaking with you today. As promised, I'm attaching our Agentforce Implementation Guide.
@@ -1649,6 +1650,34 @@ Best,
 [YOUR_EMAIL]
 [YOUR_PHONE]
 Fexle Services | Salesforce Platinum Partner`
+        },
+        aiDeckGeneral: {
+          name: "📧 Send AI Success Guide",
+          subject: "How to Succeed with AI Implementation - As Discussed",
+          description: "Send after call when prospect wants AI guidance (for non-Salesforce leads)",
+          body: `Hi [FIRST_NAME],
+
+Great speaking with you today. As promised, I'm attaching our guide on succeeding with AI implementation.
+
+Here's the reality: 80% of AI projects never reach production, and 95% of generative AI pilots fail to deliver measurable P&L impact. But organisations that master the fundamentals achieve 3.6x higher shareholder returns than peers.
+
+The guide covers:
+
+• Why most AI projects fail - lessons from IBM Watson ($4B), McDonald's AI, Volkswagen Cariad ($7.5B)
+• What the 5% who succeed do differently - strategy, talent, data readiness, change management
+• The winning formula: 70% people & processes, 20% technology & data, only 10% algorithms
+• Data readiness benchmarks - Gartner predicts 60% of projects will be abandoned due to data issues by 2026
+• Your 90-day roadmap - a practical action plan from assessment to scale
+
+The bottom line: success isn't about having the best algorithms or biggest budget. It's about execution, change management, and data readiness.
+
+Have a look when you get a chance. Happy to set up a quick call with our team to discuss how this applies to [COMPANY].
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+Fexle Services | Full-Stack System Integrator`
         },
         deckFollowUp: {
           name: "🔄 Follow Up on Guide",
@@ -1896,10 +1925,12 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       };
 
       // Open email client directly with AI Deck template
-      const openDeckEmail = () => {
+      // deckType: 'salesforce' for Agentforce guide, 'general' for AI Success guide
+      const openDeckEmail = (deckType = 'salesforce') => {
         if (!selectedLead) return;
 
-        const template = emailTemplates.aiDeck;
+        const isSalesforce = deckType === 'salesforce';
+        const template = isSalesforce ? emailTemplates.aiDeck : emailTemplates.aiDeckGeneral;
         const vertical = verticalData[selectedLead.vertical];
         const firstName = selectedLead.contact.split(' ')[0];
 
@@ -1913,7 +1944,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           .replace(/\[PAIN_POINT\]/g, (vertical?.painPoints[0] || 'operational challenges').toLowerCase());
 
         // Add attachment reminder at the top
-        body = `[📎 REMEMBER: Attach the Agentforce Implementation Guide PDF before sending]\n\n${body}`;
+        const attachmentName = isSalesforce
+          ? 'Your-Customers-Wont-Wait-Neither-Should-You.pdf'
+          : 'How-to-Succeed-with-AI-Implementation.pdf';
+        const guideName = isSalesforce ? 'Agentforce Guide' : 'AI Success Guide';
+        body = `[📎 REMEMBER: Attach "${attachmentName}" before sending]\n\n${body}`;
 
         let subject = template.subject
           .replace(/\[COMPANY\]/g, selectedLead.company)
@@ -1923,7 +1958,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const mailtoUrl = `mailto:${selectedLead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.open(mailtoUrl, '_blank');
 
-        showNotification('Email client opened - remember to attach the Agentforce guide!', 'info');
+        showNotification(`Email client opened - remember to attach the ${guideName}!`, 'info');
       };
 
       // ==================== ICS CALENDAR FILE GENERATION ====================
@@ -4667,9 +4702,23 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                           // Called but not Deck Sent and not Meeting Booked - offer choices
                           return (
                             <div className="flex items-center gap-2">
-                              <button onClick={openDeckEmail} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span>📧</span> Send Deck
-                              </button>
+                              <div className="relative">
+                                <button onClick={() => setShowDeckMenu(!showDeckMenu)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                  <span>📧</span> Send Deck <span className="text-xs">▼</span>
+                                </button>
+                                {showDeckMenu && (
+                                  <div className="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[200px]">
+                                    <button onClick={() => { openDeckEmail('salesforce'); setShowDeckMenu(false); }} className="w-full px-4 py-3 text-left hover:bg-blue-50 rounded-t-lg border-b border-gray-100 transition-colors">
+                                      <div className="font-medium text-gray-900 text-sm">☁️ Agentforce Guide</div>
+                                      <div className="text-xs text-gray-500">For Salesforce leads</div>
+                                    </button>
+                                    <button onClick={() => { openDeckEmail('general'); setShowDeckMenu(false); }} className="w-full px-4 py-3 text-left hover:bg-purple-50 rounded-b-lg transition-colors">
+                                      <div className="font-medium text-gray-900 text-sm">🤖 AI Success Guide</div>
+                                      <div className="text-xs text-gray-500">For general AI leads</div>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                               <span className="text-gray-400 text-xs">or</span>
                               <button onClick={() => {
                                 setMeetingDetails(prev => ({
@@ -4707,12 +4756,32 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                           >
                             ✉️ Email
                           </button>
-                          <button
-                            onClick={openDeckEmail}
-                            className="px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all text-sm font-medium shadow-sm"
-                          >
-                            📧 Send Deck
-                          </button>
+                          <div className="relative inline-block">
+                            <button
+                              onClick={() => setShowDeckMenu(!showDeckMenu)}
+                              className="px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all text-sm font-medium shadow-sm flex items-center gap-1"
+                            >
+                              📧 Send Deck <span className="text-xs">▼</span>
+                            </button>
+                            {showDeckMenu && (
+                              <div className="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[200px]">
+                                <button
+                                  onClick={() => { openDeckEmail('salesforce'); setShowDeckMenu(false); }}
+                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 rounded-t-lg border-b border-gray-100 transition-colors"
+                                >
+                                  <div className="font-medium text-gray-900 text-sm">☁️ Agentforce Guide</div>
+                                  <div className="text-xs text-gray-500">For Salesforce leads</div>
+                                </button>
+                                <button
+                                  onClick={() => { openDeckEmail('general'); setShowDeckMenu(false); }}
+                                  className="w-full px-4 py-3 text-left hover:bg-purple-50 rounded-b-lg transition-colors"
+                                >
+                                  <div className="font-medium text-gray-900 text-sm">🤖 AI Success Guide</div>
+                                  <div className="text-xs text-gray-500">For general AI leads</div>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                           <button
                             onClick={() => {
                               setMeetingDetails({
