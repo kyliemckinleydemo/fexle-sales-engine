@@ -676,7 +676,7 @@ Use this tab to pitch Fexle as a **full-stack system integrator** — not just S
 1. **Opening Scripts** - Full capability intro, Salesforce-focused intro, existing partner scenario
 2. **Pain Points to Probe** - Current partner issues (too slow, too expensive, junior staff, etc.)
 3. **Pivot to Value** - Hybrid model, speed to value, Platinum expertise, full-stack capabilities
-4. **Path Forward: CEO Meeting** - Primary goal is securing a meeting with Fexle CEO Anand. Includes scripts for when they hesitate, are interested, want more info first, or timing isn't right
+4. **Path Forward: CEO Meeting** - Primary goal is securing a meeting with Fexle's CEO. Includes scripts for when they hesitate, are interested, want more info first, or timing isn't right
 5. **Objection Handling** - "Never heard of you", "Prefer Big Four", offshore concerns, etc.
 
 #### Quick Stats to Reference
