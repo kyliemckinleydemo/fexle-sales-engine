@@ -563,14 +563,15 @@ Each vertical includes:
 | **Agentforce Use Case** | AI application for this vertical |
 | **Industry Stats** | Data points to use in conversations |
 
-### Prospect Type Toggle
+### Playbook Tabs
 
-The playbook includes two distinct script sets for objection handling:
+The playbook popup includes three distinct script sets:
 
-| Mode | When to Use |
-|------|-------------|
-| **SF Users** | Prospect already uses Salesforce - focus on AI upgrades, optimization |
-| **Non-SF** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration |
+| Tab | When to Use |
+|-----|-------------|
+| **Existing SF User** | Prospect already uses Salesforce - focus on AI upgrades, Agentforce, optimization |
+| **Non-SF Prospect** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration value |
+| **Generic Pitch** | Pitch Fexle as a full-stack system integrator - Salesforce, E-Commerce, Mobile, Web |
 
 ---
 
@@ -647,6 +648,47 @@ Use these when calling prospects who don't currently use Salesforce — they may
 | **Tailored Demo** | Show Salesforce configured for their industry |
 | **ROI Conversation** | Build business case based on their specifics |
 | **Competitor Comparison** | Side-by-side vs their current system |
+
+---
+
+### Generic Pitch Tab
+
+Use this tab to pitch Fexle as a **full-stack system integrator** — not just Salesforce, but e-commerce, mobile apps, and custom web development.
+
+#### When to Use
+
+- When the conversation shifts to broader technology needs
+- When positioning Fexle's overall value proposition
+- When the prospect needs more than just Salesforce
+- When comparing Fexle to other consultancies/integrators
+
+#### Capabilities Covered
+
+| Area | Technologies |
+|------|--------------|
+| **Salesforce** | Agentforce, Data Cloud, Sales/Service/Marketing Cloud, Industry Clouds, MuleSoft |
+| **E-Commerce** | B2B & B2C platforms, Commerce Cloud, payment gateways, order management |
+| **Mobile** | iOS, Android, React Native, Flutter, Xamarin |
+| **Web Dev** | Laravel, Node.js, React, Angular, PHP, ASP.NET, WordPress, Drupal |
+
+#### Script Structure (Same as Other Tabs)
+
+1. **Opening Scripts** - Full capability intro, Salesforce-focused intro, existing partner scenario
+2. **Pain Points to Probe** - Current partner issues (too slow, too expensive, junior staff, etc.)
+3. **Pivot to Value** - Hybrid model, speed to value, Platinum expertise, full-stack capabilities
+4. **Path Forward: CEO Meeting** - Primary goal is securing a meeting with Fexle CEO Anand. Includes scripts for when they hesitate, are interested, want more info first, or timing isn't right
+5. **Objection Handling** - "Never heard of you", "Prefer Big Four", offshore concerns, etc.
+
+#### Quick Stats to Reference
+
+| Metric | Value |
+|--------|-------|
+| Support call reduction | 30% |
+| Customer satisfaction increase | 25% |
+| Case resolution improvement | 40% |
+| Employee onboarding speed | 75% faster |
+| Sales productivity | 35% improvement |
+| Agentforce ROI | 213% |
 
 ---
 
