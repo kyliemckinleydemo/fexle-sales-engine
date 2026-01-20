@@ -700,7 +700,8 @@ Use this tab to pitch Fexle as a **full-stack system integrator** — not just S
 |----------|-------------|
 | **📧 Send Agentforce Guide** | After call when Salesforce prospect wants the deck |
 | **📧 Send AI Success Guide** | After call when general AI prospect wants the deck |
-| **🔄 Follow Up on Deck** | 5-7 days after sending deck |
+| **🔄 Follow Up (Agentforce)** | 5-7 days after sending Agentforce guide |
+| **🔄 Follow Up (AI Success)** | 5-7 days after sending AI Success guide |
 | **📅 CEO Meeting Confirm** | Confirm booked CEO meeting |
 | **📞 Voicemail Follow Up** | After leaving a voicemail |
 | **❄️ Cold Email** | Initial outreach without prior call |
