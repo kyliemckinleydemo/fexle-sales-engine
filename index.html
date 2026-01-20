@@ -4030,8 +4030,10 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 .toggle-btn.sf.active { background: #3b82f6; color: white; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); }
                 .toggle-btn.nonsf { background: #e5e7eb; color: #6b7280; }
                 .toggle-btn.nonsf.active { background: #22c55e; color: white; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3); }
-                .sf-content, .nonsf-content { display: none; }
-                .sf-content.active, .nonsf-content.active { display: block; }
+                .toggle-btn.whyfexle { background: #e5e7eb; color: #6b7280; }
+                .toggle-btn.whyfexle.active { background: #8b5cf6; color: white; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3); }
+                .sf-content, .nonsf-content, .whyfexle-content { display: none; }
+                .sf-content.active, .nonsf-content.active, .whyfexle-content.active { display: block; }
                 .industry-box { background: #fef3c7; padding: 16px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 24px; }
                 .key-messages { background: #dbeafe; padding: 16px; border-radius: 8px; border: 1px solid #93c5fd; }
                 .key-messages ul { margin: 0; padding-left: 20px; }
@@ -4084,6 +4086,9 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 <button class="toggle-btn nonsf ${scriptMode === 'nonSalesforce' ? 'active' : ''}" onclick="switchMode('nonsf')">
                   Non-SF Prospect
                 </button>
+                <button class="toggle-btn whyfexle" onclick="switchMode('whyfexle')">
+                  Why Fexle
+                </button>
               </div>
 
               <div class="industry-box">
@@ -4132,6 +4137,115 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 ${nonSfObjectionsHtml}
               </div>
 
+              <!-- Why Fexle Content -->
+              <div class="whyfexle-content">
+                <h2>🏆 Why Fexle?</h2>
+                <div style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                  <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">The Smart Choice for Salesforce</div>
+                  <div style="font-size: 14px; opacity: 0.9;">Enterprise-quality implementations at 30-40% less than Big Four consultancies</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+                  <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: #7c3aed;">700+</div>
+                    <div style="font-size: 12px; color: #6b7280;">Implementations</div>
+                  </div>
+                  <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: #7c3aed;">500+</div>
+                    <div style="font-size: 12px; color: #6b7280;">Happy Clients</div>
+                  </div>
+                  <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: #7c3aed;">5.0</div>
+                    <div style="font-size: 12px; color: #6b7280;">Client Rating</div>
+                  </div>
+                  <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 700; color: #7c3aed;">12+</div>
+                    <div style="font-size: 12px; color: #6b7280;">Years Experience</div>
+                  </div>
+                </div>
+
+                <h2>💡 The Hybrid Model Advantage</h2>
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+                  <p style="margin: 0; font-style: italic; color: #92400e;">"We combine senior Australian consultants who understand your business with our global delivery center. You get enterprise-grade expertise at 30-40% less than traditional consultancies — without compromising on quality or communication."</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                  <div style="background: #dcfce7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">✅ What You Get</div>
+                    <ul style="margin: 0; padding-left: 20px; color: #166534; font-size: 14px;">
+                      <li>Senior consultants who stay on your project</li>
+                      <li>Direct access to decision-makers</li>
+                      <li>Weeks to value, not quarters</li>
+                      <li>Local presence (Sydney, Melbourne, Gold Coast)</li>
+                      <li>Salesforce Platinum Partner expertise</li>
+                    </ul>
+                  </div>
+                  <div style="background: #fee2e2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">❌ What You Avoid</div>
+                    <ul style="margin: 0; padding-left: 20px; color: #991b1b; font-size: 14px;">
+                      <li>Rotating junior staff learning on your dime</li>
+                      <li>Account manager layers blocking access</li>
+                      <li>Multi-year timelines and scope creep</li>
+                      <li>Premium pricing with hidden surprises</li>
+                      <li>"Everything for everyone" generalist approach</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <h2>📊 Typical Client Results</h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;">
+                  <div style="background: #dbeafe; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #1e40af;">30%</div>
+                    <div style="font-size: 13px; color: #1e40af;">Reduction in support call volume</div>
+                  </div>
+                  <div style="background: #d1fae5; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #065f46;">25%</div>
+                    <div style="font-size: 13px; color: #065f46;">Increase in customer satisfaction</div>
+                  </div>
+                  <div style="background: #ede9fe; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #5b21b6;">40%</div>
+                    <div style="font-size: 13px; color: #5b21b6;">Faster case resolution times</div>
+                  </div>
+                  <div style="background: #fce7f3; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #9d174d;">75%</div>
+                    <div style="font-size: 13px; color: #9d174d;">Faster employee onboarding</div>
+                  </div>
+                  <div style="background: #ffedd5; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #c2410c;">35%</div>
+                    <div style="font-size: 13px; color: #c2410c;">Sales productivity improvement</div>
+                  </div>
+                  <div style="background: #ecfdf5; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #047857;">213%</div>
+                    <div style="font-size: 13px; color: #047857;">ROI on Agentforce deployments</div>
+                  </div>
+                </div>
+
+                <h2>🎯 Client Success Highlights</h2>
+                <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                  <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                    <div style="font-weight: 600; color: #374151;">Axelerant</div>
+                    <div style="font-size: 14px; color: #6b7280;">Migrated legacy code to modern architecture — achieved 75% faster onboarding</div>
+                  </div>
+                  <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                    <div style="font-weight: 600; color: #374151;">Campos Coffee</div>
+                    <div style="font-size: 14px; color: #6b7280;">Built B2B commerce portal with single-click checkout and complex pricing</div>
+                  </div>
+                  <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                    <div style="font-weight: 600; color: #374151;">Ubisense</div>
+                    <div style="font-size: 14px; color: #6b7280;">Replaced legacy CRM, standardized global Sales/Marketing operations</div>
+                  </div>
+                  <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                    <div style="font-weight: 600; color: #374151;">Director Institute</div>
+                    <div style="font-size: 14px; color: #6b7280;">Elevated B2B marketing through automation</div>
+                  </div>
+                </div>
+
+                <h2>🗣️ Quick Pitch Script</h2>
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e;">
+                  <p style="margin: 0; font-style: italic; color: #166534;">"We're Fexle — a Salesforce Platinum Partner with over 700 implementations under our belt. What makes us different is our hybrid model: you get senior Australian consultants who actually stay on your project, backed by our global delivery center. That means enterprise-quality work at 30-40% less than the Big Four. Our clients typically see results in weeks, not quarters — things like 30% reduction in support volume, 25% improvement in customer satisfaction. Happy to show you some case studies if that's useful?"</p>
+                </div>
+              </div>
+
               <h2>📝 Key Messages</h2>
               <div class="key-messages">
                 <ul>
@@ -4170,13 +4284,16 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
           const popupScript = `
             function switchMode(mode) {
               document.querySelectorAll('.toggle-btn').forEach(function(btn) { btn.classList.remove('active'); });
-              document.querySelectorAll('.sf-content, .nonsf-content').forEach(function(el) { el.classList.remove('active'); });
+              document.querySelectorAll('.sf-content, .nonsf-content, .whyfexle-content').forEach(function(el) { el.classList.remove('active'); });
               if (mode === 'sf') {
                 document.querySelector('.toggle-btn.sf').classList.add('active');
                 document.querySelector('.sf-content').classList.add('active');
-              } else {
+              } else if (mode === 'nonsf') {
                 document.querySelector('.toggle-btn.nonsf').classList.add('active');
                 document.querySelector('.nonsf-content').classList.add('active');
+              } else if (mode === 'whyfexle') {
+                document.querySelector('.toggle-btn.whyfexle').classList.add('active');
+                document.querySelector('.whyfexle-content').classList.add('active');
               }
             }
 
