@@ -738,6 +738,17 @@ Click the **📧 Send Deck** button to see a dropdown with both options:
 
 The email client opens with the template pre-populated. Remember to attach the appropriate PDF before sending.
 
+### Following Up on Decks
+
+After sending a deck, use the matching follow-up template 5-7 days later:
+
+| Deck Sent | Follow-Up Template |
+|-----------|-------------------|
+| Agentforce Guide | 🔄 Follow Up (Agentforce) |
+| AI Success Guide | 🔄 Follow Up (AI Success) |
+
+**Tip:** Add a note to the lead indicating which deck you sent (e.g., "Sent Agentforce Guide 15/1/26"), since the system tracks that a deck was sent but not which type.
+
 ### Using Templates
 
 1. Select a lead in Call Center
