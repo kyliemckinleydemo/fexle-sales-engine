@@ -1517,7 +1517,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         try {
           // Build search payload
           const payload = {
-            api_key: apolloApiKey,
             page: apolloSearchParams.page,
             per_page: apolloSearchParams.perPage,
             person_titles: apolloSearchParams.personTitles,
@@ -1541,6 +1540,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'X-Api-Key': apolloApiKey,
             },
             body: JSON.stringify(payload)
           });
