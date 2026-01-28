@@ -997,7 +997,15 @@ Set up your profile information for use in call scripts and email signatures:
 | Setting | Purpose |
 |---------|---------|
 | **Anthropic API Key** | Enables AI Research feature |
-| **Apollo API Key** | Enables Apollo.io lead search |
+| **Apollo API Key** | Enables Apollo.io lead search (direct mode — requires localhost) |
+
+### Google Apps Script Proxy
+
+| Setting | Purpose |
+|---------|---------|
+| **Google Apps Script URL** | Routes Apollo searches through a server-side proxy, bypassing CORS. Allows Apollo to work when opening the HTML file directly. See [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) |
+
+When a proxy URL is configured, Apollo searches route server-to-server. Your API key is stored in Google Apps Script Properties, not the browser.
 
 ### Other Options
 

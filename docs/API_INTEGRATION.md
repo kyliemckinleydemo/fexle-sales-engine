@@ -30,26 +30,38 @@ Apollo.io provides access to a database of 250M+ business contacts. The integrat
 
 1. Go to [apollo.io](https://www.apollo.io)
 2. Sign up for an account
-3. Choose a plan:
+3. Choose a **paid plan** (API access requires Basic or higher):
 
-| Plan | Price | Credits/Month | Best For |
-|------|-------|---------------|----------|
-| Free | $0 | 50 | Testing |
-| Basic | $49 | 200 | Individual |
-| Professional | $99 | 400 | Small teams |
-| Organization | Custom | Unlimited | Large teams |
+| Plan | Price | Credits/Month | API Access |
+|------|-------|---------------|-----------|
+| Free | $0 | 50 | No API access |
+| Basic | $49 | 200 | Yes |
+| Professional | $99 | 400 | Yes |
+| Organization | Custom | Unlimited | Yes |
 
 4. Navigate to **Settings → Integrations → API**
 5. Click **Generate API Key**
 6. Copy the key
 
+> **Note:** The free plan does not include API search access. All search endpoints return a 403 error on free plans.
+
 ### Configuration
 
+There are two ways to configure Apollo:
+
+**Option A — Direct API key (requires localhost):**
 1. Open Fexle Sales Engine
 2. Go to **Settings** (⚙️)
 3. Find **Apollo.io API Key**
 4. Paste your key
 5. Key saves automatically
+6. Serve the app from `http://localhost` (see [CORS](#cors-and-browser-access) below)
+
+**Option B — Google Apps Script proxy (recommended):**
+1. Set up the Google Apps Script backend (see [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md))
+2. Add `APOLLO_API_KEY` to Script Properties in the Apps Script editor
+3. Paste the Web App URL into Settings → **Google Apps Script URL**
+4. Apollo searches route server-to-server — no CORS issues, works in any browser
 
 ### Using Apollo Search
 
@@ -85,22 +97,41 @@ Apollo.io provides access to a database of 250M+ business contacts. The integrat
 | Requests per minute | 100 |
 | Monthly credits | Based on plan |
 
+### API Authentication
+
+Apollo requires the API key in the `X-Api-Key` HTTP header (not the request body). The app handles this automatically for both direct and proxy modes.
+
+### CORS and Browser Access
+
+Apollo's API only allows cross-origin requests from `http://localhost`. This means:
+
+| Origin | Apollo API Works? |
+|--------|------------------|
+| `file://` (double-click HTML) | No — CORS blocks it |
+| `http://localhost` (any port) | Yes |
+| `http://127.0.0.1` | No |
+| Google Apps Script proxy | Yes (recommended) |
+
+**Recommended solution:** Use the Google Apps Script proxy. It routes requests server-to-server, bypassing CORS entirely and keeping your API key secure. See [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) for setup.
+
+**Alternative:** Serve the app from localhost:
+```bash
+cd fexle-sales-engine
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
 ### Troubleshooting Apollo
 
 | Issue | Solution |
 |-------|----------|
+| "API key must be passed in the X-Api-Key header" | Update to the latest version of the app |
+| "not accessible with this api_key on a free plan" | Upgrade to Apollo Basic ($49/mo) or higher |
 | "Invalid API Key" | Regenerate key in Apollo settings |
 | "Rate limit exceeded" | Wait 1 minute, reduce batch size |
 | "No results" | Broaden search criteria |
-| CORS error | Apollo may block browser requests - see below |
-
-#### CORS Workaround
-
-If you get CORS errors, Apollo may be blocking direct browser requests. Options:
-
-1. **Use Apollo's Chrome Extension** for manual searches
-2. **Export from Apollo website** and import via CSV
-3. **Set up a proxy** server (advanced)
+| CORS error (direct mode) | Use the Google Apps Script proxy or serve from localhost |
+| Apollo proxy error | Check `APOLLO_API_KEY` in Script Properties |
 
 ---
 
@@ -203,20 +234,26 @@ Provide:
 
 ### Storage
 
-API keys are stored in your browser's localStorage:
+API keys can be stored in two places:
 
+**Browser localStorage (direct mode):**
 ```javascript
-// Keys stored as:
 localStorage.getItem('fexle_sales_engine_data')
 // Contains: { anthropicApiKey: '...', apolloApiKey: '...' }
 ```
 
+**Google Apps Script Properties (proxy mode — more secure):**
+- Keys stored server-side in Google's infrastructure
+- Not exposed to the browser
+- Configured in Apps Script → Project Settings → Script Properties
+
 ### Security Best Practices
 
-1. **Don't share keys** - Each user should have their own
-2. **Rotate regularly** - Generate new keys periodically
-3. **Use separate keys** - Don't reuse keys across apps
-4. **Monitor usage** - Check API dashboards for unusual activity
+1. **Use the proxy** - Keeps API keys server-side, not in the browser
+2. **Don't share keys** - Each user should have their own
+3. **Rotate regularly** - Generate new keys periodically
+4. **Use separate keys** - Don't reuse keys across apps
+5. **Monitor usage** - Check API dashboards for unusual activity
 
 ### If a Key is Compromised
 

@@ -26,6 +26,8 @@ This guide walks you through setting up the Fexle Sales Engine from scratch.
 2. Double-click to open in your default browser
 3. Done! The app runs entirely in your browser
 
+> **Note:** Opening via `file://` works for all features except Apollo.io search, which requires either a localhost server or a Google Apps Script proxy (see [Apollo CORS](#apollo-cors) below).
+
 #### Option 2: Clone Repository
 
 ```bash
@@ -34,7 +36,16 @@ cd fexle-sales-engine
 open index.html
 ```
 
-#### Option 3: Web Hosting
+#### Option 3: Local Server (recommended for Apollo)
+
+```bash
+git clone https://github.com/YOUR_USERNAME/fexle-sales-engine.git
+cd fexle-sales-engine
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+#### Option 4: Web Hosting
 
 Upload `index.html` to any web hosting service:
 - GitHub Pages
@@ -58,26 +69,48 @@ Upload `index.html` to any web hosting service:
 
 Apollo.io provides access to 250M+ business contacts.
 
+> **Important:** Apollo requires a **paid plan** (Basic or higher) for API search access. The free plan does not include API endpoints.
+
 #### Getting Your API Key
 
 1. Go to [apollo.io](https://apollo.io) and sign up
-2. Choose a plan (Pro at $99/month recommended)
+2. Choose a plan (Basic at $49/month minimum for API access)
 3. Navigate to **Settings → Integrations → API**
 4. Click **Generate API Key**
 5. Copy the key
 
 #### Configuring in App
 
+**Option A — Direct API key (requires localhost):**
 1. Open Settings (⚙️)
 2. Find **Apollo.io API Key**
 3. Paste your key
 4. Key is saved automatically
+5. Serve the app from `http://localhost` (see [Apollo CORS](#apollo-cors))
+
+**Option B — Google Apps Script proxy (recommended):**
+1. Set up the Google Apps Script backend (see [Google Sheets Setup](#google-sheets-setup))
+2. Add your Apollo API key to Script Properties (see below)
+3. Paste the Web App URL into Settings → **Google Apps Script URL**
+4. Apollo searches route through the proxy — no CORS issues, works in any browser
+
+#### Apollo CORS
+
+Apollo's API only allows browser requests from `http://localhost`. This means:
+
+| How You Open the App | Apollo Search Works? |
+|---------------------|---------------------|
+| `file://` (double-click HTML) | No — blocked by CORS |
+| `http://localhost` (any port) | Yes |
+| Google Apps Script proxy | Yes — recommended |
+
+The **Google Apps Script proxy** is the best solution: it routes requests server-to-server, bypassing CORS entirely and keeping your API key secure on the server.
 
 #### Usage Limits
 
-| Plan | Monthly Credits | API Calls |
+| Plan | Monthly Credits | API Access |
 |------|-----------------|-----------|
-| Free | 50 | Limited |
+| Free | 50 | No API access |
 | Basic | 200 | Standard |
 | Pro | 400 | Standard |
 | Organization | Unlimited | Unlimited |
@@ -111,7 +144,7 @@ Claude powers the AI Research feature for company analysis.
 
 ## Google Sheets Setup
 
-Google Sheets enables team collaboration by syncing data to a shared spreadsheet.
+Google Sheets enables team collaboration and also serves as a **server-side proxy** for Apollo.io API calls (bypassing CORS restrictions).
 
 ### Step 1: Create the Sheet
 
@@ -125,9 +158,21 @@ Google Sheets enables team collaboration by syncing data to a shared spreadsheet
 
 1. In your Google Sheet, go to **Extensions → Apps Script**
 2. Delete any existing code
-3. Copy the entire contents of `scripts/google-apps-script.js`
+3. Copy the entire contents of `scripts/google-apps-script.js` (v3.0)
 4. Paste into the Apps Script editor
 5. Click **Save** (Ctrl+S / Cmd+S)
+
+### Step 2b: Add API Keys to Script Properties (optional)
+
+To use the proxy for Apollo searches:
+
+1. In the Apps Script editor, click **Project Settings** (gear icon in left sidebar)
+2. Scroll to **Script Properties**
+3. Click **Add script property**
+4. Add `APOLLO_API_KEY` with your Apollo API key as the value
+5. (Optional) Add `ANTHROPIC_API_KEY` for server-side AI research
+
+This stores your API keys securely on Google's servers, not in the browser.
 
 ### Step 3: Deploy as Web App
 
@@ -149,10 +194,8 @@ Google Sheets enables team collaboration by syncing data to a shared spreadsheet
 
 1. Open Fexle Sales Engine
 2. Go to Settings (⚙️)
-3. Find **Google Sheets Sync**
-4. Paste the Web App URL
-5. Click **Test Connection**
-6. You should see "✓ Connected"
+3. Paste the Web App URL into **Google Apps Script URL**
+4. Apollo searches will now route through the proxy automatically
 
 ### Troubleshooting
 
@@ -162,6 +205,7 @@ Google Sheets enables team collaboration by syncing data to a shared spreadsheet
 | Authorization Error | Re-deploy after code changes |
 | Connection Failed | Check URL is correct, redeploy |
 | Data Not Syncing | Verify sheet names are exact |
+| Apollo proxy error | Check APOLLO_API_KEY in Script Properties |
 
 ---
 
@@ -206,9 +250,9 @@ git push origin main
 
 ### Security Considerations
 
-1. **API Keys** - Stored in browser localStorage (per-user)
+1. **API Keys** - Stored in browser localStorage (per-user), or securely in Google Apps Script Properties when using the proxy
 2. **Lead Data** - Stored locally or in your Google Sheet
-3. **No Server** - No data sent to external servers (except APIs you configure)
+3. **No Server** - No data sent to external servers (except APIs you configure and the optional Google Apps Script proxy)
 
 ### Backup Strategy
 

@@ -10,6 +10,7 @@ The Google Sheets integration allows your team to:
 - **Sync tasks** for collaborative follow-up
 - **Backup data** automatically to the cloud
 - **Work offline** and sync when connected
+- **Proxy API calls** for Apollo.io (bypasses CORS, hides API keys)
 
 ## Architecture
 
@@ -18,12 +19,18 @@ The Google Sheets integration allows your team to:
 │  User Browser   │────▶│  Google Apps    │────▶│  Google Sheet   │
 │  (Sales Engine) │◀────│    Script       │◀────│  (Leads/Tasks)  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                                               │
-         │              ┌─────────────────┐              │
+         │                      │  │                     │
+         │                      │  └──▶ Apollo.io API    │
+         │                      │  └──▶ Anthropic API    │
+         │              ┌───────┴─────────┐              │
          └─────────────▶│  Other Team     │◀─────────────┘
                         │    Members      │
                         └─────────────────┘
 ```
+
+The Apps Script serves dual purposes:
+1. **Data sync** — Shared leads and tasks via Google Sheets
+2. **API proxy** — Routes Apollo.io and Anthropic API calls server-side, bypassing browser CORS restrictions and keeping API keys secure
 
 ## Step-by-Step Setup
 
@@ -46,6 +53,8 @@ The Google Sheets integration allows your team to:
 4. Delete any existing code (usually `function myFunction() {}`)
 
 ### 3. Add the Backend Code
+
+> **Important:** The code below is a simplified version for reference. For the **full v3.0 backend** with version-based conflict resolution, incremental sync, and API proxy endpoints, copy from `scripts/google-apps-script.js` in the repository instead.
 
 Copy and paste the following code into the Apps Script editor:
 
@@ -316,6 +325,22 @@ function removeDuplicates() {
 1. Click **File → Save** (or Ctrl+S / Cmd+S)
 2. Name the project "Fexle Sales Engine Backend"
 
+### 4b. Add API Keys to Script Properties (for proxy)
+
+To enable the Apollo.io and Anthropic API proxy:
+
+1. In the Apps Script editor, click the **gear icon** (Project Settings) in the left sidebar
+2. Scroll down to **Script Properties**
+3. Click **Add script property**
+4. Add your API keys:
+
+| Property Name | Value | Purpose |
+|--------------|-------|---------|
+| `APOLLO_API_KEY` | Your Apollo API key | Proxies Apollo search requests |
+| `ANTHROPIC_API_KEY` | Your Anthropic API key | Proxies AI research requests |
+
+This keeps API keys on Google's servers rather than in the browser — more secure and avoids CORS.
+
 ### 5. Deploy as Web App
 
 1. Click **Deploy** (blue button, top right)
@@ -349,10 +374,10 @@ After authorization, you'll see a success screen with:
 
 1. Open the Fexle Sales Engine
 2. Click **Settings** (⚙️ gear icon)
-3. Scroll to **Google Sheets Sync**
-4. Paste the Web App URL
-5. Click **Test Connection**
-6. You should see: "✓ Connected to [Your Sheet Name]"
+3. Paste the Web App URL into **Google Apps Script URL**
+4. You should see: "✓ Proxy URL saved — Apollo searches will route through server"
+
+Once configured, Apollo searches will automatically route through the proxy, bypassing CORS restrictions. This means you can open the app by double-clicking `index.html` — no localhost server needed.
 
 ## Using the Sync Features
 
