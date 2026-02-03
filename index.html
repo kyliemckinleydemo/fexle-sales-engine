@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fexle Sales Engine - AI-Powered Lead Generation</title>
+  <title>Sales Engine - AI-Powered Lead Generation</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .scrollbar-thin::-webkit-scrollbar { width: 6px; }
     .scrollbar-thin::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
@@ -20,7 +21,1284 @@
 <body class="bg-gray-50">
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, createContext, useContext } = React;
+
+    // ==================== SUPABASE CONFIGURATION ====================
+    // Configure these values for your Supabase project
+    // You can set these via URL params: ?supabase_url=...&supabase_key=...
+    const getSupabaseConfig = () => {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        url: params.get('supabase_url') || localStorage.getItem('supabase_url') || '',
+        anonKey: params.get('supabase_key') || localStorage.getItem('supabase_key') || ''
+      };
+    };
+
+    const SUPABASE_CONFIG = getSupabaseConfig();
+    const supabase = SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey
+      ? window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey)
+      : null;
+
+    // ==================== AUTH CONTEXT ====================
+    const AuthContext = createContext(null);
+
+    const useAuth = () => {
+      const context = useContext(AuthContext);
+      if (!context) {
+        throw new Error('useAuth must be used within AuthProvider');
+      }
+      return context;
+    };
+
+    const AuthProvider = ({ children }) => {
+      const [user, setUser] = useState(null);
+      const [session, setSession] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
+
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+      }, []);
+
+      const signUp = async (email, password, fullName) => {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName }
+          }
+        });
+        return { data, error };
+      };
+
+      const signIn = async (email, password) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        return { data, error };
+      };
+
+      const signOut = async () => {
+        const { error } = await supabase.auth.signOut();
+        return { error };
+      };
+
+      const resetPassword = async (email) => {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+        return { data, error };
+      };
+
+      return (
+        <AuthContext.Provider value={{
+          user,
+          session,
+          loading,
+          signUp,
+          signIn,
+          signOut,
+          resetPassword,
+          isAuthenticated: !!user
+        }}>
+          {children}
+        </AuthContext.Provider>
+      );
+    };
+
+    // ==================== ORGANIZATION CONTEXT ====================
+    const OrgContext = createContext(null);
+
+    const useOrg = () => {
+      const context = useContext(OrgContext);
+      if (!context) {
+        throw new Error('useOrg must be used within OrgProvider');
+      }
+      return context;
+    };
+
+    const OrgProvider = ({ children }) => {
+      const { user, isAuthenticated } = useAuth();
+      const [organization, setOrganization] = useState(null);
+      const [membership, setMembership] = useState(null);
+      const [config, setConfig] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!supabase || !isAuthenticated) {
+          setLoading(false);
+          return;
+        }
+
+        loadOrganization();
+      }, [isAuthenticated, user]);
+
+      const loadOrganization = async () => {
+        try {
+          // Get user's organization membership
+          const { data: memberships, error: memError } = await supabase
+            .from('organization_members')
+            .select('*, organizations(*)')
+            .eq('user_id', user.id)
+            .limit(1);
+
+          if (memError) throw memError;
+
+          if (memberships && memberships.length > 0) {
+            const mem = memberships[0];
+            setMembership(mem);
+            setOrganization(mem.organizations);
+            setConfig(mem.organizations.config || {});
+          }
+        } catch (err) {
+          console.error('Error loading organization:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const createOrganization = async (name, initialConfig = {}) => {
+        try {
+          const { data, error } = await supabase.rpc('create_organization', {
+            p_name: name,
+            p_config: initialConfig
+          });
+          if (error) throw error;
+
+          await loadOrganization();
+          return { data, error: null };
+        } catch (err) {
+          return { data: null, error: err };
+        }
+      };
+
+      const updateConfig = async (newConfig) => {
+        if (!organization) return { error: 'No organization' };
+
+        try {
+          const { data, error } = await supabase.rpc('update_org_config', {
+            p_org_id: organization.id,
+            p_config: newConfig
+          });
+          if (error) throw error;
+
+          setConfig(data);
+          return { data, error: null };
+        } catch (err) {
+          return { data: null, error: err };
+        }
+      };
+
+      const isAdmin = membership?.role === 'owner' || membership?.role === 'admin';
+      const isOwner = membership?.role === 'owner';
+
+      return (
+        <OrgContext.Provider value={{
+          organization,
+          membership,
+          config,
+          loading,
+          isAdmin,
+          isOwner,
+          createOrganization,
+          updateConfig,
+          reload: loadOrganization
+        }}>
+          {children}
+        </OrgContext.Provider>
+      );
+    };
+
+    // ==================== DATA HOOKS (Supabase Integration) ====================
+    const useLeads = () => {
+      const { organization } = useOrg();
+      const [leads, setLeads] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!supabase || !organization) {
+          setLoading(false);
+          return;
+        }
+
+        loadLeads();
+
+        // Set up realtime subscription
+        const channel = supabase
+          .channel('leads-changes')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'leads',
+            filter: `organization_id=eq.${organization.id}`
+          }, (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setLeads(prev => [...prev, payload.new]);
+            } else if (payload.eventType === 'UPDATE') {
+              setLeads(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
+            } else if (payload.eventType === 'DELETE') {
+              setLeads(prev => prev.filter(l => l.id !== payload.old.id));
+            }
+          })
+          .subscribe();
+
+        return () => {
+          supabase.removeChannel(channel);
+        };
+      }, [organization]);
+
+      const loadLeads = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('organization_id', organization.id)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setLeads(data || []);
+        } catch (err) {
+          console.error('Error loading leads:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const createLead = async (lead) => {
+        const { data, error } = await supabase
+          .from('leads')
+          .insert({ ...lead, organization_id: organization.id })
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      const updateLead = async (id, updates) => {
+        const { data, error } = await supabase
+          .from('leads')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      const deleteLead = async (id) => {
+        const { error } = await supabase
+          .from('leads')
+          .delete()
+          .eq('id', id);
+        return { error };
+      };
+
+      return { leads, loading, createLead, updateLead, deleteLead, reload: loadLeads };
+    };
+
+    const useTasks = () => {
+      const { organization } = useOrg();
+      const [tasks, setTasks] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!supabase || !organization) {
+          setLoading(false);
+          return;
+        }
+
+        loadTasks();
+
+        const channel = supabase
+          .channel('tasks-changes')
+          .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'tasks',
+            filter: `organization_id=eq.${organization.id}`
+          }, (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setTasks(prev => [...prev, payload.new]);
+            } else if (payload.eventType === 'UPDATE') {
+              setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+            } else if (payload.eventType === 'DELETE') {
+              setTasks(prev => prev.filter(t => t.id !== payload.old.id));
+            }
+          })
+          .subscribe();
+
+        return () => supabase.removeChannel(channel);
+      }, [organization]);
+
+      const loadTasks = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('organization_id', organization.id)
+            .order('due_date', { ascending: true });
+
+          if (error) throw error;
+          setTasks(data || []);
+        } catch (err) {
+          console.error('Error loading tasks:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const createTask = async (task) => {
+        const { data, error } = await supabase
+          .from('tasks')
+          .insert({ ...task, organization_id: organization.id })
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      const updateTask = async (id, updates) => {
+        const { data, error } = await supabase
+          .from('tasks')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+        return { data, error };
+      };
+
+      const deleteTask = async (id) => {
+        const { error } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', id);
+        return { error };
+      };
+
+      return { tasks, loading, createTask, updateTask, deleteTask, reload: loadTasks };
+    };
+
+    const useMeetings = () => {
+      const { organization } = useOrg();
+      const [meetings, setMeetings] = useState([]);
+      const [slots, setSlots] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!supabase || !organization) {
+          setLoading(false);
+          return;
+        }
+
+        loadMeetings();
+        loadSlots();
+      }, [organization]);
+
+      const loadMeetings = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('meetings')
+            .select('*, leads(company, contact)')
+            .eq('organization_id', organization.id)
+            .order('meeting_date', { ascending: true });
+
+          if (error) throw error;
+          setMeetings(data || []);
+        } catch (err) {
+          console.error('Error loading meetings:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const loadSlots = async () => {
+        const { data, error } = await supabase
+          .from('availability_slots')
+          .select('*')
+          .eq('organization_id', organization.id)
+          .gte('slot_date', new Date().toISOString().split('T')[0])
+          .order('slot_date', { ascending: true });
+
+        if (!error) setSlots(data || []);
+      };
+
+      const createMeeting = async (meeting) => {
+        const { data, error } = await supabase
+          .from('meetings')
+          .insert({ ...meeting, organization_id: organization.id })
+          .select()
+          .single();
+
+        if (!error && meeting.slot_id) {
+          await supabase
+            .from('availability_slots')
+            .update({ is_booked: true })
+            .eq('id', meeting.slot_id);
+        }
+
+        return { data, error };
+      };
+
+      const createSlot = async (slot) => {
+        const { data, error } = await supabase
+          .from('availability_slots')
+          .insert({ ...slot, organization_id: organization.id })
+          .select()
+          .single();
+
+        if (!error) loadSlots();
+        return { data, error };
+      };
+
+      return { meetings, slots, loading, createMeeting, createSlot, reload: loadMeetings };
+    };
+
+    // ==================== UNIFIED DATA CONTEXT ====================
+    // Abstracts data access between Supabase (multi-user) and localStorage (local) modes
+    const DataContext = createContext(null);
+
+    const useData = () => {
+      const context = useContext(DataContext);
+      if (!context) {
+        throw new Error('useData must be used within DataProvider');
+      }
+      return context;
+    };
+
+    // Helper to check if we're in Supabase mode
+    const isSupabaseMode = () => !!supabase;
+
+    // DataProvider for Supabase mode - uses the Supabase hooks
+    const SupabaseDataProvider = ({ children }) => {
+      const leadsHook = useLeads();
+      const tasksHook = useTasks();
+      const meetingsHook = useMeetings();
+      const { organization } = useOrg();
+
+      // Transform Supabase data structure to match App's expected format
+      const transformLead = (dbLead) => ({
+        id: dbLead.id,
+        company: dbLead.company,
+        contact: dbLead.contact,
+        title: dbLead.title,
+        phone: dbLead.phone,
+        email: dbLead.email,
+        vertical: dbLead.vertical || 'general',
+        notes: dbLead.notes,
+        score: dbLead.score || 50,
+        status: dbLead.status || 'New Lead',
+        lastContact: dbLead.last_contact_date ? new Date(dbLead.last_contact_date).toLocaleDateString('en-AU') : 'Never',
+        lastContactDate: dbLead.last_contact_date,
+        research: dbLead.research,
+        companySize: dbLead.company_size,
+        revenue: dbLead.revenue,
+        website: dbLead.website,
+        linkedinUrl: dbLead.linkedin_url,
+        city: dbLead.city,
+        state: dbLead.state,
+        country: dbLead.country || 'AU',
+        industry: dbLead.industry,
+        source: dbLead.source || 'manual',
+        milestones: dbLead.milestones || {},
+        intentSignals: dbLead.intent_signals || {},
+        createdAt: dbLead.created_at
+      });
+
+      const transformTask = (dbTask) => ({
+        id: dbTask.id,
+        leadId: dbTask.lead_id,
+        type: dbTask.type,
+        description: dbTask.description,
+        dueDate: dbTask.due_date,
+        dueTime: dbTask.due_time,
+        completed: dbTask.completed,
+        createdAt: dbTask.created_at
+      });
+
+      const transformMeeting = (dbMeeting) => ({
+        id: dbMeeting.id,
+        leadId: dbMeeting.lead_id,
+        startDate: dbMeeting.meeting_date,
+        startTime: dbMeeting.meeting_time,
+        duration: dbMeeting.duration,
+        title: dbMeeting.title,
+        location: dbMeeting.location,
+        notes: dbMeeting.notes,
+        status: dbMeeting.status,
+        company: dbMeeting.leads?.company,
+        contact: dbMeeting.leads?.contact
+      });
+
+      // Transform to DB format
+      const toDbLead = (lead) => ({
+        company: lead.company,
+        contact: lead.contact,
+        title: lead.title,
+        phone: lead.phone,
+        email: lead.email,
+        vertical: lead.vertical,
+        notes: lead.notes,
+        score: lead.score,
+        status: lead.status,
+        last_contact_date: lead.lastContactDate,
+        research: lead.research,
+        company_size: lead.companySize,
+        revenue: lead.revenue,
+        website: lead.website,
+        linkedin_url: lead.linkedinUrl,
+        city: lead.city,
+        state: lead.state,
+        country: lead.country,
+        industry: lead.industry,
+        source: lead.source,
+        milestones: lead.milestones,
+        intent_signals: lead.intentSignals
+      });
+
+      const toDbTask = (task) => ({
+        lead_id: task.leadId,
+        type: task.type,
+        description: task.description,
+        due_date: task.dueDate,
+        due_time: task.dueTime,
+        completed: task.completed || false
+      });
+
+      const value = {
+        // Data
+        leads: leadsHook.leads.map(transformLead),
+        tasks: tasksHook.tasks.map(transformTask),
+        meetings: meetingsHook.meetings.map(transformMeeting),
+        availabilitySlots: meetingsHook.slots,
+        loading: leadsHook.loading || tasksHook.loading || meetingsHook.loading,
+        isSupabase: true,
+        organization,
+
+        // Lead operations
+        addLead: async (lead) => {
+          const { data, error } = await leadsHook.createLead(toDbLead(lead));
+          return { success: !error, data: data ? transformLead(data) : null, error };
+        },
+        updateLead: async (id, updates) => {
+          const { data, error } = await leadsHook.updateLead(id, toDbLead(updates));
+          return { success: !error, data: data ? transformLead(data) : null, error };
+        },
+        deleteLead: async (id) => {
+          const { error } = await leadsHook.deleteLead(id);
+          return { success: !error, error };
+        },
+        setLeads: () => console.warn('setLeads not available in Supabase mode - use addLead/updateLead'),
+
+        // Task operations
+        addTask: async (task) => {
+          const { data, error } = await tasksHook.createTask(toDbTask(task));
+          return { success: !error, data: data ? transformTask(data) : null, error };
+        },
+        updateTask: async (id, updates) => {
+          const { data, error } = await tasksHook.updateTask(id, toDbTask(updates));
+          return { success: !error, data: data ? transformTask(data) : null, error };
+        },
+        deleteTask: async (id) => {
+          const { error } = await tasksHook.deleteTask(id);
+          return { success: !error, error };
+        },
+        setTasks: () => console.warn('setTasks not available in Supabase mode'),
+
+        // Meeting operations
+        addMeeting: async (meeting) => {
+          const { data, error } = await meetingsHook.createMeeting({
+            lead_id: meeting.leadId,
+            meeting_date: meeting.startDate,
+            meeting_time: meeting.startTime,
+            duration: meeting.duration,
+            title: meeting.title,
+            location: meeting.location,
+            notes: meeting.notes
+          });
+          return { success: !error, data: data ? transformMeeting(data) : null, error };
+        },
+        addAvailabilitySlot: async (slot) => {
+          const { data, error } = await meetingsHook.createSlot({
+            slot_date: slot.date,
+            start_time: slot.startTime,
+            end_time: slot.endTime
+          });
+          return { success: !error, data, error };
+        },
+
+        // Reload data
+        reload: () => {
+          leadsHook.reload();
+          tasksHook.reload();
+          meetingsHook.reload();
+        }
+      };
+
+      return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+    };
+
+    // DataProvider for Local mode - uses localStorage
+    const LocalDataProvider = ({ children }) => {
+      const STORAGE_KEY = 'fexle_sales_engine_data';
+      const [leads, setLeads] = useState([]);
+      const [tasks, setTasks] = useState([]);
+      const [meetings, setMeetings] = useState([]);
+      const [availabilitySlots, setAvailabilitySlots] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [settings, setSettings] = useState({});
+
+      // Load data on mount
+      useEffect(() => {
+        try {
+          const data = localStorage.getItem(STORAGE_KEY);
+          if (data) {
+            const parsed = JSON.parse(data);
+            setLeads(parsed.leads || []);
+            setTasks(parsed.tasks || []);
+            setMeetings(parsed.bookedMeetings || []);
+            setAvailabilitySlots(parsed.ceoAvailability || []);
+            setSettings({
+              callerName: parsed.callerName || '',
+              userEmail: parsed.userEmail || '',
+              userPhone: parsed.userPhone || '',
+              anthropicApiKey: parsed.anthropicApiKey || '',
+              apolloApiKey: parsed.apolloApiKey || '',
+              proxyUrl: parsed.proxyUrl || '',
+              todayCallList: parsed.todayCallList || [],
+              onboardingCompleted: parsed.onboardingCompleted || false
+            });
+          }
+        } catch (e) {
+          console.error('Failed to load from localStorage:', e);
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      // Save data on change
+      useEffect(() => {
+        if (!loading) {
+          try {
+            const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+              ...current,
+              leads,
+              tasks,
+              bookedMeetings: meetings,
+              ceoAvailability: availabilitySlots,
+              ...settings
+            }));
+          } catch (e) {
+            console.error('Failed to save to localStorage:', e);
+          }
+        }
+      }, [leads, tasks, meetings, availabilitySlots, settings, loading]);
+
+      const value = {
+        // Data
+        leads,
+        tasks,
+        meetings,
+        availabilitySlots,
+        loading,
+        isSupabase: false,
+        settings,
+
+        // Lead operations (sync for local mode)
+        addLead: (lead) => {
+          const newLead = { ...lead, id: Date.now(), createdAt: new Date().toISOString() };
+          setLeads(prev => [...prev, newLead]);
+          return { success: true, data: newLead };
+        },
+        updateLead: (id, updates) => {
+          setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
+          return { success: true };
+        },
+        deleteLead: (id) => {
+          setLeads(prev => prev.filter(l => l.id !== id));
+          return { success: true };
+        },
+        setLeads,
+
+        // Task operations
+        addTask: (task) => {
+          const newTask = { ...task, id: Date.now(), createdAt: new Date().toISOString() };
+          setTasks(prev => [...prev, newTask]);
+          return { success: true, data: newTask };
+        },
+        updateTask: (id, updates) => {
+          setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+          return { success: true };
+        },
+        deleteTask: (id) => {
+          setTasks(prev => prev.filter(t => t.id !== id));
+          return { success: true };
+        },
+        setTasks,
+
+        // Meeting operations
+        addMeeting: (meeting) => {
+          const newMeeting = { ...meeting, id: Date.now() };
+          setMeetings(prev => [...prev, newMeeting]);
+          return { success: true, data: newMeeting };
+        },
+        setMeetings,
+        addAvailabilitySlot: (slot) => {
+          const newSlot = { ...slot, id: Date.now() };
+          setAvailabilitySlots(prev => [...prev, newSlot]);
+          return { success: true, data: newSlot };
+        },
+        setAvailabilitySlots,
+
+        // Settings
+        updateSettings: (newSettings) => {
+          setSettings(prev => ({ ...prev, ...newSettings }));
+        },
+
+        reload: () => {
+          // Force reload from localStorage
+          const data = localStorage.getItem(STORAGE_KEY);
+          if (data) {
+            const parsed = JSON.parse(data);
+            setLeads(parsed.leads || []);
+            setTasks(parsed.tasks || []);
+          }
+        }
+      };
+
+      return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+    };
+
+    // Unified DataProvider that picks the right implementation
+    const DataProvider = ({ children, forceLocal = false }) => {
+      if (forceLocal || !isSupabaseMode()) {
+        return <LocalDataProvider>{children}</LocalDataProvider>;
+      }
+      return <SupabaseDataProvider>{children}</SupabaseDataProvider>;
+    };
+
+    // ==================== AUTH UI COMPONENTS ====================
+    const LoginPage = ({ onSwitchToRegister, onSwitchToSetup }) => {
+      const { signIn } = useAuth();
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        const { error } = await signIn(email, password);
+        if (error) {
+          setError(error.message);
+        }
+        setLoading(false);
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Sales Engine</h1>
+              <p className="text-gray-500 mt-2">Sign in to your account</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="you@company.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center text-sm">
+              <span className="text-gray-500">Don't have an account? </span>
+              <button onClick={onSwitchToRegister} className="text-blue-600 hover:underline font-medium">
+                Create one
+              </button>
+            </div>
+
+            {!SUPABASE_CONFIG.url && (
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <button
+                  onClick={onSwitchToSetup}
+                  className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                >
+                  Configure Database Connection
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const RegisterPage = ({ onSwitchToLogin }) => {
+      const { signUp } = useAuth();
+      const [fullName, setFullName] = useState('');
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [confirmPassword, setConfirmPassword] = useState('');
+      const [error, setError] = useState('');
+      const [success, setSuccess] = useState(false);
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters');
+          return;
+        }
+
+        setLoading(true);
+        const { error } = await signUp(email, password, fullName);
+        if (error) {
+          setError(error.message);
+        } else {
+          setSuccess(true);
+        }
+        setLoading(false);
+      };
+
+      if (success) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
+              <p className="text-gray-600 mb-6">We've sent a confirmation link to {email}</p>
+              <button onClick={onSwitchToLogin} className="text-blue-600 hover:underline">
+                Back to login
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+              <p className="text-gray-500 mt-2">Start your free trial</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="John Smith"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="you@company.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center text-sm">
+              <span className="text-gray-500">Already have an account? </span>
+              <button onClick={onSwitchToLogin} className="text-blue-600 hover:underline font-medium">
+                Sign in
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const SetupPage = ({ onComplete }) => {
+      const [supabaseUrl, setSupabaseUrl] = useState('');
+      const [supabaseKey, setSupabaseKey] = useState('');
+      const [testing, setTesting] = useState(false);
+      const [error, setError] = useState('');
+
+      const handleTest = async () => {
+        setTesting(true);
+        setError('');
+
+        try {
+          const testClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          const { error } = await testClient.from('organizations').select('count').limit(1);
+
+          if (error && !error.message.includes('permission denied')) {
+            throw error;
+          }
+
+          // Save config
+          localStorage.setItem('supabase_url', supabaseUrl);
+          localStorage.setItem('supabase_key', supabaseKey);
+
+          // Reload to apply new config
+          window.location.reload();
+        } catch (err) {
+          setError('Connection failed: ' + err.message);
+        } finally {
+          setTesting(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Database Setup</h1>
+              <p className="text-gray-500 mt-2">Connect to your Supabase project</p>
+            </div>
+
+            <div className="space-y-6">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="p-4 bg-blue-50 rounded-xl">
+                <h3 className="font-medium text-blue-900 mb-2">How to get these values:</h3>
+                <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                  <li>Go to <a href="https://supabase.com" target="_blank" className="underline">supabase.com</a> and create a project</li>
+                  <li>Run the migrations from <code className="bg-blue-100 px-1 rounded">supabase/migrations/</code></li>
+                  <li>Go to Project Settings → API</li>
+                  <li>Copy the Project URL and anon/public key</li>
+                </ol>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supabase Project URL</label>
+                <input
+                  type="url"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="https://your-project.supabase.co"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supabase Anon Key</label>
+                <input
+                  type="password"
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="eyJhbGciOiJIUzI1NiIs..."
+                />
+              </div>
+
+              <button
+                onClick={handleTest}
+                disabled={!supabaseUrl || !supabaseKey || testing}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+              >
+                {testing ? 'Testing connection...' : 'Connect & Save'}
+              </button>
+
+              <div className="text-center">
+                <button
+                  onClick={onComplete}
+                  className="text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Skip for now (use local storage)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const OrgSetupPage = () => {
+      const { user } = useAuth();
+      const { createOrganization } = useOrg();
+      const [step, setStep] = useState(1);
+      const [orgName, setOrgName] = useState('');
+      const [config, setConfig] = useState({
+        company: {
+          name: '',
+          tagline: '',
+          size: '',
+          locations: [],
+          keyProducts: [],
+          proofPoints: [],
+          website: '',
+          ceoName: '',
+          meetingDuration: 20
+        },
+        localization: {
+          country: 'AU',
+          currency: 'AUD',
+          timezone: 'Australia/Sydney'
+        }
+      });
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      const handleCreate = async () => {
+        setLoading(true);
+        setError('');
+
+        const finalConfig = {
+          ...config,
+          company: { ...config.company, name: orgName }
+        };
+
+        const { error } = await createOrganization(orgName, finalConfig);
+        if (error) {
+          setError(error.message);
+        }
+        setLoading(false);
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Welcome!</h1>
+              <p className="text-gray-500 mt-2">Let's set up your organization</p>
+            </div>
+
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                  <input
+                    type="text"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Acme Corp"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+                  <input
+                    type="text"
+                    value={config.company.tagline}
+                    onChange={(e) => setConfig({...config, company: {...config.company, tagline: e.target.value}})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Your value proposition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <input
+                    type="url"
+                    value={config.company.website}
+                    onChange={(e) => setConfig({...config, company: {...config.company, website: e.target.value}})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://yourcompany.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Primary Country</label>
+                  <select
+                    value={config.localization.country}
+                    onChange={(e) => {
+                      const country = e.target.value;
+                      const currencies = { AU: 'AUD', US: 'USD', CA: 'CAD', UK: 'GBP' };
+                      const timezones = { AU: 'Australia/Sydney', US: 'America/New_York', CA: 'America/Toronto', UK: 'Europe/London' };
+                      setConfig({
+                        ...config,
+                        localization: {
+                          country,
+                          currency: currencies[country],
+                          timezone: timezones[country]
+                        }
+                      });
+                    }}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="AU">Australia</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="UK">United Kingdom</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!orgName}
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Team Size</label>
+                  <input
+                    type="text"
+                    value={config.company.size}
+                    onChange={(e) => setConfig({...config, company: {...config.company, size: e.target.value}})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 50+ employees"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Key Products/Services (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={config.company.keyProducts.join(', ')}
+                    onChange={(e) => setConfig({...config, company: {...config.company, keyProducts: e.target.value.split(',').map(s => s.trim()).filter(Boolean)}})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Product A, Service B, Solution C"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">CEO/Meeting Host Name</label>
+                  <input
+                    type="text"
+                    value={config.company.ceoName}
+                    onChange={(e) => setConfig({...config, company: {...config.company, ceoName: e.target.value}})}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Name for meeting invites"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="flex-1 py-3 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={loading}
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+                  >
+                    {loading ? 'Creating...' : 'Create Organization'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     // ==================== COLD CALLING PRO TIPS ====================
     const COLD_CALLING_PRO_TIPS = [
@@ -1407,9 +2685,78 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
 
     // ==================== MAIN APP ====================
     function App() {
+      // Try to use DataContext if available
+      let dataContext = null;
+      try {
+        dataContext = useContext(DataContext);
+      } catch (e) {
+        // DataContext not available, will use local state
+      }
+
+      // Core data - from context if available, otherwise local state
+      const [localLeads, setLocalLeads] = useState([]);
+      const [localTasks, setLocalTasks] = useState([]);
+
+      // Use context data or local state
+      const leads = dataContext?.leads ?? localLeads;
+      const tasks = dataContext?.tasks ?? localTasks;
+      const dataLoading = dataContext?.loading ?? false;
+      const isSupabaseMode = dataContext?.isSupabase ?? false;
+
+      // Unified setLeads that works with both modes
+      const setLeads = (newLeadsOrFn) => {
+        if (dataContext?.setLeads) {
+          // In local mode, context provides setLeads
+          dataContext.setLeads(newLeadsOrFn);
+        } else if (!isSupabaseMode) {
+          setLocalLeads(newLeadsOrFn);
+        } else {
+          console.warn('setLeads not available in Supabase mode - use addLead/updateLead');
+        }
+      };
+
+      // Unified setTasks that works with both modes
+      const setTasks = (newTasksOrFn) => {
+        if (dataContext?.setTasks) {
+          dataContext.setTasks(newTasksOrFn);
+        } else if (!isSupabaseMode) {
+          setLocalTasks(newTasksOrFn);
+        } else {
+          console.warn('setTasks not available in Supabase mode');
+        }
+      };
+
+      // Helper function to update a single lead by ID - handles both modes
+      const updateLeadById = async (id, updates, updateLocalState = true) => {
+        if (dataContext?.updateLead) {
+          // Supabase mode - use async operation
+          const { success, data, error } = await dataContext.updateLead(id, updates);
+          if (!success) {
+            console.error('Error updating lead:', error);
+          }
+          return { success, data, error };
+        } else {
+          // Local mode - update state directly
+          if (updateLocalState) {
+            setLocalLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
+          }
+          return { success: true, data: { id, ...updates } };
+        }
+      };
+
+      // Helper function to add a task - handles both modes
+      const addTaskHelper = async (task) => {
+        if (dataContext?.addTask) {
+          return await dataContext.addTask(task);
+        } else {
+          const newTask = { ...task, id: Date.now(), createdAt: new Date().toISOString() };
+          setLocalTasks(prev => [...prev, newTask]);
+          return { success: true, data: newTask };
+        }
+      };
+
       const [activeTab, setActiveTab] = useState('dashboard');
       const [selectedVertical, setSelectedVertical] = useState('healthcare');
-      const [leads, setLeads] = useState([]);
       const [selectedLead, setSelectedLead] = useState(null);
       const [shouldOpenPlaybook, setShouldOpenPlaybook] = useState(false);
       const [heroLeadIndex, setHeroLeadIndex] = useState(0);
@@ -1581,16 +2928,29 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       };
 
       // Import leads from Apollo results
-      const importApolloLeads = (selectedIds) => {
+      const importApolloLeads = async (selectedIds) => {
         const leadsToImport = apolloResults.filter(l => selectedIds.includes(l.id));
         const existingEmails = new Set(leads.map(l => l.email?.toLowerCase()));
-        
+
         const newLeads = leadsToImport.filter(l => !existingEmails.has(l.email?.toLowerCase()));
         const duplicates = leadsToImport.length - newLeads.length;
 
         if (newLeads.length > 0) {
-          setLeads([...leads, ...newLeads]);
-          showNotification(`Imported ${newLeads.length} leads${duplicates > 0 ? ` (${duplicates} duplicates skipped)` : ''}`);
+          if (dataContext?.addLead) {
+            // Supabase mode - add leads one by one
+            let imported = 0;
+            let errors = 0;
+            for (const lead of newLeads) {
+              const { success } = await dataContext.addLead(lead);
+              if (success) imported++;
+              else errors++;
+            }
+            showNotification(`Imported ${imported} leads${duplicates > 0 ? ` (${duplicates} duplicates skipped)` : ''}${errors > 0 ? ` (${errors} errors)` : ''}`);
+          } else {
+            // Local mode
+            setLocalLeads([...localLeads, ...newLeads]);
+            showNotification(`Imported ${newLeads.length} leads${duplicates > 0 ? ` (${duplicates} duplicates skipped)` : ''}`);
+          }
         } else {
           showNotification('All selected leads already exist', 'error');
         }
@@ -2410,16 +3770,36 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
       };
 
-      // Load data on mount
+      // Load data on mount (skip if DataContext is providing data)
       useEffect(() => {
+        // Skip localStorage loading if DataContext is handling data
+        if (dataContext) {
+          // DataContext handles data loading, just load settings from localStorage
+          const saved = loadFromStorage();
+          if (saved) {
+            setCallerName(saved.callerName || '');
+            setUserEmail(saved.userEmail || '');
+            setUserPhone(saved.userPhone || '');
+            setAnthropicApiKey(saved.anthropicApiKey || '');
+            setApolloApiKey(saved.apolloApiKey || '');
+            setProxyUrl(saved.proxyUrl || '');
+            setTodayCallList(saved.todayCallList || []);
+            if (!saved.onboardingCompleted) {
+              setShowOnboarding(true);
+            }
+          }
+          return;
+        }
+
+        // Local mode - load everything from localStorage
         const saved = loadFromStorage();
         if (saved) {
           setUseTestData(saved.useTestData !== false); // Default to true if not set
           if (saved.useTestData === false && saved.leads) {
             // Only load saved leads if test data is OFF and there are saved leads
-            setLeads(saved.leads.length > 0 ? saved.leads : []);
+            setLocalLeads(saved.leads.length > 0 ? saved.leads : []);
           } else {
-            setLeads(saved.leads || defaultLeads);
+            setLocalLeads(saved.leads || defaultLeads);
           }
           setCallerName(saved.callerName || '');
           setUserEmail(saved.userEmail || '');
@@ -2427,7 +3807,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setAnthropicApiKey(saved.anthropicApiKey || '');
           setApolloApiKey(saved.apolloApiKey || '');
           setProxyUrl(saved.proxyUrl || '');
-          setTasks(saved.tasks || []);
+          setLocalTasks(saved.tasks || []);
           setTodayCallList(saved.todayCallList || []);
 
           // Show onboarding if not completed
@@ -2456,21 +3836,31 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             }, 2000);
           }
         } else {
-          setLeads(defaultLeads);
+          setLocalLeads(defaultLeads);
           // First time user - show onboarding
           setShowOnboarding(true);
         }
-      }, []);
+      }, [dataContext]);
 
-      // Save data whenever it changes
+      // Save data whenever it changes (skip leads/tasks save if DataContext handles them)
       useEffect(() => {
-        if (leads.length > 0 || callerName || userEmail || userPhone || tasks.length > 0 || anthropicApiKey || apolloApiKey || proxyUrl || !useTestData || todayCallList.length > 0) {
+        // Always save settings to localStorage
+        if (callerName || userEmail || userPhone || anthropicApiKey || apolloApiKey || proxyUrl || todayCallList.length > 0) {
+          const current = loadFromStorage() || {};
           saveToStorage({
-            leads, callerName, userEmail, userPhone, anthropicApiKey, apolloApiKey,
-            proxyUrl, tasks, useTestData, todayCallList
+            ...current,
+            callerName, userEmail, userPhone, anthropicApiKey, apolloApiKey, proxyUrl, todayCallList
           });
         }
-      }, [leads, callerName, userEmail, userPhone, anthropicApiKey, apolloApiKey, proxyUrl, tasks, useTestData, todayCallList]);
+
+        // Only save leads/tasks if NOT in Supabase mode (DataContext handles that)
+        if (!isSupabaseMode && (localLeads.length > 0 || localTasks.length > 0 || !useTestData)) {
+          saveToStorage({
+            leads: localLeads, callerName, userEmail, userPhone, anthropicApiKey, apolloApiKey,
+            proxyUrl, tasks: localTasks, useTestData, todayCallList
+          });
+        }
+      }, [localLeads, callerName, userEmail, userPhone, anthropicApiKey, apolloApiKey, proxyUrl, localTasks, useTestData, todayCallList, isSupabaseMode]);
 
       // Handle test data toggle
       const toggleTestData = (enabled) => {
@@ -2537,30 +3927,178 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         return lead.milestones?.deckSent || lead.status === 'Deck Sent';
       };
 
-      // Helper: Format Australian phone number for tel: link
-      const formatPhoneForTel = (phone) => {
-        if (!phone) return '';
-        // Remove all non-digit characters
+      // ==================== MULTI-COUNTRY PHONE SUPPORT ====================
+      const PHONE_FORMATS = {
+        AU: {
+          code: '+61',
+          patterns: {
+            mobile: /^04\d{8}$/,
+            landline: /^0[2378]\d{8}$/,
+            business: /^1[38]00\d{6}$|^13\d{4}$/
+          }
+        },
+        US: {
+          code: '+1',
+          patterns: {
+            mobile: /^[2-9]\d{9}$/,
+            landline: /^[2-9]\d{9}$/,
+            business: /^8[0-9]{2}[2-9]\d{6}$/
+          }
+        },
+        CA: {
+          code: '+1',
+          patterns: {
+            mobile: /^[2-9]\d{9}$/,
+            landline: /^[2-9]\d{9}$/
+          }
+        },
+        UK: {
+          code: '+44',
+          patterns: {
+            mobile: /^07\d{9}$/,
+            landline: /^0[1-9]\d{8,9}$/,
+            business: /^0800\d{6,7}$|^0808\d{6,7}$/
+          }
+        }
+      };
+
+      // Detect country from phone number
+      const detectPhoneCountry = (phone) => {
+        if (!phone) return null;
         const digits = phone.replace(/\D/g, '');
 
-        // Already international format with 61
-        if (digits.startsWith('61') && digits.length >= 11) {
+        // Check international format first
+        if (digits.startsWith('61')) return 'AU';
+        if (digits.startsWith('44')) return 'UK';
+        if (digits.startsWith('1') && digits.length === 11) {
+          // US or CA - check area code
+          const areaCode = digits.substring(1, 4);
+          const canadaAreaCodes = ['204', '226', '236', '249', '250', '289', '306', '343', '365', '403', '416', '418', '431', '437', '438', '450', '506', '514', '519', '579', '581', '587', '604', '613', '639', '647', '672', '705', '709', '778', '780', '782', '807', '819', '825', '867', '873', '902', '905'];
+          return canadaAreaCodes.includes(areaCode) ? 'CA' : 'US';
+        }
+
+        // Check local formats
+        if (digits.startsWith('04') && digits.length === 10) return 'AU';
+        if (digits.startsWith('0') && digits.length === 10 && /^0[2378]/.test(digits)) return 'AU';
+        if (digits.startsWith('07') && digits.length === 11) return 'UK';
+        if (digits.startsWith('0') && digits.length >= 10 && digits.length <= 11) return 'UK';
+        if (digits.length === 10 && /^[2-9]/.test(digits)) return 'US'; // Default to US for 10-digit
+
+        return null;
+      };
+
+      // Format phone for tel: link (E.164 format)
+      const formatPhoneForTel = (phone, country = null) => {
+        if (!phone) return '';
+        const digits = phone.replace(/\D/g, '');
+        const detectedCountry = country || detectPhoneCountry(phone);
+
+        // Already has + prefix
+        if (phone.startsWith('+')) {
           return '+' + digits;
         }
 
-        // Australian mobile (04xx xxx xxx) or landline (0X xxxx xxxx)
-        if (digits.startsWith('0') && digits.length === 10) {
-          // Drop the leading 0, add +61
-          return '+61' + digits.substring(1);
-        }
+        // Handle by country
+        switch (detectedCountry) {
+          case 'AU':
+            // Already international format with 61
+            if (digits.startsWith('61') && digits.length >= 11) {
+              return '+' + digits;
+            }
+            // Australian local format (starts with 0)
+            if (digits.startsWith('0') && digits.length === 10) {
+              return '+61' + digits.substring(1);
+            }
+            // Business numbers (1300, 1800)
+            if (digits.startsWith('1') && (digits.length === 10 || digits.length === 6)) {
+              return '+61' + digits;
+            }
+            break;
 
-        // 8-digit landline without area code - assume Sydney (02)
-        if (digits.length === 8 && !digits.startsWith('1')) {
-          return '+612' + digits;
+          case 'US':
+          case 'CA':
+            // Already has country code
+            if (digits.startsWith('1') && digits.length === 11) {
+              return '+' + digits;
+            }
+            // 10-digit local format
+            if (digits.length === 10) {
+              return '+1' + digits;
+            }
+            break;
+
+          case 'UK':
+            // Already international format with 44
+            if (digits.startsWith('44')) {
+              return '+' + digits;
+            }
+            // UK local format (starts with 0)
+            if (digits.startsWith('0') && digits.length >= 10) {
+              return '+44' + digits.substring(1);
+            }
+            break;
         }
 
         // Return cleaned digits if format not recognized
         return phone.replace(/\s/g, '');
+      };
+
+      // Format phone for display (human-readable)
+      const formatPhoneDisplay = (phone, country = null) => {
+        if (!phone) return '';
+        const digits = phone.replace(/\D/g, '');
+        const detectedCountry = country || detectPhoneCountry(phone);
+
+        switch (detectedCountry) {
+          case 'AU':
+            // Mobile: 04XX XXX XXX
+            if (digits.startsWith('04') || (digits.startsWith('614') && digits.length >= 11)) {
+              const num = digits.startsWith('61') ? '0' + digits.substring(2) : digits;
+              if (num.length === 10) {
+                return `${num.substring(0, 4)} ${num.substring(4, 7)} ${num.substring(7)}`;
+              }
+            }
+            // Landline: 0X XXXX XXXX
+            if (digits.startsWith('0') && digits.length === 10) {
+              return `${digits.substring(0, 2)} ${digits.substring(2, 6)} ${digits.substring(6)}`;
+            }
+            break;
+
+          case 'US':
+          case 'CA':
+            // (XXX) XXX-XXXX
+            const usDigits = digits.startsWith('1') ? digits.substring(1) : digits;
+            if (usDigits.length === 10) {
+              return `(${usDigits.substring(0, 3)}) ${usDigits.substring(3, 6)}-${usDigits.substring(6)}`;
+            }
+            break;
+
+          case 'UK':
+            // 07XXX XXXXXX (mobile) or 0XX XXXX XXXX (landline)
+            const ukDigits = digits.startsWith('44') ? '0' + digits.substring(2) : digits;
+            if (ukDigits.startsWith('07') && ukDigits.length === 11) {
+              return `${ukDigits.substring(0, 5)} ${ukDigits.substring(5)}`;
+            }
+            if (ukDigits.length >= 10) {
+              return `${ukDigits.substring(0, 3)} ${ukDigits.substring(3, 7)} ${ukDigits.substring(7)}`;
+            }
+            break;
+        }
+
+        // Return as-is if no formatting applied
+        return phone;
+      };
+
+      // Validate phone number for a country
+      const validatePhone = (phone, country) => {
+        if (!phone || !country) return false;
+        const digits = phone.replace(/\D/g, '');
+        const format = PHONE_FORMATS[country];
+        if (!format) return false;
+
+        // Check against patterns
+        const patterns = format.patterns;
+        return Object.values(patterns).some(pattern => pattern.test(digits));
       };
 
       // Filter leads
@@ -2575,11 +4113,10 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       });
 
       // Add lead
-      const addNewLead = () => {
+      const addNewLead = async () => {
         if (newLead.company && newLead.contact) {
           const { score } = calculateLeadScore(newLead);
           const lead = {
-            id: Date.now(),
             ...newLead,
             score,
             status: 'New Lead',
@@ -2587,31 +4124,40 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             createdAt: new Date().toISOString().split('T')[0],
             research: null
           };
-          setLeads([...leads, lead]);
-          setNewLead({ 
-            company: '', 
-            contact: '', 
-            title: '', 
-            phone: '', 
-            email: '', 
-            vertical: 'general', 
-            notes: '',
-            source: 'manual',
-            companySize: '51-200',
-            revenue: '$20M-$50M',
-            website: '',
-            linkedinUrl: '',
-            city: '',
-            state: '',
-            intentSignals: {}
-          });
-          setShowAddLead(false);
-          showNotification(`Lead added with score ${score}`);
+
+          if (dataContext?.addLead) {
+            // Supabase mode - use async operation
+            const { success, data, error } = await dataContext.addLead(lead);
+            if (success) {
+              setNewLead({
+                company: '', contact: '', title: '', phone: '', email: '',
+                vertical: 'general', notes: '', source: 'manual',
+                companySize: '51-200', revenue: '$20M-$50M', website: '',
+                linkedinUrl: '', city: '', state: '', intentSignals: {}
+              });
+              setShowAddLead(false);
+              showNotification(`Lead added with score ${score}`);
+            } else {
+              showNotification(`Error adding lead: ${error?.message || 'Unknown error'}`, 'error');
+            }
+          } else {
+            // Local mode
+            lead.id = Date.now();
+            setLocalLeads([...localLeads, lead]);
+            setNewLead({
+              company: '', contact: '', title: '', phone: '', email: '',
+              vertical: 'general', notes: '', source: 'manual',
+              companySize: '51-200', revenue: '$20M-$50M', website: '',
+              linkedinUrl: '', city: '', state: '', intentSignals: {}
+            });
+            setShowAddLead(false);
+            showNotification(`Lead added with score ${score}`);
+          }
         }
       };
 
       // Log call
-      const logCall = () => {
+      const logCall = async () => {
         if (selectedLead && callOutcome) {
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
           const outcomeNote = `[${timestamp}] 📞 ${callOutcome}${callNotes ? ': ' + callNotes : ''}`;
@@ -2629,11 +4175,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             updatedLeadData.milestones = { ...selectedLead.milestones, deckSent: true };
           }
 
-          setLeads(leads.map(lead =>
-            lead.id === selectedLead.id
-              ? { ...lead, ...updatedLeadData }
-              : lead
-          ));
+          // Update lead using helper (works in both modes)
+          await updateLeadById(selectedLead.id, updatedLeadData);
 
           // Auto-create follow-up task based on outcome
           const followUpConfig = {
@@ -2649,16 +4192,14 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             dueDate.setDate(dueDate.getDate() + config.days);
 
             const newFollowUp = {
-              id: Date.now(),
               leadId: selectedLead.id,
               type: callOutcome === 'Deck Requested' ? 'follow-up-deck' : 'follow-up-call',
               description: config.description,
               dueDate: dueDate.toISOString().split('T')[0],
               dueTime: '16:00',
-              completed: false,
-              createdAt: new Date().toISOString()
+              completed: false
             };
-            setTasks([...tasks, newFollowUp]);
+            await addTaskHelper(newFollowUp);
             showNotification(`Follow-up task created for ${dueDate.toLocaleDateString('en-AU')}`);
           }
 
@@ -2674,19 +4215,17 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       };
 
       // Add call notes without changing status
-      const addCallNotes = () => {
+      const addCallNotes = async () => {
         if (selectedLead && callNotes.trim()) {
           const timestamp = new Date().toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' });
-          const updatedLead = {
-            ...selectedLead,
+          const updates = {
             lastContact: 'Just now',
             lastContactDate: new Date().toISOString(),
             notes: `[${timestamp}] ${callNotes}\n\n${selectedLead.notes || ''}`
           };
-          setLeads(leads.map(lead =>
-            lead.id === selectedLead.id ? updatedLead : lead
-          ));
-          setSelectedLead(updatedLead);
+
+          await updateLeadById(selectedLead.id, updates);
+          setSelectedLead({ ...selectedLead, ...updates });
 
           // Auto-mark as complete in today's call list
           if (todayCallList.some(item => item.leadId === selectedLead.id)) {
@@ -2796,13 +4335,27 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         showNotification('Task deleted');
       };
 
-      const deleteLead = (leadId) => {
+      const deleteLead = async (leadId) => {
         if (confirm('Are you sure you want to delete this lead? This cannot be undone.')) {
-          setLeads(leads.filter(l => l.id !== leadId));
-          if (selectedLead?.id === leadId) {
-            setSelectedLead(null);
+          if (dataContext?.deleteLead) {
+            // Supabase mode - use async operation
+            const { success, error } = await dataContext.deleteLead(leadId);
+            if (success) {
+              if (selectedLead?.id === leadId) {
+                setSelectedLead(null);
+              }
+              showNotification('Lead deleted');
+            } else {
+              showNotification(`Error deleting lead: ${error?.message || 'Unknown error'}`, 'error');
+            }
+          } else {
+            // Local mode
+            setLocalLeads(localLeads.filter(l => l.id !== leadId));
+            if (selectedLead?.id === leadId) {
+              setSelectedLead(null);
+            }
+            showNotification('Lead deleted');
           }
-          showNotification('Lead deleted');
         }
       };
 
@@ -2909,12 +4462,25 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = (event) => {
+          reader.onload = async (event) => {
             const csvText = event.target.result;
             const importedLeads = parseCSV(csvText);
             if (importedLeads.length > 0) {
-              setLeads([...leads, ...importedLeads]);
-              showNotification(`Imported ${importedLeads.length} leads`);
+              if (dataContext?.addLead) {
+                // Supabase mode - add leads one by one
+                let imported = 0;
+                let errors = 0;
+                for (const lead of importedLeads) {
+                  const { success } = await dataContext.addLead(lead);
+                  if (success) imported++;
+                  else errors++;
+                }
+                showNotification(`Imported ${imported} leads${errors > 0 ? ` (${errors} errors)` : ''}`);
+              } else {
+                // Local mode
+                setLocalLeads([...localLeads, ...importedLeads]);
+                showNotification(`Imported ${importedLeads.length} leads`);
+              }
               setShowImportModal(false);
             } else {
               showNotification('No valid leads found in CSV', 'error');
@@ -6231,12 +7797,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
       );
 
       // Save edited lead function
-      const saveEditedLead = () => {
+      const saveEditedLead = async () => {
         if (!editingLead) return;
-        const updatedLeads = leads.map(l => l.id === editingLead.id ? { ...editingLead, score: calculateLeadScore(editingLead).score } : l);
-        setLeads(updatedLeads);
+        const updatedLead = { ...editingLead, score: calculateLeadScore(editingLead).score };
+        await updateLeadById(editingLead.id, updatedLead);
         if (selectedLead?.id === editingLead.id) {
-          setSelectedLead({ ...editingLead, score: calculateLeadScore(editingLead).score });
+          setSelectedLead(updatedLead);
         }
         setShowEditLead(false);
         setEditingLead(null);
@@ -8072,6 +9638,18 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
       })();
 
       // ==================== MAIN RENDER ====================
+      // Show loading state while Supabase data is loading
+      if (dataLoading) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your data...</p>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="min-h-screen bg-gray-50">
           {/* Notification */}
@@ -8277,8 +9855,97 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
       );
     }
 
+    // ==================== ROOT WRAPPER ====================
+    const RootApp = () => {
+      const [authPage, setAuthPage] = useState('login');
+      const [showSetup, setShowSetup] = useState(false);
+      const [useLocalMode, setUseLocalMode] = useState(!supabase);
+
+      // If no Supabase configured and user wants local mode, show the app directly
+      if (useLocalMode || !supabase) {
+        return (
+          <DataProvider forceLocal={true}>
+            <App />
+          </DataProvider>
+        );
+      }
+
+      // Show setup page if requested
+      if (showSetup) {
+        return <SetupPage onComplete={() => setShowSetup(false)} />;
+      }
+
+      return (
+        <AuthProvider>
+          <AuthenticatedApp
+            onShowSetup={() => setShowSetup(true)}
+            authPage={authPage}
+            setAuthPage={setAuthPage}
+          />
+        </AuthProvider>
+      );
+    };
+
+    const AuthenticatedApp = ({ onShowSetup, authPage, setAuthPage }) => {
+      const { user, loading: authLoading, isAuthenticated } = useAuth();
+
+      if (authLoading) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (!isAuthenticated) {
+        if (authPage === 'register') {
+          return <RegisterPage onSwitchToLogin={() => setAuthPage('login')} />;
+        }
+        return (
+          <LoginPage
+            onSwitchToRegister={() => setAuthPage('register')}
+            onSwitchToSetup={onShowSetup}
+          />
+        );
+      }
+
+      return (
+        <OrgProvider>
+          <OrgGate />
+        </OrgProvider>
+      );
+    };
+
+    const OrgGate = () => {
+      const { organization, loading: orgLoading } = useOrg();
+
+      if (orgLoading) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading organization...</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (!organization) {
+        return <OrgSetupPage />;
+      }
+
+      return (
+        <DataProvider>
+          <App />
+        </DataProvider>
+      );
+    };
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    root.render(<RootApp />);
   </script>
 </body>
 </html>
