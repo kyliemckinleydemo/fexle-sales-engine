@@ -31,6 +31,10 @@
     "priority": 1,
     "followUpDays": 1,
     "icon": "📅",
+    "hostTitle": "CEO",
+    "hostDescription": "our CEO",
+    "emailSubjectPrefix": "Confirmed: Call with",
+    "emailTemplate": "meeting",
     "color": {
       "bg": "bg-green-200",
       "text": "text-green-900",

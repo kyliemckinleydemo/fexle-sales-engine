@@ -101,6 +101,34 @@ localStorage.setItem('supabase_key', 'eyJ...');
 | `member` | Full CRUD on leads, tasks, meetings |
 | `viewer` | Read-only access |
 
+### Team Management
+
+Owners can manage their team from **Settings → Team Management**:
+
+**Inviting Members:**
+1. Go to Settings (gear icon)
+2. Open "Team Management" section
+3. Enter email address and select role
+4. Click "Invite"
+5. The invitee receives an invite link (copy it for them)
+
+**Invite Flow:**
+1. New member receives/clicks invite link (e.g., `?invite=TOKEN`)
+2. They sign up or log in
+3. Invitation is automatically accepted
+4. They're added to the organization with the specified role
+
+**Managing Members:**
+- Change roles using the dropdown next to each member
+- Remove members with the ✕ button (requires confirmation)
+- View pending invitations and resend/cancel as needed
+
+**Notes:**
+- Only owners can manage team members
+- Owners cannot be removed (transfer ownership via Supabase dashboard)
+- Invitations expire after 7 days
+- Each email can only have one active invitation per organization
+
 ---
 
 ## White-Label Configuration

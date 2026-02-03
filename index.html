@@ -55,6 +55,10 @@
       priority: 1,
       followUpDays: 1,
       icon: '📅',
+      hostTitle: 'CEO',
+      hostDescription: 'our CEO',
+      emailSubjectPrefix: 'Confirmed: Call with',
+      emailTemplate: 'meeting',
       color: {
         bg: 'bg-green-200',
         text: 'text-green-900',
@@ -233,6 +237,188 @@
         }
       };
 
+      // ==================== TEAM MANAGEMENT ====================
+
+      // Load team members
+      const loadTeamMembers = async () => {
+        if (!organization) return { data: [], error: null };
+
+        try {
+          const { data, error } = await supabase
+            .from('organization_members')
+            .select(`
+              id,
+              user_id,
+              role,
+              invited_by,
+              invited_at,
+              joined_at,
+              created_at
+            `)
+            .eq('organization_id', organization.id)
+            .order('created_at', { ascending: true });
+
+          if (error) throw error;
+
+          // Get user profiles for each member
+          const memberIds = data.map(m => m.user_id);
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, avatar_url')
+            .in('id', memberIds);
+
+          if (profileError) {
+            console.warn('Could not load profiles:', profileError);
+          }
+
+          // Merge profiles with members
+          const membersWithProfiles = data.map(member => ({
+            ...member,
+            profile: profiles?.find(p => p.id === member.user_id) || null
+          }));
+
+          return { data: membersWithProfiles, error: null };
+        } catch (err) {
+          return { data: [], error: err };
+        }
+      };
+
+      // Load pending invitations
+      const loadInvitations = async () => {
+        if (!organization) return { data: [], error: null };
+
+        try {
+          const { data, error } = await supabase
+            .from('invitations')
+            .select('*')
+            .eq('organization_id', organization.id)
+            .is('accepted_at', null)
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          return { data, error: null };
+        } catch (err) {
+          return { data: [], error: err };
+        }
+      };
+
+      // Invite a new team member
+      const inviteTeamMember = async (email, role = 'member') => {
+        if (!organization) return { data: null, error: 'No organization' };
+
+        try {
+          const { data, error } = await supabase
+            .from('invitations')
+            .insert({
+              organization_id: organization.id,
+              email: email.toLowerCase().trim(),
+              role,
+              invited_by: user.id
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          return { data, error: null };
+        } catch (err) {
+          return { data: null, error: err };
+        }
+      };
+
+      // Update member role
+      const updateMemberRole = async (memberId, newRole) => {
+        if (!organization) return { error: 'No organization' };
+
+        try {
+          const { error } = await supabase
+            .from('organization_members')
+            .update({ role: newRole })
+            .eq('id', memberId)
+            .eq('organization_id', organization.id);
+
+          if (error) throw error;
+          return { error: null };
+        } catch (err) {
+          return { error: err };
+        }
+      };
+
+      // Remove team member
+      const removeTeamMember = async (memberId) => {
+        if (!organization) return { error: 'No organization' };
+
+        try {
+          const { error } = await supabase
+            .from('organization_members')
+            .delete()
+            .eq('id', memberId)
+            .eq('organization_id', organization.id);
+
+          if (error) throw error;
+          return { error: null };
+        } catch (err) {
+          return { error: err };
+        }
+      };
+
+      // Cancel invitation
+      const cancelInvitation = async (invitationId) => {
+        if (!organization) return { error: 'No organization' };
+
+        try {
+          const { error } = await supabase
+            .from('invitations')
+            .delete()
+            .eq('id', invitationId)
+            .eq('organization_id', organization.id);
+
+          if (error) throw error;
+          return { error: null };
+        } catch (err) {
+          return { error: err };
+        }
+      };
+
+      // Resend invitation (create new token)
+      const resendInvitation = async (invitationId) => {
+        if (!organization) return { data: null, error: 'No organization' };
+
+        try {
+          // Get existing invitation
+          const { data: existing, error: fetchError } = await supabase
+            .from('invitations')
+            .select('email, role')
+            .eq('id', invitationId)
+            .single();
+
+          if (fetchError) throw fetchError;
+
+          // Delete old invitation
+          await supabase
+            .from('invitations')
+            .delete()
+            .eq('id', invitationId);
+
+          // Create new invitation with fresh token
+          const { data, error } = await supabase
+            .from('invitations')
+            .insert({
+              organization_id: organization.id,
+              email: existing.email,
+              role: existing.role,
+              invited_by: user.id
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          return { data, error: null };
+        } catch (err) {
+          return { data: null, error: err };
+        }
+      };
+
       const isAdmin = membership?.role === 'owner' || membership?.role === 'admin';
       const isOwner = membership?.role === 'owner';
 
@@ -246,7 +432,15 @@
           isOwner,
           createOrganization,
           updateConfig,
-          reload: loadOrganization
+          reload: loadOrganization,
+          // Team management
+          loadTeamMembers,
+          loadInvitations,
+          inviteTeamMember,
+          updateMemberRole,
+          removeTeamMember,
+          cancelInvitation,
+          resendInvitation
         }}>
           {children}
         </OrgContext.Provider>
@@ -3169,24 +3363,25 @@ Best,
 [YOUR_PHONE]
 Fexle Services | Full-Stack System Integrator`
         },
-        ceoMeetingConfirm: {
-          name: "📅 CEO Meeting Confirmation",
-          subject: "Confirmed: Call with [CEO_NAME] - [DATE]",
-          description: "Confirm the CEO meeting after booking",
+        // Dynamic target action confirmation - uses [TARGET_*] tokens
+        targetActionConfirm: {
+          name: "[TARGET_ICON] [TARGET_LABEL] Confirmation",
+          subject: "[TARGET_EMAIL_SUBJECT] - [DATE]",
+          description: "Confirm the [TARGET_LABEL] after booking",
           body: `Hi [FIRST_NAME],
 
-Great news — I've locked in time with our CEO for your conversation.
+Great news — I've locked in time with [TARGET_HOST_DESC] for your [TARGET_LABEL_LOWER].
 
-Meeting Details:
+[TARGET_LABEL] Details:
 • Date: [DATE]
-• Time: [TIME] AEST
-• Duration: 20 minutes
+• Time: [TIME] [TIMEZONE]
+• Duration: [TARGET_DURATION] minutes
 • Format: Video call (link below)
 
 [MEETING_LINK]
 
 What to expect:
-He'll walk you through the latest Salesforce AI innovations (Agentforce, Einstein), what we're seeing work in [INDUSTRY] companies like yours, and whether any of it makes sense for your plans. No pitch — just a practical conversation.
+[TARGET_EXPECTATION]
 
 If you need to reschedule, just let me know.
 
@@ -3196,7 +3391,160 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
+        },
+        // Demo-specific confirmation
+        demoConfirm: {
+          name: "🎬 Demo Confirmation",
+          subject: "Your Demo is Confirmed - [DATE]",
+          description: "Confirm a product demo booking",
+          body: `Hi [FIRST_NAME],
+
+Great news — your product demo is confirmed!
+
+Demo Details:
+• Date: [DATE]
+• Time: [TIME] [TIMEZONE]
+• Duration: [TARGET_DURATION] minutes
+• Format: Video call (link below)
+
+[MEETING_LINK]
+
+What to expect:
+Our product team will walk you through a live demonstration tailored to [COMPANY]'s needs. We'll focus on the features most relevant to [INDUSTRY] companies and show you exactly how our solution addresses [PAIN_POINT].
+
+Come prepared with questions — this is your chance to see everything in action.
+
+If you need to reschedule, just let me know.
+
+Looking forward to showing you what's possible!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Webinar registration confirmation
+        webinarConfirm: {
+          name: "📺 Webinar Registration",
+          subject: "You're Registered - [DATE]",
+          description: "Confirm webinar registration",
+          body: `Hi [FIRST_NAME],
+
+You're all set! Your webinar registration is confirmed.
+
+Webinar Details:
+• Date: [DATE]
+• Time: [TIME] [TIMEZONE]
+• Duration: [TARGET_DURATION] minutes
+• Format: Live online webinar
+
+[MEETING_LINK]
+
+What you'll learn:
+Our expert presenters will cover the latest trends and practical strategies relevant to [INDUSTRY] companies like [COMPANY]. You'll walk away with actionable insights you can implement immediately.
+
+A reminder email will be sent 24 hours before the webinar, along with another 1 hour before we go live.
+
+See you there!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Consultation confirmation
+        consultationConfirm: {
+          name: "💬 Consultation Confirmation",
+          subject: "Your Consultation is Confirmed - [DATE]",
+          description: "Confirm a consultation booking",
+          body: `Hi [FIRST_NAME],
+
+Your complimentary consultation is confirmed!
+
+Consultation Details:
+• Date: [DATE]
+• Time: [TIME] [TIMEZONE]
+• Duration: [TARGET_DURATION] minutes
+• Format: Video call (link below)
+
+[MEETING_LINK]
+
+What to expect:
+One of our senior consultants will review your current situation and provide tailored recommendations for [COMPANY]. This is a no-obligation conversation — you'll walk away with practical advice whether we work together or not.
+
+To make the most of our time, think about:
+• Your biggest challenges with [PAIN_POINT]
+• What success would look like for your team
+• Any specific questions you'd like answered
+
+If you need to reschedule, just let me know.
+
+Looking forward to our conversation!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Callback confirmation
+        callbackConfirm: {
+          name: "📞 Callback Confirmation",
+          subject: "Callback Confirmed - [DATE]",
+          description: "Confirm a callback request",
+          body: `Hi [FIRST_NAME],
+
+Your callback request is confirmed!
+
+Callback Details:
+• Date: [DATE]
+• Time: [TIME] [TIMEZONE]
+• Duration: Approximately [TARGET_DURATION] minutes
+
+One of our team members will call you at the number you provided. If you'd prefer a different number or need to reschedule, just reply to this email.
+
+We'll be prepared to discuss how we can help [COMPANY] with [PAIN_POINT] and answer any questions you have.
+
+Talk soon!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Legacy alias for backward compatibility
+        ceoMeetingConfirm: {
+          name: "📅 CEO Meeting Confirmation",
+          subject: "Confirmed: Call with [HOST_NAME] - [DATE]",
+          description: "Confirm the CEO meeting after booking",
+          body: `Hi [FIRST_NAME],
+
+Great news — I've locked in time with [TARGET_HOST_DESC] for your conversation.
+
+Meeting Details:
+• Date: [DATE]
+• Time: [TIME] [TIMEZONE]
+• Duration: [TARGET_DURATION] minutes
+• Format: Video call (link below)
+
+[MEETING_LINK]
+
+What to expect:
+[TARGET_EXPECTATION]
+
+If you need to reschedule, just let me know.
+
+Looking forward to it!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
         },
         noAnswer: {
           name: "📞 Voicemail Follow Up",
@@ -3243,6 +3591,179 @@ Best,
 [YOUR_EMAIL]
 [YOUR_PHONE]
 Fexle Services | Salesforce Platinum Partner`
+        },
+        // Dynamic follow-up after target action was booked
+        targetActionFollowUp: {
+          name: "[TARGET_ICON] [TARGET_LABEL] Follow Up",
+          subject: "Following up on your upcoming [TARGET_LABEL_LOWER]",
+          description: "Follow up before or after a [TARGET_LABEL]",
+          body: `Hi [FIRST_NAME],
+
+Just wanted to check in ahead of your [TARGET_LABEL_LOWER] scheduled for [DATE].
+
+A few things to help you prepare:
+
+• Think about your biggest challenges with [PAIN_POINT]
+• Jot down any specific questions you'd like answered
+• Consider what success would look like for [COMPANY]
+
+If you need to reschedule or have any questions beforehand, just let me know.
+
+Looking forward to it!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Post-meeting/demo/webinar follow-up
+        targetActionRecap: {
+          name: "[TARGET_ICON] [TARGET_LABEL] Recap",
+          subject: "Great [TARGET_LABEL_LOWER] - Next steps",
+          description: "Follow up after a completed [TARGET_LABEL]",
+          body: `Hi [FIRST_NAME],
+
+Thanks for joining the [TARGET_LABEL_LOWER] today. Great conversation!
+
+Key Takeaways:
+• [KEY_CHALLENGE_1]
+• [KEY_CHALLENGE_2]
+• [KEY_CHALLENGE_3]
+
+What We Discussed:
+• [SOLUTION_1]
+• [SOLUTION_2]
+• [SOLUTION_3]
+
+Next Steps:
+• [NEXT_STEP]
+• Timeline: [TIMELINE]
+
+I'll follow up with [DELIVERABLE] by [DATE].
+
+In the meantime, feel free to reach out if any questions come up.
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Demo-specific follow-up
+        demoFollowUp: {
+          name: "🎬 Demo Follow Up",
+          subject: "Thoughts on the demo?",
+          description: "Follow up 2-3 days after a product demo",
+          body: `Hi [FIRST_NAME],
+
+Hope you had a chance to reflect on the demo we did on [DATE].
+
+I wanted to follow up on a few things that seemed to resonate:
+
+• [KEY_CHALLENGE_1] — we showed how [SOLUTION_1]
+• [KEY_CHALLENGE_2] — you mentioned this was a priority
+
+What would be most helpful as a next step?
+
+1. A deeper dive into any specific feature
+2. A conversation with one of our [INDUSTRY] clients
+3. A scoping call to discuss implementation
+
+Let me know what makes sense for [COMPANY], and I'll make it happen.
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Webinar follow-up for attendees
+        webinarFollowUp: {
+          name: "📺 Webinar Follow Up",
+          subject: "Thanks for attending - Your next steps",
+          description: "Follow up with webinar attendees",
+          body: `Hi [FIRST_NAME],
+
+Thanks for joining our webinar! Hope you found it valuable.
+
+Here are the resources mentioned during the session:
+• [Slide deck link]
+• [Recording link]
+• [Additional resource]
+
+Based on what we covered, here are some next steps that might be relevant for [COMPANY]:
+
+1. [NEXT_STEP]
+2. Book a personalized consultation to discuss your specific situation
+3. Check out our [INDUSTRY]-specific case studies
+
+Would any of these be helpful? Just reply and I'll send over more details.
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Webinar follow-up for no-shows
+        webinarNoShow: {
+          name: "📺 Webinar - Missed You",
+          subject: "Missed you at the webinar - here's the recording",
+          description: "Follow up with registered attendees who didn't show",
+          body: `Hi [FIRST_NAME],
+
+I noticed you weren't able to make it to our webinar. No worries — I know how busy things get!
+
+Good news: we recorded the whole session. Here's the link:
+[RECORDING LINK]
+
+Key topics we covered:
+• [Topic 1]
+• [Topic 2]
+• [Topic 3]
+
+If you'd prefer a personalized conversation instead of watching the recording, I'm happy to schedule a quick call to cover the highlights most relevant to [COMPANY].
+
+Just let me know!
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
+        },
+        // Consultation follow-up
+        consultationFollowUp: {
+          name: "💬 Consultation Follow Up",
+          subject: "Following up on our consultation",
+          description: "Follow up after a consultation",
+          body: `Hi [FIRST_NAME],
+
+Thanks again for the great conversation during our consultation. I've been thinking about what you shared regarding [PAIN_POINT] at [COMPANY].
+
+Based on our discussion, here's what I'd recommend:
+
+Immediate Actions:
+• [SOLUTION_1]
+• [SOLUTION_2]
+
+Longer-term Considerations:
+• [SOLUTION_3]
+• [KEY_CHALLENGE_1]
+
+As a next step, I can put together a [DELIVERABLE] by [DATE] that outlines:
+• Specific recommendations for your situation
+• Estimated timeline and investment
+• Quick wins you can implement immediately
+
+Would that be helpful? Just let me know.
+
+Best,
+[YOUR_NAME]
+[YOUR_EMAIL]
+[YOUR_PHONE]
+[COMPANY_SIGNATURE]`
         },
         breakup: {
           name: "👋 Breakup Email",
@@ -3357,15 +3878,49 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
       };
 
-      // Generate personalized email
+      // Generate expectation text based on target action type
+      const getTargetExpectation = (targetAction, vertical, companyConfig) => {
+        const industry = vertical?.name?.toLowerCase() || 'your industry';
+        const companyName = companyConfig?.name || 'our company';
+
+        const expectations = {
+          meeting: `They'll walk you through what we're seeing work in ${industry} companies like yours, and whether any of it makes sense for your plans. No pitch — just a practical conversation.`,
+          demo: `Our product team will give you a live, personalized demonstration. We'll focus on features most relevant to ${industry} and answer all your questions in real-time.`,
+          webinar: `Our expert presenters will cover the latest trends and strategies. You'll have the chance to ask questions and connect with other ${industry} professionals.`,
+          consultation: `One of our senior consultants will review your situation and provide tailored recommendations. This is a no-obligation conversation — you'll walk away with practical advice whether we work together or not.`,
+          callback: `One of our team members will call you to discuss your needs and answer any questions you have about how we can help.`,
+          resource: `We'll send over the requested materials along with some additional resources tailored to ${industry} companies.`
+        };
+
+        return expectations[targetAction.type] || expectations.meeting;
+      };
+
+      // Generate personalized email with target action support
       const generateEmail = (templateKey) => {
         if (!selectedLead) return;
-        
+
         const template = emailTemplates[templateKey];
         const vertical = verticalData[selectedLead.vertical];
         const firstName = selectedLead.contact.split(' ')[0];
-        
+
+        // Get company and target action config
+        const companyConfig = orgConfig?.company || {};
+        const hostName = companyConfig.ceoName || companyConfig.hostName || targetAction.hostTitle;
+        const timezone = orgConfig?.localization?.timezone || 'AEST';
+        const companySignature = companyConfig.name
+          ? `${companyConfig.name}${companyConfig.tagline ? ' | ' + companyConfig.tagline : ''}`
+          : 'Fexle Services | Salesforce Platinum Partner';
+
+        // Build target action expectation text
+        const targetExpectation = getTargetExpectation(targetAction, vertical, companyConfig);
+
+        // Dynamic template name (for display)
+        let templateName = template.name
+          .replace(/\[TARGET_ICON\]/g, targetAction.icon || '📅')
+          .replace(/\[TARGET_LABEL\]/g, targetAction.label || 'Meeting');
+
         let email = template.body
+          // Basic tokens
           .replace(/\[FIRST_NAME\]/g, firstName)
           .replace(/\[COMPANY\]/g, selectedLead.company)
           .replace(/\[YOUR_NAME\]/g, callerName || '[Your Name]')
@@ -3375,16 +3930,32 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           .replace(/\[PAIN_POINT\]/g, (vertical?.painPoints[0] || 'operational challenges').toLowerCase())
           .replace(/\[DATE\]/g, '[DATE]')
           .replace(/\[TIME\]/g, '[TIME]')
-          .replace(/\[CEO_NAME\]/g, 'our CEO')
-          .replace(/\[MEETING_LINK\]/g, '[MEETING LINK]');
-        
+          .replace(/\[TIMEZONE\]/g, timezone)
+          .replace(/\[MEETING_LINK\]/g, '[MEETING LINK]')
+          .replace(/\[COMPANY_SIGNATURE\]/g, companySignature)
+          // Target action tokens
+          .replace(/\[TARGET_LABEL\]/g, targetAction.label || 'Meeting')
+          .replace(/\[TARGET_LABEL_LOWER\]/g, (targetAction.label || 'meeting').toLowerCase())
+          .replace(/\[TARGET_DURATION\]/g, String(targetAction.duration || 20))
+          .replace(/\[TARGET_HOST_DESC\]/g, targetAction.hostDescription || 'our team')
+          .replace(/\[TARGET_ICON\]/g, targetAction.icon || '📅')
+          .replace(/\[TARGET_EXPECTATION\]/g, targetExpectation)
+          // Legacy tokens (for backward compatibility)
+          .replace(/\[CEO_NAME\]/g, hostName)
+          .replace(/\[HOST_NAME\]/g, hostName);
+
+        // Build subject with target action tokens
+        const emailSubjectPrefix = targetAction.emailSubjectPrefix || 'Confirmed';
         let subject = template.subject
           .replace(/\[COMPANY\]/g, selectedLead.company)
           .replace(/\[FIRST_NAME\]/g, firstName)
           .replace(/\[DATE\]/g, '[DATE]')
-          .replace(/\[CEO_NAME\]/g, 'Fexle CEO');
-        
-        setGeneratedEmail({ subject, body: email, templateName: template.name });
+          .replace(/\[TARGET_EMAIL_SUBJECT\]/g, `${emailSubjectPrefix}${hostName ? ' ' + hostName : ''}`)
+          .replace(/\[TARGET_LABEL\]/g, targetAction.label || 'Meeting')
+          .replace(/\[CEO_NAME\]/g, hostName)
+          .replace(/\[HOST_NAME\]/g, hostName);
+
+        setGeneratedEmail({ subject, body: email, templateName });
         setSelectedEmailTemplate(templateKey);
       };
 
@@ -8843,24 +9414,255 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                         <span>👥</span> Team Management
                         <span className="text-xs font-normal text-gray-500">(owner only)</span>
                       </summary>
-                      <div className="mt-3 space-y-3">
-                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <p className="text-xs text-amber-800">
-                            <strong>Coming Soon:</strong> Invite team members, manage roles, and control access.
-                          </p>
-                          <p className="text-xs text-amber-600 mt-1">
-                            Team management is available via Supabase dashboard for now.
-                          </p>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          <div className="font-medium mb-1">Current Roles:</div>
-                          <ul className="space-y-1">
-                            <li>• <strong>Owner:</strong> Full access, can delete org</li>
-                            <li>• <strong>Admin:</strong> Manage config and team</li>
-                            <li>• <strong>Member:</strong> Full lead/task access</li>
-                            <li>• <strong>Viewer:</strong> Read-only access</li>
-                          </ul>
-                        </div>
+                      <div className="mt-3 space-y-4">
+                        {/* Team Management Component */}
+                        {(() => {
+                          const [teamMembers, setTeamMembers] = useState([]);
+                          const [invitations, setInvitations] = useState([]);
+                          const [teamLoading, setTeamLoading] = useState(false);
+                          const [inviteEmail, setInviteEmail] = useState('');
+                          const [inviteRole, setInviteRole] = useState('member');
+                          const [inviting, setInviting] = useState(false);
+
+                          const { loadTeamMembers, loadInvitations, inviteTeamMember, updateMemberRole, removeTeamMember, cancelInvitation, resendInvitation } = useOrg();
+
+                          // Load team data
+                          const loadTeamData = async () => {
+                            setTeamLoading(true);
+                            const [membersResult, invitesResult] = await Promise.all([
+                              loadTeamMembers(),
+                              loadInvitations()
+                            ]);
+                            if (membersResult.data) setTeamMembers(membersResult.data);
+                            if (invitesResult.data) setInvitations(invitesResult.data);
+                            setTeamLoading(false);
+                          };
+
+                          // Load on mount
+                          useEffect(() => {
+                            loadTeamData();
+                          }, []);
+
+                          // Handle invite
+                          const handleInvite = async () => {
+                            if (!inviteEmail.trim()) return;
+                            setInviting(true);
+                            const { data, error } = await inviteTeamMember(inviteEmail, inviteRole);
+                            if (error) {
+                              showNotification(error.message || 'Failed to send invitation', 'error');
+                            } else {
+                              showNotification(`Invitation sent to ${inviteEmail}`);
+                              setInviteEmail('');
+                              loadTeamData();
+                            }
+                            setInviting(false);
+                          };
+
+                          // Handle role change
+                          const handleRoleChange = async (memberId, newRole) => {
+                            const { error } = await updateMemberRole(memberId, newRole);
+                            if (error) {
+                              showNotification('Failed to update role', 'error');
+                            } else {
+                              showNotification('Role updated');
+                              loadTeamData();
+                            }
+                          };
+
+                          // Handle remove member
+                          const handleRemoveMember = async (member) => {
+                            if (!confirm(`Remove ${member.profile?.full_name || member.profile?.email || 'this member'} from the team?`)) return;
+                            const { error } = await removeTeamMember(member.id);
+                            if (error) {
+                              showNotification('Failed to remove member', 'error');
+                            } else {
+                              showNotification('Member removed');
+                              loadTeamData();
+                            }
+                          };
+
+                          // Handle cancel invitation
+                          const handleCancelInvite = async (invite) => {
+                            if (!confirm(`Cancel invitation to ${invite.email}?`)) return;
+                            const { error } = await cancelInvitation(invite.id);
+                            if (error) {
+                              showNotification('Failed to cancel invitation', 'error');
+                            } else {
+                              showNotification('Invitation cancelled');
+                              loadTeamData();
+                            }
+                          };
+
+                          // Handle resend invitation
+                          const handleResendInvite = async (invite) => {
+                            const { data, error } = await resendInvitation(invite.id);
+                            if (error) {
+                              showNotification('Failed to resend invitation', 'error');
+                            } else {
+                              showNotification(`Invitation resent to ${invite.email}`);
+                              loadTeamData();
+                            }
+                          };
+
+                          // Copy invite link
+                          const copyInviteLink = (invite) => {
+                            const link = `${window.location.origin}${window.location.pathname}?invite=${invite.token}`;
+                            navigator.clipboard.writeText(link);
+                            showNotification('Invite link copied!');
+                          };
+
+                          const roleColors = {
+                            owner: 'bg-purple-100 text-purple-800',
+                            admin: 'bg-blue-100 text-blue-800',
+                            member: 'bg-green-100 text-green-800',
+                            viewer: 'bg-gray-100 text-gray-800'
+                          };
+
+                          return (
+                            <div className="space-y-4">
+                              {/* Invite New Member */}
+                              <div className="p-3 bg-gray-50 rounded-lg">
+                                <div className="text-xs font-medium text-gray-700 mb-2">Invite Team Member</div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="email"
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    placeholder="email@example.com"
+                                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  />
+                                  <select
+                                    value={inviteRole}
+                                    onChange={(e) => setInviteRole(e.target.value)}
+                                    className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white"
+                                  >
+                                    <option value="admin">Admin</option>
+                                    <option value="member">Member</option>
+                                    <option value="viewer">Viewer</option>
+                                  </select>
+                                  <button
+                                    onClick={handleInvite}
+                                    disabled={inviting || !inviteEmail.trim()}
+                                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {inviting ? '...' : 'Invite'}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Team Members List */}
+                              <div>
+                                <div className="text-xs font-medium text-gray-700 mb-2">
+                                  Team Members ({teamMembers.length})
+                                </div>
+                                {teamLoading ? (
+                                  <div className="text-xs text-gray-500 py-2">Loading...</div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {teamMembers.map(member => (
+                                      <div key={member.id} className="flex items-center justify-between p-2 bg-white border border-gray-100 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
+                                            {member.profile?.full_name?.[0]?.toUpperCase() || member.profile?.email?.[0]?.toUpperCase() || '?'}
+                                          </div>
+                                          <div>
+                                            <div className="text-sm font-medium text-gray-900">
+                                              {member.profile?.full_name || 'Unknown User'}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                              {member.profile?.email || 'No email'}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {member.role === 'owner' ? (
+                                            <span className={`px-2 py-1 text-xs rounded-full ${roleColors.owner}`}>
+                                              Owner
+                                            </span>
+                                          ) : (
+                                            <>
+                                              <select
+                                                value={member.role}
+                                                onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                                                className="text-xs px-2 py-1 border border-gray-200 rounded bg-white"
+                                              >
+                                                <option value="admin">Admin</option>
+                                                <option value="member">Member</option>
+                                                <option value="viewer">Viewer</option>
+                                              </select>
+                                              <button
+                                                onClick={() => handleRemoveMember(member)}
+                                                className="text-red-500 hover:text-red-700 text-xs p-1"
+                                                title="Remove member"
+                                              >
+                                                ✕
+                                              </button>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Pending Invitations */}
+                              {invitations.length > 0 && (
+                                <div>
+                                  <div className="text-xs font-medium text-gray-700 mb-2">
+                                    Pending Invitations ({invitations.length})
+                                  </div>
+                                  <div className="space-y-2">
+                                    {invitations.map(invite => (
+                                      <div key={invite.id} className="flex items-center justify-between p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                                        <div>
+                                          <div className="text-sm text-gray-900">{invite.email}</div>
+                                          <div className="text-xs text-gray-500">
+                                            Invited as {invite.role} • Expires {new Date(invite.expires_at).toLocaleDateString()}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            onClick={() => copyInviteLink(invite)}
+                                            className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800"
+                                            title="Copy invite link"
+                                          >
+                                            📋 Link
+                                          </button>
+                                          <button
+                                            onClick={() => handleResendInvite(invite)}
+                                            className="text-xs px-2 py-1 text-green-600 hover:text-green-800"
+                                            title="Resend invitation"
+                                          >
+                                            🔄
+                                          </button>
+                                          <button
+                                            onClick={() => handleCancelInvite(invite)}
+                                            className="text-xs px-2 py-1 text-red-500 hover:text-red-700"
+                                            title="Cancel invitation"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Role Descriptions */}
+                              <details className="text-xs text-gray-600">
+                                <summary className="cursor-pointer hover:text-gray-800">Role Permissions</summary>
+                                <ul className="mt-2 space-y-1 pl-4">
+                                  <li>• <strong>Owner:</strong> Full access, can delete organization</li>
+                                  <li>• <strong>Admin:</strong> Manage config, team, and all data</li>
+                                  <li>• <strong>Member:</strong> Full access to leads and tasks</li>
+                                  <li>• <strong>Viewer:</strong> Read-only access to data</li>
+                                </ul>
+                              </details>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </details>
                   )}
@@ -9241,26 +10043,90 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
               <h3 className="text-xl font-bold">✉️ Email Templates for {selectedLead?.company}</h3>
               <button onClick={() => setShowEmailModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            
+
             <div className="flex gap-6 flex-1 overflow-hidden">
-              {/* Template List */}
+              {/* Template List - Grouped by Category */}
               <div className="w-1/3 overflow-y-auto border-r border-gray-100 pr-4">
-                <div className="space-y-2">
-                  {Object.entries(emailTemplates).map(([key, template]) => (
-                    <button
-                      key={key}
-                      onClick={() => generateEmail(key)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        selectedEmailTemplate === key 
-                          ? 'bg-blue-50 border-2 border-blue-400' 
-                          : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                      }`}
-                    >
-                      <div className="font-medium text-sm">{template.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">{template.description}</div>
-                    </button>
-                  ))}
-                </div>
+                {/* Helper to process dynamic template names */}
+                {(() => {
+                  const processTemplateName = (name, description) => ({
+                    name: name
+                      .replace(/\[TARGET_ICON\]/g, targetAction.icon || '📅')
+                      .replace(/\[TARGET_LABEL\]/g, targetAction.label || 'Meeting')
+                      .replace(/\[TARGET_LABEL_LOWER\]/g, (targetAction.label || 'meeting').toLowerCase()),
+                    description: description
+                      .replace(/\[TARGET_LABEL\]/g, targetAction.label || 'Meeting')
+                      .replace(/\[TARGET_LABEL_LOWER\]/g, (targetAction.label || 'meeting').toLowerCase())
+                  });
+
+                  // Group templates by category
+                  const templateGroups = {
+                    'Booking Confirmations': ['targetActionConfirm', 'demoConfirm', 'webinarConfirm', 'consultationConfirm', 'callbackConfirm', 'ceoMeetingConfirm'],
+                    'Follow-ups': ['targetActionFollowUp', 'targetActionRecap', 'demoFollowUp', 'webinarFollowUp', 'webinarNoShow', 'consultationFollowUp', 'deckFollowUp', 'deckFollowUpGeneral'],
+                    'Resource Emails': ['aiDeck', 'aiDeckGeneral', 'healthCheck'],
+                    'Outreach': ['coldOutreach', 'noAnswer'],
+                    'Relationship': ['meetingRecap', 'referralRequest', 'breakup']
+                  };
+
+                  // Get recommended template based on target action type
+                  const recommendedConfirm = {
+                    meeting: 'targetActionConfirm',
+                    demo: 'demoConfirm',
+                    webinar: 'webinarConfirm',
+                    consultation: 'consultationConfirm',
+                    callback: 'callbackConfirm'
+                  }[targetAction.type] || 'targetActionConfirm';
+
+                  const recommendedFollowUp = {
+                    meeting: 'targetActionFollowUp',
+                    demo: 'demoFollowUp',
+                    webinar: 'webinarFollowUp',
+                    consultation: 'consultationFollowUp',
+                    callback: 'targetActionFollowUp'
+                  }[targetAction.type] || 'targetActionFollowUp';
+
+                  return (
+                    <div className="space-y-4">
+                      {Object.entries(templateGroups).map(([groupName, templateKeys]) => {
+                        const groupTemplates = templateKeys.filter(key => emailTemplates[key]);
+                        if (groupTemplates.length === 0) return null;
+
+                        return (
+                          <div key={groupName}>
+                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{groupName}</div>
+                            <div className="space-y-1">
+                              {groupTemplates.map(key => {
+                                const template = emailTemplates[key];
+                                const processed = processTemplateName(template.name, template.description);
+                                const isRecommended = key === recommendedConfirm || key === recommendedFollowUp;
+
+                                return (
+                                  <button
+                                    key={key}
+                                    onClick={() => generateEmail(key)}
+                                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                                      selectedEmailTemplate === key
+                                        ? 'bg-blue-50 border-2 border-blue-400'
+                                        : isRecommended
+                                          ? 'bg-green-50 hover:bg-green-100 border-2 border-green-200'
+                                          : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                                    }`}
+                                  >
+                                    <div className="font-medium text-sm flex items-center gap-2">
+                                      {processed.name}
+                                      {isRecommended && <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded">Recommended</span>}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">{processed.description}</div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Email Preview */}
@@ -10255,7 +11121,107 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
     };
 
     const OrgGate = () => {
-      const { organization, loading: orgLoading } = useOrg();
+      const { organization, loading: orgLoading, reload: reloadOrg } = useOrg();
+      const [inviteStatus, setInviteStatus] = useState(null); // 'checking', 'accepting', 'accepted', 'error', null
+      const [inviteError, setInviteError] = useState(null);
+
+      // Check for invite token in URL
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const inviteToken = params.get('invite');
+
+        if (inviteToken && supabase && !organization) {
+          acceptInvitation(inviteToken);
+        }
+      }, [organization]);
+
+      const acceptInvitation = async (token) => {
+        setInviteStatus('accepting');
+        setInviteError(null);
+
+        try {
+          // Use the Supabase RPC function to accept the invitation
+          const { data, error } = await supabase.rpc('accept_invitation', {
+            p_token: token
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            setInviteStatus('accepted');
+            // Clear the invite token from URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('invite');
+            window.history.replaceState({}, '', url.toString());
+            // Reload organization data
+            await reloadOrg();
+          } else {
+            throw new Error(data?.error || 'Failed to accept invitation');
+          }
+        } catch (err) {
+          console.error('Error accepting invitation:', err);
+          setInviteStatus('error');
+          setInviteError(err.message || 'Invalid or expired invitation');
+        }
+      };
+
+      // Show invite acceptance status
+      if (inviteStatus === 'accepting') {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center bg-white rounded-2xl p-8 shadow-xl">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Accepting invitation...</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (inviteStatus === 'accepted') {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center bg-white rounded-2xl p-8 shadow-xl">
+              <div className="text-5xl mb-4">🎉</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome to the Team!</h2>
+              <p className="text-gray-600 mb-4">Your invitation has been accepted.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Continue to App
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (inviteStatus === 'error') {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="text-center bg-white rounded-2xl p-8 shadow-xl max-w-md">
+              <div className="text-5xl mb-4">❌</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Invitation Error</h2>
+              <p className="text-gray-600 mb-4">{inviteError}</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('invite');
+                    window.history.replaceState({}, '', url.toString());
+                    setInviteStatus(null);
+                  }}
+                  className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Continue Anyway
+                </button>
+                <p className="text-xs text-gray-500">
+                  The invitation may have expired or already been used. Contact your team admin for a new invitation.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       if (orgLoading) {
         return (

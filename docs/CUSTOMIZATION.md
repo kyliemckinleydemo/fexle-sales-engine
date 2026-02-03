@@ -298,16 +298,84 @@ The platform auto-detects and formats phone numbers by country:
 
 ## Email Templates
 
-Email templates use the same tokens as scripts, plus:
+Email templates use the same tokens as scripts, plus additional tokens for personalization and target action support.
+
+### Basic Tokens
 
 | Token | Replaced With |
 |-------|---------------|
 | `[FIRST_NAME]` | Lead's first name |
+| `[COMPANY]` | Lead's company name |
 | `[YOUR_NAME]` | Your name |
 | `[YOUR_EMAIL]` | Your email |
 | `[YOUR_PHONE]` | Your phone |
 | `[INDUSTRY]` | Lead's industry name |
 | `[PAIN_POINT]` | Industry pain point |
+| `[TIMEZONE]` | Organization's timezone |
+| `[COMPANY_SIGNATURE]` | Organization name and tagline |
+
+### Target Action Tokens
+
+These tokens automatically adapt based on your configured target action:
+
+| Token | Replaced With |
+|-------|---------------|
+| `[TARGET_LABEL]` | Target action label (e.g., "CEO Meeting", "Product Demo") |
+| `[TARGET_LABEL_LOWER]` | Lowercase label (e.g., "ceo meeting", "product demo") |
+| `[TARGET_DURATION]` | Meeting/call duration in minutes |
+| `[TARGET_HOST_DESC]` | Host description (e.g., "our CEO", "our product team") |
+| `[TARGET_ICON]` | Target action emoji icon |
+| `[TARGET_EXPECTATION]` | Auto-generated expectation text based on action type |
+| `[TARGET_EMAIL_SUBJECT]` | Email subject prefix with host name |
+| `[HOST_NAME]` | CEO/host name from company config |
+
+### Meeting Tokens
+
+| Token | Replaced With |
+|-------|---------------|
+| `[DATE]` | Meeting date (fill in manually) |
+| `[TIME]` | Meeting time (fill in manually) |
+| `[MEETING_LINK]` | Video call link (fill in manually) |
+
+### Template Categories
+
+Templates are organized into categories:
+
+**Booking Confirmations:**
+- `targetActionConfirm` - Dynamic confirmation for any target action
+- `demoConfirm` - Product demo confirmation
+- `webinarConfirm` - Webinar registration confirmation
+- `consultationConfirm` - Consultation booking confirmation
+- `callbackConfirm` - Callback request confirmation
+
+**Follow-ups:**
+- `targetActionFollowUp` - Pre-meeting preparation reminder
+- `targetActionRecap` - Post-meeting recap
+- `demoFollowUp` - Demo follow-up (2-3 days after)
+- `webinarFollowUp` - Webinar attendee follow-up
+- `webinarNoShow` - Follow-up for webinar no-shows
+- `consultationFollowUp` - Post-consultation follow-up
+
+**Resource Emails:**
+- `aiDeck` - Agentforce guide (Salesforce leads)
+- `aiDeckGeneral` - AI Success guide (general leads)
+- `healthCheck` - Salesforce health check offer
+
+**Outreach:**
+- `coldOutreach` - Initial cold email
+- `noAnswer` - Voicemail follow-up
+
+**Relationship:**
+- `meetingRecap` - Discovery call recap
+- `referralRequest` - Ask for referrals
+- `breakup` - Final attempt email
+
+### Template Selection
+
+The email modal highlights "Recommended" templates based on your configured target action. For example:
+- **CEO Meeting** → `targetActionConfirm` and `targetActionFollowUp`
+- **Product Demo** → `demoConfirm` and `demoFollowUp`
+- **Webinar** → `webinarConfirm` and `webinarFollowUp`
 
 ---
 
