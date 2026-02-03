@@ -633,7 +633,70 @@ Verify all these templates exist and load correctly:
 
 ---
 
-### 7. Cross-Feature Integration Tests
+### 7. Call Timer & Logging
+
+**Purpose:** Verify call timer tracks duration and logs calls correctly.
+
+#### Test 7.1: Start Timer on Dial
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Select a lead with phone number | Lead details shown |
+| 2 | Click "📞 Dial & Start Timer" button | Phone app opens, timer starts |
+| 3 | Check timer display | Red pulsing dot, MM:SS counting up |
+| 4 | Wait 10 seconds | Timer shows 0:10 |
+| 5 | Click "⏹️ Stop Timer" | Timer stops but duration preserved |
+
+#### Test 7.2: Log Call with Duration
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Start a call timer | Timer running |
+| 2 | Wait 30 seconds | Timer shows 0:30 |
+| 3 | Select "Meeting Requested" outcome | Outcome highlighted |
+| 4 | Add a note: "Great conversation" | Note entered |
+| 5 | Click "📝 Log Call" | Notification shows "Call logged: Meeting Requested (0:30)" |
+| 6 | Check lead notes | Shows "[timestamp] 📞 Meeting Requested: Great conversation\n(Duration: 0:30)" |
+
+#### Test 7.3: Call History Display
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Log 2-3 calls on a lead | Calls logged |
+| 2 | Check "Call History" section | Shows "Call History (X calls)" toggle |
+| 3 | Click to expand | Shows list of previous calls |
+| 4 | Check call entries | Each shows: timestamp, outcome badge, duration, notes |
+
+#### Test 7.4: Auto Status Update
+
+| Outcome | Expected Status Change |
+|---------|------------------------|
+| Meeting Requested | → "Call Scheduled" |
+| Deck Requested | → "Deck Sent" + milestone |
+| Not Interested | → "Closed Lost" |
+| Voicemail | No change, creates follow-up |
+| No Answer | No change, creates follow-up |
+| Call Back | No change, creates follow-up |
+
+#### Test 7.5: Timer Reset on Lead Change
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Start timer for Lead A | Timer running |
+| 2 | Select Lead B | Timer stops, resets to 0 |
+| 3 | Return to Lead A | Timer is at 0 (not resumed) |
+
+#### Test 7.6: Manual Timer Without Dial
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Make call using external phone | - |
+| 2 | Click "📞 Dial & Start Timer" | Timer starts (even if not dialing) |
+| 3 | Log call outcome | Duration recorded correctly |
+
+---
+
+### 8. Cross-Feature Integration Tests
 
 **Purpose:** Verify features work together correctly.
 
@@ -712,6 +775,12 @@ Use this checklist when testing a new deployment:
 **Local Mode Tests (5 min):**
 - [ ] Test 6.1: Works without Supabase
 - [ ] Test 6.3: Backup/restore
+
+**Call Timer Tests (5 min):**
+- [ ] Test 7.1: Start timer on dial
+- [ ] Test 7.2: Log call with duration
+- [ ] Test 7.3: Call history display
+- [ ] Test 7.4: Auto status update
 
 ---
 
