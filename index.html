@@ -63,7 +63,32 @@
         bg: 'bg-green-200',
         text: 'text-green-900',
         border: 'border-green-400'
+      },
+      calendar: {
+        title: 'CEO Availability Calendar',
+        subtitle: 'Click slots to mark available • Click available slots to book',
+        slotLabel: 'Available',
+        bookedLabel: 'Meeting Booked',
+        challengeLabel: 'Schedule Challenge',
+        challengeMessage: 'This time is outside normal availability - will be booked as a Schedule Challenge',
+        mode: 'availability',
+        allowMultipleBookings: false
       }
+    };
+
+    // Helper to get calendar config with defaults
+    const getCalendarConfig = (targetAction) => {
+      const defaults = {
+        title: `${targetAction.shortLabel} Calendar`,
+        subtitle: 'Click slots to set availability • Click to book',
+        slotLabel: 'Available',
+        bookedLabel: `${targetAction.shortLabel} Booked`,
+        challengeLabel: 'Custom Time',
+        challengeMessage: 'This time is outside normal availability',
+        mode: 'availability',
+        allowMultipleBookings: false
+      };
+      return { ...defaults, ...(targetAction.calendar || {}) };
     };
 
     // Helper to get target action config from organization config
@@ -4138,7 +4163,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           const description = `CEO meeting with ${meeting.leadName}\\n` +
             `Company: ${meeting.company}\\n` +
             `Email: ${meeting.email || 'N/A'}\\n` +
-            (meeting.isScheduleChallenge ? '\\n⚠️ SCHEDULE CHALLENGE - Confirm CEO availability' : '');
+            (meeting.isScheduleChallenge ? `\\n⚠️ ${getCalendarConfig(targetAction).challengeLabel.toUpperCase()} - Confirm availability` : '');
 
           return [
             'BEGIN:VEVENT',
@@ -4188,7 +4213,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `CEO_Meetings_Export_${today}.ics`;
+        link.download = `${targetAction.shortLabel.replace(/\s+/g, '_')}_Export_${today}.ics`;
         link.click();
         URL.revokeObjectURL(url);
 
@@ -4257,7 +4282,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
         // Add schedule challenge note to ICS if applicable
         const scheduleNote = isScheduleChallenge
-          ? '\n\n⚠️ SCHEDULE CHALLENGE: This meeting was booked outside normal CEO availability.'
+          ? `\n\n⚠️ ${getCalendarConfig(targetAction).challengeLabel.toUpperCase()}: This was booked outside normal availability.`
           : '';
 
         downloadICSFile({
@@ -4327,7 +4352,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
         setShowMeetingModal(false);
         showNotification(isScheduleChallenge
-          ? '⚠️ Schedule Challenge booked! Confirm CEO availability.'
+          ? `⚠️ ${getCalendarConfig(targetAction).challengeLabel} booked! Confirm availability.`
           : 'Meeting booked and calendar invite created!');
       };
       // Load/save availability and meetings
@@ -10273,12 +10298,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                       </div>
                     ) : (
                       <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
-                        <p className="text-sm text-amber-800">No CEO availability set for the next 2 weeks.</p>
+                        <p className="text-sm text-amber-800">No {targetAction.shortLabel.toLowerCase()} availability set for the next 2 weeks.</p>
                         <button
                           onClick={() => { setShowMeetingModal(false); setShowCalendarModal(true); }}
                           className="mt-2 text-sm text-amber-600 hover:text-amber-800 underline"
                         >
-                          Open CEO Calendar to set availability →
+                          Open {targetAction.shortLabel} Calendar to set availability →
                         </button>
                       </div>
                     );
@@ -10317,7 +10342,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     </div>
                     {meetingDetails.startDate && meetingDetails.startTime && !ceoAvailability.some(s => s.date === meetingDetails.startDate && s.time === meetingDetails.startTime) && (
                       <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                        ⚠️ This time is outside CEO availability - will be booked as a Schedule Challenge
+                        ⚠️ {getCalendarConfig(targetAction).challengeMessage}
                       </p>
                     )}
                   </div>
@@ -10503,7 +10528,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
           }
 
           const scheduleNote = isScheduleChallenge
-            ? `\\n\\n⚠️ SCHEDULE CHALLENGE: This meeting was booked outside normal CEO availability windows at the prospect's request. Please confirm CEO availability.`
+            ? `\\n\\n⚠️ ${getCalendarConfig(targetAction).challengeLabel.toUpperCase()}: This was booked outside normal availability windows at the prospect's request. Please confirm availability.`
             : '';
 
           downloadICSFile({
@@ -10582,14 +10607,19 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-orange-500 to-amber-500 text-white">
-                <div>
-                  <h3 className="text-xl font-bold">📅 CEO Availability Calendar</h3>
-                  <p className="text-orange-100 text-sm">Click slots to mark available • Click available slots to book</p>
-                </div>
-                <button onClick={() => setShowCalendarModal(false)} className="text-white hover:bg-white/20 rounded-lg p-2 text-xl">&times;</button>
-              </div>
+              {/* Header - Dynamic based on target action */}
+              {(() => {
+                const calConfig = getCalendarConfig(targetAction);
+                return (
+                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-orange-500 to-amber-500 text-white">
+                    <div>
+                      <h3 className="text-xl font-bold">{targetAction.icon} {calConfig.title}</h3>
+                      <p className="text-orange-100 text-sm">{calConfig.subtitle}</p>
+                    </div>
+                    <button onClick={() => setShowCalendarModal(false)} className="text-white hover:bg-white/20 rounded-lg p-2 text-xl">&times;</button>
+                  </div>
+                );
+              })()}
 
               <div className="flex flex-1 overflow-hidden">
                 {/* Calendar Grid */}
@@ -10681,14 +10711,19 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     </div>
                   </div>
 
-                  {/* Legend */}
-                  <div className="flex gap-4 mt-4 text-xs text-gray-500 flex-wrap">
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-blue-100 border-2 border-blue-300 rounded"></div><span>Available</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-100 rounded"></div><span>Booked</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-100 rounded"></div><span>Schedule Challenge</span></div>
-                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-100 rounded"></div><span>Unavailable</span></div>
-                    {selectedLead && <div className="flex items-center gap-2"><div className="w-4 h-4 border border-dashed border-gray-400 rounded"></div><span>Click to book anyway</span></div>}
-                  </div>
+                  {/* Legend - Dynamic labels */}
+                  {(() => {
+                    const calConfig = getCalendarConfig(targetAction);
+                    return (
+                      <div className="flex gap-4 mt-4 text-xs text-gray-500 flex-wrap">
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-blue-100 border-2 border-blue-300 rounded"></div><span>{calConfig.slotLabel}</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-100 rounded"></div><span>{calConfig.bookedLabel}</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-100 rounded"></div><span>{calConfig.challengeLabel}</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-100 rounded"></div><span>Unavailable</span></div>
+                        {selectedLead && <div className="flex items-center gap-2"><div className="w-4 h-4 border border-dashed border-gray-400 rounded"></div><span>Click to book anyway</span></div>}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Sidebar */}
@@ -10701,7 +10736,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                         </h4>
                         {selectedSlotForBooking.isScheduleChallenge && (
                           <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
-                            <p className="text-xs text-amber-800">Booked outside normal CEO availability</p>
+                            <p className="text-xs text-amber-800">{getCalendarConfig(targetAction).challengeLabel} - booked outside normal availability</p>
                           </div>
                         )}
                         <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -10713,7 +10748,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                         <div className="flex gap-2">
                           <button onClick={() => {
                             const scheduleNote = selectedSlotForBooking.isScheduleChallenge 
-                              ? `\\n\\n⚠️ SCHEDULE CHALLENGE: This meeting was booked outside normal CEO availability windows.`
+                              ? `\\n\\n⚠️ ${getCalendarConfig(targetAction).challengeLabel.toUpperCase()}: This was booked outside normal availability.`
                               : '';
                             downloadICSFile({
                               startDate: selectedSlotForBooking.date,
@@ -10741,8 +10776,8 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                         
                         {selectedSlotForBooking.isScheduleChallenge && (
                           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                            <p className="text-sm text-amber-800 font-medium">Outside CEO Availability</p>
-                            <p className="text-xs text-amber-700 mt-1">This time is not in the CEO's open slots. Book anyway if the prospect can't do other times.</p>
+                            <p className="text-sm text-amber-800 font-medium">{getCalendarConfig(targetAction).challengeLabel}</p>
+                            <p className="text-xs text-amber-700 mt-1">{getCalendarConfig(targetAction).challengeMessage}. Book anyway if needed.</p>
                           </div>
                         )}
                         
@@ -10930,7 +10965,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     + Add Lead
                   </button>
                   <button onClick={() => setShowCalendarModal(true)} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-amber-600 transition-colors shadow-lg shadow-orange-200">
-                    📅 CEO Calendar
+                    {targetAction.icon} {targetAction.shortLabel} Calendar
                   </button>
                 </div>
               </div>
