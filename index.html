@@ -3116,6 +3116,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [showSettings, setShowSettings] = useState(false);
       const [showEmailModal, setShowEmailModal] = useState(false);
       const [selectedEmailTemplate, setSelectedEmailTemplate] = useState(null);
+      const [showSequencesModal, setShowSequencesModal] = useState(false);
       const [generatedEmail, setGeneratedEmail] = useState('');
       const [showDeckMenu, setShowDeckMenu] = useState(false);
       const [notification, setNotification] = useState(null);
@@ -10391,6 +10392,184 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     </details>
                   )}
 
+                  {/* Email Reports (Supabase mode only) */}
+                  {isSupabaseMode && (
+                    <details className="pt-4 border-t border-gray-100">
+                      <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                        <span>📧</span> Email Reports
+                        <span className="text-xs font-normal text-gray-500">(automated summaries)</span>
+                      </summary>
+                      <div className="mt-3">
+                        {(() => {
+                          const [reportSettings, setReportSettings] = useState({
+                            dailyReport: false,
+                            weeklyReport: false,
+                            sendTime: '08:00',
+                            sendDayOfWeek: 1,
+                            reportScope: 'own'
+                          });
+                          const [reportLoading, setReportLoading] = useState(true);
+                          const [reportSaving, setReportSaving] = useState(false);
+
+                          // Load existing settings
+                          useEffect(() => {
+                            const loadSettings = async () => {
+                              if (!supabase || !dataContext?.organization?.id) return;
+                              try {
+                                const { data } = await supabase
+                                  .from('email_report_subscriptions')
+                                  .select('*')
+                                  .eq('user_id', user?.id)
+                                  .single();
+                                if (data) {
+                                  setReportSettings({
+                                    dailyReport: data.daily_report || false,
+                                    weeklyReport: data.weekly_report || false,
+                                    sendTime: data.send_time || '08:00',
+                                    sendDayOfWeek: data.send_day_of_week || 1,
+                                    reportScope: data.report_scope || 'own'
+                                  });
+                                }
+                              } catch (e) {
+                                console.log('No existing report subscription');
+                              } finally {
+                                setReportLoading(false);
+                              }
+                            };
+                            loadSettings();
+                          }, []);
+
+                          const saveSettings = async () => {
+                            if (!supabase || !dataContext?.organization?.id) return;
+                            setReportSaving(true);
+                            try {
+                              const { error } = await supabase
+                                .from('email_report_subscriptions')
+                                .upsert({
+                                  organization_id: dataContext.organization.id,
+                                  user_id: user?.id,
+                                  daily_report: reportSettings.dailyReport,
+                                  weekly_report: reportSettings.weeklyReport,
+                                  send_time: reportSettings.sendTime,
+                                  send_day_of_week: reportSettings.sendDayOfWeek,
+                                  report_scope: reportSettings.reportScope
+                                }, { onConflict: 'organization_id,user_id' });
+                              if (error) throw error;
+                              showNotification('Report settings saved');
+                            } catch (e) {
+                              showNotification('Failed to save settings', 'error');
+                            } finally {
+                              setReportSaving(false);
+                            }
+                          };
+
+                          if (reportLoading) {
+                            return <div className="text-sm text-gray-500">Loading settings...</div>;
+                          }
+
+                          return (
+                            <div className="space-y-4">
+                              {/* Daily Report Toggle */}
+                              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">Daily Report</div>
+                                  <div className="text-xs text-gray-500">Yesterday's activity summary</div>
+                                </div>
+                                <button
+                                  onClick={() => setReportSettings(prev => ({ ...prev, dailyReport: !prev.dailyReport }))}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    reportSettings.dailyReport ? 'bg-blue-600' : 'bg-gray-300'
+                                  }`}
+                                >
+                                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    reportSettings.dailyReport ? 'translate-x-6' : 'translate-x-1'
+                                  }`} />
+                                </button>
+                              </div>
+
+                              {/* Weekly Report Toggle */}
+                              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">Weekly Report</div>
+                                  <div className="text-xs text-gray-500">Week-over-week performance</div>
+                                </div>
+                                <button
+                                  onClick={() => setReportSettings(prev => ({ ...prev, weeklyReport: !prev.weeklyReport }))}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    reportSettings.weeklyReport ? 'bg-purple-600' : 'bg-gray-300'
+                                  }`}
+                                >
+                                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    reportSettings.weeklyReport ? 'translate-x-6' : 'translate-x-1'
+                                  }`} />
+                                </button>
+                              </div>
+
+                              {/* Send Time */}
+                              {(reportSettings.dailyReport || reportSettings.weeklyReport) && (
+                                <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Send Time</label>
+                                    <select
+                                      value={reportSettings.sendTime}
+                                      onChange={(e) => setReportSettings(prev => ({ ...prev, sendTime: e.target.value }))}
+                                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                    >
+                                      {['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00'].map(time => (
+                                        <option key={time} value={time}>{time}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  {reportSettings.weeklyReport && (
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">Weekly Report Day</label>
+                                      <select
+                                        value={reportSettings.sendDayOfWeek}
+                                        onChange={(e) => setReportSettings(prev => ({ ...prev, sendDayOfWeek: parseInt(e.target.value) }))}
+                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                      >
+                                        <option value={1}>Monday</option>
+                                        <option value={2}>Tuesday</option>
+                                        <option value={3}>Wednesday</option>
+                                        <option value={4}>Thursday</option>
+                                        <option value={5}>Friday</option>
+                                        <option value={6}>Saturday</option>
+                                        <option value={0}>Sunday</option>
+                                      </select>
+                                    </div>
+                                  )}
+
+                                  {isAdmin && (
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-600 mb-1">Report Scope</label>
+                                      <select
+                                        value={reportSettings.reportScope}
+                                        onChange={(e) => setReportSettings(prev => ({ ...prev, reportScope: e.target.value }))}
+                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                      >
+                                        <option value="own">My activity only</option>
+                                        <option value="team">Full team stats</option>
+                                      </select>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <button
+                                onClick={saveSettings}
+                                disabled={reportSaving}
+                                className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                              >
+                                {reportSaving ? 'Saving...' : 'Save Report Settings'}
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </details>
+                  )}
+
                   {/* Data Export/Import */}
                   <details className="pt-4 border-t border-gray-100">
                     <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
@@ -11676,6 +11855,11 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                   <button onClick={() => setShowCalendarModal(true)} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-amber-600 transition-colors shadow-lg shadow-orange-200">
                     {targetAction.icon} {targetAction.shortLabel} Calendar
                   </button>
+                  {isSupabaseMode && isAdmin && (
+                    <button onClick={() => setShowSequencesModal(true)} className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-600 transition-colors shadow-lg shadow-emerald-200">
+                      📧 Sequences
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -11703,6 +11887,421 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
           {showMeetingModal && meetingModalContent}
           {showCalendarModal && ceoCalendarContent}
           {callListPickerModal}
+
+          {/* Email Sequences Manager Modal */}
+          {showSequencesModal && isSupabaseMode && isAdmin && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowSequencesModal(false)}>
+              <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-bold">📧 Email Sequences</h3>
+                    <p className="text-sm text-gray-500">Automated follow-up campaigns</p>
+                  </div>
+                  <button onClick={() => setShowSequencesModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6">
+                  {(() => {
+                    const [sequences, setSequences] = useState([]);
+                    const [seqLoading, setSeqLoading] = useState(true);
+                    const [editingSequence, setEditingSequence] = useState(null);
+                    const [newSequence, setNewSequence] = useState({
+                      name: '',
+                      description: '',
+                      triggerType: 'manual',
+                      triggerValue: '',
+                      fromName: '',
+                      replyTo: '',
+                      isActive: true,
+                      steps: []
+                    });
+                    const [showNewForm, setShowNewForm] = useState(false);
+
+                    // Load sequences
+                    useEffect(() => {
+                      const loadSequences = async () => {
+                        if (!supabase || !dataContext?.organization?.id) return;
+                        try {
+                          const { data } = await supabase
+                            .from('email_sequences')
+                            .select('*, email_sequence_steps(*)')
+                            .eq('organization_id', dataContext.organization.id)
+                            .order('created_at', { ascending: false });
+                          setSequences(data || []);
+                        } catch (e) {
+                          console.error('Failed to load sequences:', e);
+                        } finally {
+                          setSeqLoading(false);
+                        }
+                      };
+                      loadSequences();
+                    }, []);
+
+                    // Create new sequence
+                    const createSequence = async () => {
+                      if (!supabase || !dataContext?.organization?.id || !newSequence.name) return;
+                      try {
+                        const { data, error } = await supabase
+                          .from('email_sequences')
+                          .insert({
+                            organization_id: dataContext.organization.id,
+                            name: newSequence.name,
+                            description: newSequence.description,
+                            trigger_type: newSequence.triggerType,
+                            trigger_value: newSequence.triggerValue || null,
+                            from_name: newSequence.fromName || null,
+                            reply_to: newSequence.replyTo || null,
+                            is_active: newSequence.isActive,
+                            created_by: user?.id
+                          })
+                          .select()
+                          .single();
+
+                        if (error) throw error;
+                        setSequences(prev => [{ ...data, email_sequence_steps: [] }, ...prev]);
+                        setNewSequence({ name: '', description: '', triggerType: 'manual', triggerValue: '', fromName: '', replyTo: '', isActive: true, steps: [] });
+                        setShowNewForm(false);
+                        showNotification('Sequence created');
+                      } catch (e) {
+                        showNotification('Failed to create sequence', 'error');
+                      }
+                    };
+
+                    // Toggle sequence active
+                    const toggleActive = async (seq) => {
+                      if (!supabase) return;
+                      try {
+                        const { error } = await supabase
+                          .from('email_sequences')
+                          .update({ is_active: !seq.is_active })
+                          .eq('id', seq.id);
+                        if (error) throw error;
+                        setSequences(prev => prev.map(s => s.id === seq.id ? { ...s, is_active: !s.is_active } : s));
+                      } catch (e) {
+                        showNotification('Failed to update', 'error');
+                      }
+                    };
+
+                    // Delete sequence
+                    const deleteSequence = async (seq) => {
+                      if (!confirm(`Delete "${seq.name}"? This cannot be undone.`)) return;
+                      if (!supabase) return;
+                      try {
+                        const { error } = await supabase
+                          .from('email_sequences')
+                          .delete()
+                          .eq('id', seq.id);
+                        if (error) throw error;
+                        setSequences(prev => prev.filter(s => s.id !== seq.id));
+                        showNotification('Sequence deleted');
+                      } catch (e) {
+                        showNotification('Failed to delete', 'error');
+                      }
+                    };
+
+                    // Add step to sequence
+                    const addStep = async (seqId) => {
+                      if (!supabase) return;
+                      const seq = sequences.find(s => s.id === seqId);
+                      const stepNumber = (seq?.email_sequence_steps?.length || 0) + 1;
+                      try {
+                        const { data, error } = await supabase
+                          .from('email_sequence_steps')
+                          .insert({
+                            sequence_id: seqId,
+                            step_number: stepNumber,
+                            delay_days: stepNumber === 1 ? 0 : 2,
+                            delay_hours: 0,
+                            subject: `Step ${stepNumber}: Follow-up`,
+                            body_html: '<p>Hi {{firstName}},</p><p>Just following up on my previous email...</p><p>Best,<br>{{companyName}} Team</p>',
+                            skip_conditions: { if_replied: true }
+                          })
+                          .select()
+                          .single();
+                        if (error) throw error;
+                        setSequences(prev => prev.map(s => s.id === seqId ? {
+                          ...s,
+                          email_sequence_steps: [...(s.email_sequence_steps || []), data].sort((a, b) => a.step_number - b.step_number)
+                        } : s));
+                        showNotification('Step added');
+                      } catch (e) {
+                        showNotification('Failed to add step', 'error');
+                      }
+                    };
+
+                    // Update step
+                    const updateStep = async (stepId, updates) => {
+                      if (!supabase) return;
+                      try {
+                        const { error } = await supabase
+                          .from('email_sequence_steps')
+                          .update(updates)
+                          .eq('id', stepId);
+                        if (error) throw error;
+                        setSequences(prev => prev.map(s => ({
+                          ...s,
+                          email_sequence_steps: s.email_sequence_steps?.map(st =>
+                            st.id === stepId ? { ...st, ...updates } : st
+                          )
+                        })));
+                      } catch (e) {
+                        showNotification('Failed to update step', 'error');
+                      }
+                    };
+
+                    // Delete step
+                    const deleteStep = async (stepId, seqId) => {
+                      if (!supabase) return;
+                      try {
+                        const { error } = await supabase
+                          .from('email_sequence_steps')
+                          .delete()
+                          .eq('id', stepId);
+                        if (error) throw error;
+                        setSequences(prev => prev.map(s => s.id === seqId ? {
+                          ...s,
+                          email_sequence_steps: s.email_sequence_steps?.filter(st => st.id !== stepId)
+                        } : s));
+                        showNotification('Step deleted');
+                      } catch (e) {
+                        showNotification('Failed to delete step', 'error');
+                      }
+                    };
+
+                    const triggerLabels = {
+                      manual: 'Manual enrollment',
+                      status_change: 'When status changes to',
+                      milestone: 'When milestone reached'
+                    };
+
+                    if (seqLoading) {
+                      return (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-6">
+                        {/* Create New Button */}
+                        {!showNewForm ? (
+                          <button
+                            onClick={() => setShowNewForm(true)}
+                            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                          >
+                            + Create New Sequence
+                          </button>
+                        ) : (
+                          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                            <h4 className="font-semibold text-gray-900 mb-3">New Email Sequence</h4>
+                            <div className="space-y-3">
+                              <input
+                                type="text"
+                                value={newSequence.name}
+                                onChange={(e) => setNewSequence(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="Sequence name (e.g., 'Post-Qualified Nurture')"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              />
+                              <textarea
+                                value={newSequence.description}
+                                onChange={(e) => setNewSequence(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Description (optional)"
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                              />
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">Trigger Type</label>
+                                  <select
+                                    value={newSequence.triggerType}
+                                    onChange={(e) => setNewSequence(prev => ({ ...prev, triggerType: e.target.value, triggerValue: '' }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                  >
+                                    <option value="manual">Manual enrollment</option>
+                                    <option value="status_change">Status change</option>
+                                    <option value="milestone">Milestone reached</option>
+                                  </select>
+                                </div>
+                                {newSequence.triggerType !== 'manual' && (
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                      {newSequence.triggerType === 'status_change' ? 'Status' : 'Milestone'}
+                                    </label>
+                                    {newSequence.triggerType === 'status_change' ? (
+                                      <select
+                                        value={newSequence.triggerValue}
+                                        onChange={(e) => setNewSequence(prev => ({ ...prev, triggerValue: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                      >
+                                        <option value="">Select status...</option>
+                                        <option value="Qualified">Qualified</option>
+                                        <option value="Follow Up">Follow Up</option>
+                                        <option value="Deck Sent">Deck Sent</option>
+                                      </select>
+                                    ) : (
+                                      <select
+                                        value={newSequence.triggerValue}
+                                        onChange={(e) => setNewSequence(prev => ({ ...prev, triggerValue: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                      >
+                                        <option value="">Select milestone...</option>
+                                        <option value="deckSent">Deck Sent</option>
+                                        <option value="discoveryCall">Discovery Call</option>
+                                        <option value="ceoMeetingHeld">CEO Meeting Held</option>
+                                        <option value="proposalSent">Proposal Sent</option>
+                                      </select>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={createSequence}
+                                  disabled={!newSequence.name}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  Create Sequence
+                                </button>
+                                <button
+                                  onClick={() => setShowNewForm(false)}
+                                  className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Sequences List */}
+                        {sequences.length === 0 ? (
+                          <div className="text-center py-12 text-gray-500">
+                            <div className="text-4xl mb-2">📧</div>
+                            <p>No sequences yet. Create one to start automating follow-ups.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {sequences.map(seq => (
+                              <div key={seq.id} className={`border rounded-xl overflow-hidden ${seq.is_active ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50/50'}`}>
+                                {/* Sequence Header */}
+                                <div className="p-4 flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <button
+                                      onClick={() => toggleActive(seq)}
+                                      className={`px-2 py-1 rounded-full text-xs font-medium ${seq.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                                    >
+                                      {seq.is_active ? '● Active' : '○ Paused'}
+                                    </button>
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900">{seq.name}</h4>
+                                      <p className="text-xs text-gray-500">
+                                        {triggerLabels[seq.trigger_type]}
+                                        {seq.trigger_value && <span className="font-medium"> "{seq.trigger_value}"</span>}
+                                        {' • '}{seq.email_sequence_steps?.length || 0} steps
+                                        {' • '}{seq.enrollments_count || 0} enrolled
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => setEditingSequence(editingSequence === seq.id ? null : seq.id)}
+                                      className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    >
+                                      {editingSequence === seq.id ? 'Close' : 'Edit Steps'}
+                                    </button>
+                                    <button
+                                      onClick={() => deleteSequence(seq)}
+                                      className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Steps Editor */}
+                                {editingSequence === seq.id && (
+                                  <div className="border-t border-gray-200 p-4 bg-white">
+                                    <div className="space-y-3">
+                                      {(seq.email_sequence_steps || []).sort((a, b) => a.step_number - b.step_number).map((step, idx) => (
+                                        <div key={step.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="text-sm font-medium text-gray-700">
+                                              Step {step.step_number}
+                                              {idx === 0 ? ' (Immediate)' : ` (${step.delay_days}d ${step.delay_hours}h delay)`}
+                                            </span>
+                                            <button
+                                              onClick={() => deleteStep(step.id, seq.id)}
+                                              className="text-red-500 hover:text-red-700 text-sm"
+                                            >
+                                              Remove
+                                            </button>
+                                          </div>
+                                          <div className="space-y-2">
+                                            {idx > 0 && (
+                                              <div className="flex gap-2">
+                                                <div>
+                                                  <label className="text-xs text-gray-500">Days</label>
+                                                  <input
+                                                    type="number"
+                                                    value={step.delay_days}
+                                                    onChange={(e) => updateStep(step.id, { delay_days: parseInt(e.target.value) || 0 })}
+                                                    className="w-16 px-2 py-1 border rounded text-sm"
+                                                    min="0"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="text-xs text-gray-500">Hours</label>
+                                                  <input
+                                                    type="number"
+                                                    value={step.delay_hours}
+                                                    onChange={(e) => updateStep(step.id, { delay_hours: parseInt(e.target.value) || 0 })}
+                                                    className="w-16 px-2 py-1 border rounded text-sm"
+                                                    min="0"
+                                                    max="23"
+                                                  />
+                                                </div>
+                                              </div>
+                                            )}
+                                            <input
+                                              type="text"
+                                              value={step.subject}
+                                              onChange={(e) => updateStep(step.id, { subject: e.target.value })}
+                                              placeholder="Email subject"
+                                              className="w-full px-2 py-1 border rounded text-sm"
+                                            />
+                                            <textarea
+                                              value={step.body_html}
+                                              onChange={(e) => updateStep(step.id, { body_html: e.target.value })}
+                                              placeholder="Email body (HTML)"
+                                              rows={3}
+                                              className="w-full px-2 py-1 border rounded text-sm font-mono"
+                                            />
+                                            <div className="text-xs text-gray-400">
+                                              Tokens: {'{{contact}}'}, {'{{firstName}}'}, {'{{company}}'}, {'{{companyName}}'}, {'{{ceoName}}'}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      <button
+                                        onClick={() => addStep(seq.id)}
+                                        className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600"
+                                      >
+                                        + Add Step
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Onboarding Tour Modal */}
           {showOnboarding && (
