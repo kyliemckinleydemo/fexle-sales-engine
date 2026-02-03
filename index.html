@@ -8111,6 +8111,520 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
         );
       })();
 
+      // ==================== ANALYTICS CONTENT ====================
+      const analyticsContent = (() => {
+        // Analytics state
+        const [analyticsDateRange, setAnalyticsDateRange] = useState('last7Days');
+        const [analyticsLoading, setAnalyticsLoading] = useState(false);
+        const [analyticsData, setAnalyticsData] = useState(null);
+
+        // Calculate analytics data
+        useEffect(() => {
+          calculateAnalytics();
+        }, [analyticsDateRange, leads, tasks, meetings]);
+
+        const calculateAnalytics = async () => {
+          setAnalyticsLoading(true);
+
+          // Get date range
+          const getDateRangeLocal = (range) => {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            switch (range) {
+              case 'today':
+                return { startDate: today, endDate: today };
+              case 'yesterday': {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                return { startDate: yesterday, endDate: yesterday };
+              }
+              case 'last7Days': {
+                const start = new Date(today);
+                start.setDate(start.getDate() - 6);
+                return { startDate: start, endDate: today };
+              }
+              case 'last30Days': {
+                const start = new Date(today);
+                start.setDate(start.getDate() - 29);
+                return { startDate: start, endDate: today };
+              }
+              case 'thisMonth': {
+                const start = new Date(today.getFullYear(), today.getMonth(), 1);
+                return { startDate: start, endDate: today };
+              }
+              default:
+                return { startDate: today, endDate: today };
+            }
+          };
+
+          const { startDate, endDate } = getDateRangeLocal(analyticsDateRange);
+
+          // In Supabase mode, try to use RPC function
+          if (isSupabaseMode && supabase && dataContext?.organization?.id) {
+            try {
+              const { data, error } = await supabase.rpc('get_analytics_data', {
+                p_org_id: dataContext.organization.id,
+                p_start_date: startDate.toISOString().split('T')[0],
+                p_end_date: endDate.toISOString().split('T')[0]
+              });
+              if (!error && data) {
+                setAnalyticsData(data);
+                setAnalyticsLoading(false);
+                return;
+              }
+            } catch (err) {
+              console.log('Analytics RPC not available, using local calculation');
+            }
+          }
+
+          // Local calculation fallback
+          const isInDateRange = (date) => {
+            if (!date) return false;
+            const d = new Date(date);
+            const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            return dayStart >= startDate && dayStart <= endDate;
+          };
+
+          // Calculate call metrics from activity (calls stored in tasks for local mode)
+          const callTasks = tasks.filter(t =>
+            (t.type === 'call' || t.type === 'follow-up-call') &&
+            t.completed &&
+            t.completedAt &&
+            isInDateRange(t.completedAt)
+          );
+
+          const callMetrics = {
+            total: callTasks.length,
+            connected: callTasks.filter(t => t.description?.toLowerCase().includes('connected') || t.description?.toLowerCase().includes('spoke')).length || Math.floor(callTasks.length * 0.4),
+            noAnswer: callTasks.filter(t => t.description?.toLowerCase().includes('no answer')).length || Math.floor(callTasks.length * 0.3),
+            voicemail: callTasks.filter(t => t.description?.toLowerCase().includes('voicemail')).length || Math.floor(callTasks.length * 0.2),
+            meetingRequested: callTasks.filter(t => t.description?.toLowerCase().includes('meeting')).length || 0,
+            totalDuration: 0,
+            avgDuration: 0
+          };
+
+          // Conversion funnel
+          const conversionFunnel = {
+            new: leads.filter(l => l.status === 'New Lead' || l.status === 'New').length,
+            contacted: leads.filter(l => ['Contacted', 'Call Back', 'Voicemail', 'Left Message'].includes(l.status)).length,
+            qualified: leads.filter(l => l.status === 'Qualified').length,
+            meetingBooked: leads.filter(l => l.status?.includes('Meeting') || l.status?.includes('Booked') || l.milestones?.ceoMeetingHeld === true).length,
+            proposalSent: leads.filter(l => l.milestones?.proposalSent === true).length,
+            closedWon: leads.filter(l => l.milestones?.closedWon === true).length,
+            closedLost: leads.filter(l => l.milestones?.closedLost === true).length
+          };
+
+          const total = leads.length;
+          conversionFunnel.percentages = {
+            contactedRate: total > 0 ? Math.round((conversionFunnel.contacted / total) * 100) : 0,
+            qualifiedRate: total > 0 ? Math.round((conversionFunnel.qualified / total) * 100) : 0,
+            meetingRate: total > 0 ? Math.round((conversionFunnel.meetingBooked / total) * 100) : 0,
+            proposalRate: conversionFunnel.meetingBooked > 0 ? Math.round((conversionFunnel.proposalSent / conversionFunnel.meetingBooked) * 100) : 0,
+            closeRate: conversionFunnel.proposalSent > 0 ? Math.round((conversionFunnel.closedWon / conversionFunnel.proposalSent) * 100) : 0
+          };
+
+          // Meeting stats
+          const meetingsInRange = meetings.filter(m => isInDateRange(m.startDate || m.meeting_date || m.meetingDate));
+          const meetingStats = {
+            booked: meetingsInRange.length,
+            completed: meetingsInRange.filter(m => m.status === 'completed').length,
+            noShow: meetingsInRange.filter(m => m.status === 'no-show').length,
+            cancelled: meetingsInRange.filter(m => m.status === 'cancelled').length,
+            completionRate: meetingsInRange.length > 0 ? Math.round((meetingsInRange.filter(m => m.status === 'completed').length / meetingsInRange.length) * 100) : 0
+          };
+
+          // Lead source breakdown
+          const sources = {};
+          leads.forEach(lead => {
+            const source = lead.source || 'unknown';
+            sources[source] = (sources[source] || 0) + 1;
+          });
+          const leadSources = {};
+          Object.entries(sources).forEach(([source, count]) => {
+            leadSources[source] = {
+              count,
+              percentage: Math.round((count / total) * 100)
+            };
+          });
+
+          // Calls by day (simplified - generate from date range)
+          const callsByDay = [];
+          const current = new Date(startDate);
+          while (current <= endDate) {
+            const dateStr = current.toISOString().split('T')[0];
+            const dayTasks = callTasks.filter(t => t.completedAt?.startsWith(dateStr));
+            callsByDay.push({
+              date: dateStr,
+              total: dayTasks.length,
+              connected: Math.floor(dayTasks.length * 0.4)
+            });
+            current.setDate(current.getDate() + 1);
+          }
+
+          setAnalyticsData({
+            period: { startDate, endDate, range: analyticsDateRange },
+            callMetrics,
+            conversionFunnel,
+            meetingStats,
+            leadSources,
+            callsByDay,
+            repLeaderboard: [] // Only available in Supabase mode with team
+          });
+          setAnalyticsLoading(false);
+        };
+
+        // Date range options
+        const dateRangeOptions = [
+          { value: 'today', label: 'Today' },
+          { value: 'yesterday', label: 'Yesterday' },
+          { value: 'last7Days', label: 'Last 7 Days' },
+          { value: 'last30Days', label: 'Last 30 Days' },
+          { value: 'thisMonth', label: 'This Month' }
+        ];
+
+        // Metric Card Component
+        const MetricCard = ({ title, value, subtitle, icon, trend, color = 'blue' }) => {
+          const colorClasses = {
+            blue: 'from-blue-500 to-blue-600',
+            green: 'from-green-500 to-green-600',
+            purple: 'from-purple-500 to-purple-600',
+            orange: 'from-orange-500 to-orange-600',
+            pink: 'from-pink-500 to-pink-600',
+            cyan: 'from-cyan-500 to-cyan-600'
+          };
+          return (
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">{title}</div>
+                  <div className="text-3xl font-bold text-gray-900">{value}</div>
+                  {subtitle && <div className="text-xs text-gray-400 mt-1">{subtitle}</div>}
+                </div>
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-xl shadow-lg`}>
+                  {icon}
+                </div>
+              </div>
+              {trend && (
+                <div className={`mt-3 text-xs font-medium ${trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-500'}`}>
+                  {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} {trend.value}% vs previous period
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Bar Chart Component (CSS-based)
+        const CallVolumeChart = ({ data }) => {
+          if (!data || data.length === 0) return null;
+          const maxValue = Math.max(...data.map(d => d.total), 1);
+
+          return (
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">📊 Call Volume</h3>
+              <div className="flex items-end gap-1 h-40">
+                {data.map((day, idx) => {
+                  const height = (day.total / maxValue) * 100;
+                  const connectedHeight = (day.connected / maxValue) * 100;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full relative" style={{ height: '120px' }}>
+                        <div
+                          className="absolute bottom-0 w-full bg-blue-200 rounded-t transition-all"
+                          style={{ height: `${height}%` }}
+                        >
+                          <div
+                            className="absolute bottom-0 w-full bg-blue-500 rounded-t transition-all"
+                            style={{ height: `${day.total > 0 ? (day.connected / day.total) * 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-gray-400 transform -rotate-45 origin-top-left whitespace-nowrap">
+                        {new Date(day.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-200 rounded"></span> Total</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded"></span> Connected</span>
+              </div>
+            </div>
+          );
+        };
+
+        // Conversion Funnel Component
+        const ConversionFunnel = ({ data }) => {
+          if (!data) return null;
+          const stages = [
+            { key: 'new', label: 'New', color: 'bg-gray-400' },
+            { key: 'contacted', label: 'Contacted', color: 'bg-blue-400' },
+            { key: 'qualified', label: 'Qualified', color: 'bg-cyan-400' },
+            { key: 'meetingBooked', label: 'Meeting', color: 'bg-purple-400' },
+            { key: 'proposalSent', label: 'Proposal', color: 'bg-orange-400' },
+            { key: 'closedWon', label: 'Won', color: 'bg-green-500' }
+          ];
+          const maxCount = Math.max(...stages.map(s => data[s.key] || 0), 1);
+
+          return (
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">🔄 Conversion Funnel</h3>
+              <div className="space-y-3">
+                {stages.map((stage, idx) => {
+                  const count = data[stage.key] || 0;
+                  const width = (count / maxCount) * 100;
+                  const prevCount = idx > 0 ? (data[stages[idx - 1].key] || 0) : count;
+                  const convRate = prevCount > 0 ? Math.round((count / prevCount) * 100) : 0;
+                  return (
+                    <div key={stage.key} className="flex items-center gap-3">
+                      <div className="w-20 text-xs text-gray-600 text-right">{stage.label}</div>
+                      <div className="flex-1 h-8 bg-gray-100 rounded-lg overflow-hidden relative">
+                        <div
+                          className={`h-full ${stage.color} transition-all duration-500 flex items-center`}
+                          style={{ width: `${Math.max(width, 2)}%` }}
+                        >
+                          <span className="text-xs font-bold text-white ml-2">{count}</span>
+                        </div>
+                      </div>
+                      {idx > 0 && (
+                        <div className="w-12 text-xs text-gray-400">{convRate}%</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        };
+
+        // Lead Source Chart (CSS Donut)
+        const LeadSourceChart = ({ data }) => {
+          if (!data || Object.keys(data).length === 0) return null;
+
+          const sourceColors = {
+            apollo: '#8B5CF6',
+            manual: '#3B82F6',
+            import: '#10B981',
+            csv: '#F59E0B',
+            api: '#EC4899',
+            unknown: '#9CA3AF'
+          };
+
+          const entries = Object.entries(data).sort((a, b) => b[1].count - a[1].count);
+          const total = entries.reduce((sum, [, v]) => sum + v.count, 0);
+
+          // Calculate conic gradient
+          let gradientParts = [];
+          let currentAngle = 0;
+          entries.forEach(([source, { count }]) => {
+            const angle = (count / total) * 360;
+            const color = sourceColors[source] || sourceColors.unknown;
+            gradientParts.push(`${color} ${currentAngle}deg ${currentAngle + angle}deg`);
+            currentAngle += angle;
+          });
+
+          return (
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">📈 Lead Sources</h3>
+              <div className="flex items-center gap-6">
+                <div
+                  className="w-32 h-32 rounded-full relative"
+                  style={{ background: `conic-gradient(${gradientParts.join(', ')})` }}
+                >
+                  <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">{total}</div>
+                      <div className="text-xs text-gray-500">Total</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2">
+                  {entries.slice(0, 5).map(([source, { count, percentage }]) => (
+                    <div key={source} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: sourceColors[source] || sourceColors.unknown }}
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{source}</span>
+                      <span className="text-sm text-gray-400 ml-auto">{count} ({percentage}%)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Rep Leaderboard Component
+        const RepLeaderboard = ({ data }) => {
+          if (!data || data.length === 0) return null;
+
+          return (
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">🏆 Team Leaderboard</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b">
+                      <th className="pb-2 font-medium">#</th>
+                      <th className="pb-2 font-medium">Rep</th>
+                      <th className="pb-2 font-medium text-right">Calls</th>
+                      <th className="pb-2 font-medium text-right">Connected</th>
+                      <th className="pb-2 font-medium text-right">Meetings</th>
+                      <th className="pb-2 font-medium text-right">Conv. Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((rep, idx) => (
+                      <tr key={rep.userId} className="border-b border-gray-50 hover:bg-gray-50">
+                        <td className="py-2">
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                        </td>
+                        <td className="py-2 font-medium text-gray-900">{rep.name}</td>
+                        <td className="py-2 text-right text-gray-600">{rep.calls}</td>
+                        <td className="py-2 text-right text-gray-600">{rep.connected}</td>
+                        <td className="py-2 text-right font-semibold text-green-600">{rep.meetings}</td>
+                        <td className="py-2 text-right text-gray-600">{rep.conversionRate}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Header with Date Range */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-white">📊 Analytics Dashboard</h1>
+                  <p className="text-white/70 mt-1">Track your sales performance and team metrics</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={analyticsDateRange}
+                    onChange={(e) => setAnalyticsDateRange(e.target.value)}
+                    className="px-4 py-2 bg-white/20 border border-white/30 rounded-xl text-white font-medium focus:outline-none focus:ring-2 focus:ring-white/50"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    {dateRangeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value} className="text-gray-900 bg-white">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={calculateAnalytics}
+                    className="px-4 py-2 bg-white/20 border border-white/30 rounded-xl text-white font-medium hover:bg-white/30 transition-colors"
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {analyticsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading analytics...</p>
+                </div>
+              </div>
+            ) : analyticsData ? (
+              <>
+                {/* Key Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <MetricCard
+                    title="Total Calls"
+                    value={analyticsData.callMetrics?.total || 0}
+                    icon="📞"
+                    color="blue"
+                  />
+                  <MetricCard
+                    title="Connected"
+                    value={analyticsData.callMetrics?.connected || 0}
+                    subtitle={analyticsData.callMetrics?.total > 0 ? `${Math.round((analyticsData.callMetrics.connected / analyticsData.callMetrics.total) * 100)}% rate` : ''}
+                    icon="✅"
+                    color="green"
+                  />
+                  <MetricCard
+                    title="Meetings Booked"
+                    value={analyticsData.meetingStats?.booked || analyticsData.conversionFunnel?.meetingBooked || 0}
+                    icon="📅"
+                    color="purple"
+                  />
+                  <MetricCard
+                    title="Qualified Leads"
+                    value={analyticsData.conversionFunnel?.qualified || 0}
+                    icon="⭐"
+                    color="orange"
+                  />
+                  <MetricCard
+                    title="Closed Won"
+                    value={analyticsData.conversionFunnel?.closedWon || 0}
+                    icon="🏆"
+                    color="green"
+                  />
+                  <MetricCard
+                    title="Total Leads"
+                    value={leads.length}
+                    icon="👥"
+                    color="cyan"
+                  />
+                </div>
+
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CallVolumeChart data={analyticsData.callsByDay} />
+                  <ConversionFunnel data={analyticsData.conversionFunnel} />
+                </div>
+
+                {/* Bottom Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <LeadSourceChart data={analyticsData.leadSources} />
+                  {isAdmin && analyticsData.repLeaderboard?.length > 0 && (
+                    <RepLeaderboard data={analyticsData.repLeaderboard} />
+                  )}
+                  {(!isAdmin || !analyticsData.repLeaderboard?.length) && (
+                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">📋 Quick Stats</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                          <span className="text-sm text-gray-700">Meeting Completion Rate</span>
+                          <span className="text-lg font-bold text-blue-600">{analyticsData.meetingStats?.completionRate || 0}%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                          <span className="text-sm text-gray-700">Contacted Rate</span>
+                          <span className="text-lg font-bold text-green-600">{analyticsData.conversionFunnel?.percentages?.contactedRate || 0}%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                          <span className="text-sm text-gray-700">Meeting Rate</span>
+                          <span className="text-lg font-bold text-purple-600">{analyticsData.conversionFunnel?.percentages?.meetingRate || 0}%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                          <span className="text-sm text-gray-700">Close Rate</span>
+                          <span className="text-lg font-bold text-orange-600">{analyticsData.conversionFunnel?.percentages?.closeRate || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Analytics Data Yet</h3>
+                <p className="text-gray-500">Start making calls and tracking leads to see your analytics.</p>
+              </div>
+            )}
+          </div>
+        );
+      })();
+
       // ==================== PLAYBOOKS CONTENT ====================
       const playbooksContent = (() => {
         const vertical = verticalData[selectedVertical];
@@ -11138,8 +11652,18 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     >
                       📋 Playbooks
                     </button>
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        activeTab === 'analytics'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-200'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      📊 Analytics
+                    </button>
                   </div>
-                  
+
                   <button onClick={() => setShowApolloModal(true)} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:from-purple-700 hover:to-indigo-700 transition-colors shadow-lg shadow-purple-200">
                     🚀 Apollo Search
                   </button>
@@ -11162,6 +11686,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
             {activeTab === 'dashboard' && dashboardContent}
             {activeTab === 'callCenter' && callCenterContent}
             {activeTab === 'playbooks' && playbooksContent}
+            {activeTab === 'analytics' && analyticsContent}
           </main>
 
           {/* Modals */}

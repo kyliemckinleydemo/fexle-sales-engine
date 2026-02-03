@@ -57,7 +57,8 @@ fexle-sales-engine/
 │   │   ├── phone.test.js         # Phone formatting tests
 │   │   ├── dates.test.js         # Date calculation tests
 │   │   ├── storage.test.js       # localStorage tests
-│   │   └── transform.test.js     # Transform tests
+│   │   ├── transform.test.js     # Transform tests
+│   │   └── analytics.test.js     # Analytics calculation tests
 │   └── integration/
 │       └── workflow.test.js      # End-to-end workflows
 ├── vitest.config.js              # Vitest configuration
@@ -179,7 +180,23 @@ Tests data transformation between formats.
 | transformApolloLead | 5 tests |
 | Round-trip | 1 test |
 
-### 7. Integration Tests (`workflow.test.js`)
+### 7. Analytics Tests (`analytics.test.js`)
+
+Tests analytics calculations for dashboard metrics.
+
+| Test Category | Tests |
+|---------------|-------|
+| Date Ranges | 6 tests for each preset |
+| Call Metrics | 5 tests |
+| Conversion Funnel | 4 tests |
+| Lead Sources | 3 tests |
+| Meeting Stats | 4 tests |
+| Rep Stats | 3 tests |
+| Calls by Day | 3 tests |
+| Trend Calculation | 4 tests |
+| Duration Formatting | 5 tests |
+
+### 8. Integration Tests (`workflow.test.js`)
 
 Tests complete workflows.
 
@@ -781,6 +798,204 @@ Use this checklist when testing a new deployment:
 - [ ] Test 7.2: Log call with duration
 - [ ] Test 7.3: Call history display
 - [ ] Test 7.4: Auto status update
+
+---
+
+### 9. Analytics Dashboard
+
+**Purpose:** Verify analytics dashboard displays correct metrics and charts.
+
+#### Test 9.1: Analytics Tab Navigation
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Click "📊 Analytics" in header | Analytics tab becomes active |
+| 2 | Check URL/state | activeTab should be 'analytics' |
+| 3 | Check page content | Shows gradient header with date picker |
+
+#### Test 9.2: Date Range Selection
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Open Analytics tab | Default shows "Last 7 Days" |
+| 2 | Select "Today" | Metrics update for today only |
+| 3 | Select "Last 30 Days" | Metrics update for 30-day range |
+| 4 | Click "Refresh" button | Loading spinner, then refresh |
+
+#### Test 9.3: Metric Cards
+
+| Card | What to Verify |
+|------|----------------|
+| Total Calls | Shows count of completed call tasks |
+| Connected | Shows connected calls with percentage rate |
+| Meetings Booked | Shows meeting count |
+| Qualified Leads | Shows leads with "Qualified" status |
+| Closed Won | Shows leads with closedWon milestone |
+| Total Leads | Shows total lead count |
+
+#### Test 9.4: Call Volume Chart
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Check chart renders | Bar chart visible |
+| 2 | Check date labels | Shows dates in range |
+| 3 | Check legend | Shows "Total" and "Connected" |
+| 4 | Hover/inspect bars | Heights proportional to values |
+
+#### Test 9.5: Conversion Funnel
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Check funnel renders | Shows 6 stages |
+| 2 | Verify stages | New → Contacted → Qualified → Meeting → Proposal → Won |
+| 3 | Check percentages | Shows conversion rate between stages |
+| 4 | Check bar widths | Proportional to count |
+
+#### Test 9.6: Lead Source Chart
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Check donut chart renders | Circular chart visible |
+| 2 | Check legend | Shows source names with counts |
+| 3 | Check center text | Shows total lead count |
+| 4 | Verify colors | Each source has distinct color |
+
+#### Test 9.7: Team Leaderboard (Admin Only)
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Login as admin/owner | - |
+| 2 | Open Analytics | - |
+| 3 | Check leaderboard | Shows if rep data available |
+| 4 | Verify columns | Rep, Calls, Connected, Meetings, Conv. Rate |
+| 5 | Check ranking | Medal emojis for top 3 |
+
+#### Test 9.8: Analytics in Local Mode
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Run in local mode (no Supabase) | Analytics still works |
+| 2 | Check metrics | Calculated from localStorage data |
+| 3 | Add a lead | Metrics update on refresh |
+
+---
+
+### 10. Phone E.164 Formatting (Twilio Prep)
+
+**Purpose:** Verify E.164 phone formatting for Twilio integration.
+
+#### Test 10.1: formatPhoneE164 Function
+
+| Input | Country | Expected Output |
+|-------|---------|-----------------|
+| 0412345678 | AU | +61412345678 |
+| (02) 1234 5678 | AU | +61212345678 |
+| (555) 123-4567 | US | +15551234567 |
+| 07700 900123 | UK | +447700900123 |
+| +1 555 123 4567 | - | +15551234567 |
+
+#### Test 10.2: isValidE164 Function
+
+| Input | Expected |
+|-------|----------|
+| +61412345678 | true |
+| +1234567 | true (min 7 digits) |
+| +123456789012345 | true (max 15 digits) |
+| 0412345678 | false (no +) |
+| +0412345678 | false (starts with 0) |
+
+#### Test 10.3: parsePhone Function
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Call parsePhone('0412345678') | Returns object with all formats |
+| 2 | Check e164 property | '+61412345678' |
+| 3 | Check tel property | '+61412345678' |
+| 4 | Check display property | '0412 345 678' |
+| 5 | Check country property | 'AU' |
+| 6 | Check valid property | true |
+
+---
+
+### 11. Competitive Features (Database)
+
+**Purpose:** Verify new database tables exist after migration.
+
+**Prerequisites:**
+- Supabase mode configured
+- Migration 004_features.sql applied
+
+#### Test 11.1: Verify New Tables Exist
+
+| Table | Query to Verify |
+|-------|-----------------|
+| analytics_snapshots | SELECT COUNT(*) FROM analytics_snapshots |
+| email_report_subscriptions | SELECT COUNT(*) FROM email_report_subscriptions |
+| email_sequences | SELECT COUNT(*) FROM email_sequences |
+| email_sequence_steps | SELECT COUNT(*) FROM email_sequence_steps |
+| lead_sequence_enrollments | SELECT COUNT(*) FROM lead_sequence_enrollments |
+| twilio_credentials | SELECT COUNT(*) FROM twilio_credentials |
+| call_logs | SELECT COUNT(*) FROM call_logs |
+| sms_messages | SELECT COUNT(*) FROM sms_messages |
+| sms_templates | SELECT COUNT(*) FROM sms_templates |
+| sms_opt_outs | SELECT COUNT(*) FROM sms_opt_outs |
+| webhooks | SELECT COUNT(*) FROM webhooks |
+| webhook_deliveries | SELECT COUNT(*) FROM webhook_deliveries |
+| inbound_webhook_keys | SELECT COUNT(*) FROM inbound_webhook_keys |
+
+#### Test 11.2: Verify RLS Policies
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Try to select from analytics_snapshots as member | Returns org data only |
+| 2 | Try to insert into webhooks as member | Permission denied |
+| 3 | Try to insert into webhooks as admin | Success |
+
+#### Test 11.3: Verify Analytics RPC Function
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Call get_analytics_data(org_id, start, end) | Returns JSONB |
+| 2 | Check callMetrics in response | Has total, connected, etc. |
+| 3 | Check conversionFunnel in response | Has new, qualified, etc. |
+| 4 | Check as non-member | Permission denied |
+
+---
+
+### Future Feature Tests (Not Yet Implemented)
+
+The following test plans are for features defined in 004_features.sql that need UI implementation:
+
+#### Email Reports (Future)
+- [ ] Test subscription toggle in Settings
+- [ ] Test daily report delivery
+- [ ] Test weekly report delivery
+- [ ] Test scope (own vs team)
+
+#### Email Sequences (Future)
+- [ ] Test sequence creation
+- [ ] Test step configuration
+- [ ] Test auto-enrollment on status change
+- [ ] Test pause/resume enrollment
+- [ ] Test sequence completion
+
+#### Twilio Voice (Future)
+- [ ] Test credential configuration
+- [ ] Test browser-based calling
+- [ ] Test call recording playback
+- [ ] Test call disposition logging
+
+#### SMS Support (Future)
+- [ ] Test SMS composition
+- [ ] Test conversation view
+- [ ] Test opt-out compliance
+- [ ] Test template selection
+
+#### Webhooks (Future)
+- [ ] Test webhook configuration
+- [ ] Test event triggering
+- [ ] Test retry logic
+- [ ] Test inbound webhook API keys
 
 ---
 

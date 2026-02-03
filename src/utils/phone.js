@@ -16,6 +16,9 @@
  * - formatPhoneForTel - Format for tel: href (E.164)
  * - formatPhoneDisplay - Format for human-readable display
  * - validatePhone - Validate phone number for country
+ * - formatPhoneE164 - Strict E.164 format for Twilio API
+ * - isValidE164 - Validate E.164 format
+ * - parsePhone - Parse phone and return all formats
  *
  * PATTERNS:
  * - All functions handle null/undefined input gracefully
@@ -185,4 +188,122 @@ export function validatePhone(phone, country) {
   // Check against patterns
   const patterns = format.patterns;
   return Object.values(patterns).some(pattern => pattern.test(digits));
+}
+
+/**
+ * Format phone number to strict E.164 format for Twilio
+ * E.164 format: +[country code][subscriber number]
+ * - Max 15 digits total (including country code)
+ * - No spaces, dashes, or other characters
+ * @param {string} phone - Phone number (any format)
+ * @param {string|null} country - Optional country override
+ * @returns {string|null} E.164 formatted number or null if invalid
+ */
+export function formatPhoneE164(phone, country = null) {
+  if (!phone) return null;
+
+  // Remove all non-digit characters except leading +
+  const hasPlus = phone.trim().startsWith('+');
+  const digits = phone.replace(/\D/g, '');
+
+  if (!digits || digits.length < 7) return null;
+
+  const detectedCountry = country || detectPhoneCountry(phone);
+
+  // If already has + and proper length, just clean it
+  if (hasPlus && digits.length >= 10 && digits.length <= 15) {
+    return '+' + digits;
+  }
+
+  // Format by country
+  switch (detectedCountry) {
+    case 'AU':
+      // International format with 61
+      if (digits.startsWith('61') && digits.length >= 11 && digits.length <= 12) {
+        return '+' + digits;
+      }
+      // Australian local format (starts with 0)
+      if (digits.startsWith('0') && digits.length === 10) {
+        return '+61' + digits.substring(1);
+      }
+      // 1300/1800 numbers
+      if (digits.startsWith('1') && (digits.length === 10 || digits.length === 6)) {
+        return '+61' + digits;
+      }
+      break;
+
+    case 'US':
+    case 'CA':
+      // Already has country code 1
+      if (digits.startsWith('1') && digits.length === 11) {
+        return '+' + digits;
+      }
+      // 10-digit NANP format
+      if (digits.length === 10 && /^[2-9]/.test(digits)) {
+        return '+1' + digits;
+      }
+      break;
+
+    case 'UK':
+      // International format with 44
+      if (digits.startsWith('44') && digits.length >= 11 && digits.length <= 12) {
+        return '+' + digits;
+      }
+      // UK local format (starts with 0)
+      if (digits.startsWith('0') && digits.length >= 10 && digits.length <= 11) {
+        return '+44' + digits.substring(1);
+      }
+      break;
+  }
+
+  // Fallback: if starts with country code pattern and reasonable length, accept it
+  if (digits.length >= 10 && digits.length <= 15) {
+    if (digits.startsWith('1') || digits.startsWith('44') || digits.startsWith('61')) {
+      return '+' + digits;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if a phone number is a valid E.164 format
+ * @param {string} phone - Phone number to validate
+ * @returns {boolean} True if valid E.164 format
+ */
+export function isValidE164(phone) {
+  if (!phone || typeof phone !== 'string') return false;
+  // E.164: starts with +, followed by 1-15 digits
+  return /^\+[1-9]\d{6,14}$/.test(phone);
+}
+
+/**
+ * Parse phone number and return all formats
+ * @param {string} phone - Phone number (any format)
+ * @param {string|null} country - Optional country override
+ * @returns {Object} Object with all phone formats
+ */
+export function parsePhone(phone, country = null) {
+  if (!phone) {
+    return {
+      original: phone,
+      e164: null,
+      tel: '',
+      display: '',
+      country: null,
+      valid: false
+    };
+  }
+
+  const detectedCountry = country || detectPhoneCountry(phone);
+  const e164 = formatPhoneE164(phone, detectedCountry);
+
+  return {
+    original: phone,
+    e164,
+    tel: formatPhoneForTel(phone, detectedCountry),
+    display: formatPhoneDisplay(phone, detectedCountry),
+    country: detectedCountry,
+    valid: e164 !== null
+  };
 }

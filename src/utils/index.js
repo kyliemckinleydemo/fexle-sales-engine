@@ -8,10 +8,11 @@
  * EXPORTS:
  * - scoring: calculateLeadScore
  * - csv: parseCSV, generateCSV, normalizeVertical, escapeCSVValue, CSV_HEADERS
- * - phone: detectPhoneCountry, formatPhoneForTel, formatPhoneDisplay, validatePhone
+ * - phone: detectPhoneCountry, formatPhoneForTel, formatPhoneDisplay, validatePhone, formatPhoneE164, isValidE164, parsePhone
  * - dates: calculateFollowUpDate, getTaskPriority, FOLLOW_UP_DAYS
  * - storage: saveToStorage, loadFromStorage, STORAGE_KEY
  * - transform: transformLead, toDbLead, transformApolloLead, getCompanySizeBucket, getRevenueBucket, detectVertical
+ * - analytics: calculateLocalAnalytics, calculateCallMetrics, calculateConversionFunnel, calculateLeadSourceStats, calculateRepStats, DATE_RANGES, getDateRange, formatDuration, calculateTrend
  */
 
 export { calculateLeadScore } from './scoring.js';
@@ -28,7 +29,10 @@ export {
   detectPhoneCountry,
   formatPhoneForTel,
   formatPhoneDisplay,
-  validatePhone
+  validatePhone,
+  formatPhoneE164,
+  isValidE164,
+  parsePhone
 } from './phone.js';
 
 export {
@@ -51,3 +55,17 @@ export {
   getRevenueBucket,
   detectVertical
 } from './transform.js';
+
+export {
+  calculateLocalAnalytics,
+  calculateCallMetrics,
+  calculateConversionFunnel,
+  calculateLeadSourceStats,
+  calculateMeetingStats,
+  calculateRepStats,
+  calculateCallsByDay,
+  DATE_RANGES,
+  getDateRange,
+  formatDuration,
+  calculateTrend
+} from './analytics.js';
