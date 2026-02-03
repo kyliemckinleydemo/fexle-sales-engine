@@ -73,6 +73,25 @@ CREATE TABLE IF NOT EXISTS organizations (
       "timezone": "Australia/Sydney",
       "dateFormat": "en-AU"
     },
+    "targetAction": {
+      "type": "meeting",
+      "label": "CEO Meeting",
+      "shortLabel": "CEO Meeting",
+      "statusLabel": "CEO Meeting Booked",
+      "milestoneLabel": "CEO Meeting Held",
+      "milestoneKey": "ceoMeetingHeld",
+      "buttonText": "Schedule CEO Meeting",
+      "description": "20-minute conversation with our CEO",
+      "duration": 20,
+      "priority": 1,
+      "followUpDays": 1,
+      "icon": "📅",
+      "color": {
+        "bg": "bg-green-200",
+        "text": "text-green-900",
+        "border": "border-green-400"
+      }
+    },
     "scripts": {},
     "verticals": {},
     "scoring": {},

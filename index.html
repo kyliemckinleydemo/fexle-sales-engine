@@ -39,6 +39,34 @@
       ? window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey)
       : null;
 
+    // ==================== TARGET ACTION CONFIG ====================
+    // Configurable target action (CEO Meeting, Demo, Consultation, etc.)
+    // Organizations can customize this in their config
+    const DEFAULT_TARGET_ACTION = {
+      type: 'meeting',
+      label: 'CEO Meeting',
+      shortLabel: 'CEO Meeting',
+      statusLabel: 'CEO Meeting Booked',
+      milestoneLabel: 'CEO Meeting Held',
+      milestoneKey: 'ceoMeetingHeld',
+      buttonText: 'Schedule CEO Meeting',
+      description: '20-minute conversation with our CEO',
+      duration: 20,
+      priority: 1,
+      followUpDays: 1,
+      icon: '📅',
+      color: {
+        bg: 'bg-green-200',
+        text: 'text-green-900',
+        border: 'border-green-400'
+      }
+    };
+
+    // Helper to get target action config from organization config
+    const getTargetAction = (config) => {
+      return config?.targetAction || DEFAULT_TARGET_ACTION;
+    };
+
     // ==================== AUTH CONTEXT ====================
     const AuthContext = createContext(null);
 
@@ -486,7 +514,7 @@
       const leadsHook = useLeads();
       const tasksHook = useTasks();
       const meetingsHook = useMeetings();
-      const { organization } = useOrg();
+      const { organization, config, isAdmin, isOwner, updateConfig, membership, reload: reloadOrg } = useOrg();
 
       // Transform Supabase data structure to match App's expected format
       const transformLead = (dbLead) => ({
@@ -587,6 +615,14 @@
         isSupabase: true,
         organization,
 
+        // Org admin info
+        config: config || {},
+        isAdmin: isAdmin || false,
+        isOwner: isOwner || false,
+        membership,
+        updateConfig,
+        reloadOrg,
+
         // Lead operations
         addLead: async (lead) => {
           const { data, error } = await leadsHook.createLead(toDbLead(lead));
@@ -678,7 +714,8 @@
               apolloApiKey: parsed.apolloApiKey || '',
               proxyUrl: parsed.proxyUrl || '',
               todayCallList: parsed.todayCallList || [],
-              onboardingCompleted: parsed.onboardingCompleted || false
+              onboardingCompleted: parsed.onboardingCompleted || false,
+              targetAction: parsed.targetAction || DEFAULT_TARGET_ACTION
             });
           }
         } catch (e) {
@@ -707,6 +744,11 @@
         }
       }, [leads, tasks, meetings, availabilitySlots, settings, loading]);
 
+      // Config object for consistency with Supabase mode
+      const config = {
+        targetAction: settings.targetAction || DEFAULT_TARGET_ACTION
+      };
+
       const value = {
         // Data
         leads,
@@ -716,6 +758,7 @@
         loading,
         isSupabase: false,
         settings,
+        config,
 
         // Lead operations (sync for local mode)
         addLead: (lead) => {
@@ -767,6 +810,17 @@
         updateSettings: (newSettings) => {
           setSettings(prev => ({ ...prev, ...newSettings }));
         },
+
+        // Admin info (local mode = single user = owner)
+        isAdmin: true,
+        isOwner: true,
+        membership: { role: 'owner' },
+        updateConfig: (newConfig) => {
+          const merged = { ...config, ...newConfig };
+          setSettings(prev => ({ ...prev, ...merged }));
+          return { data: merged, error: null };
+        },
+        reloadOrg: () => {},
 
         reload: () => {
           // Force reload from localStorage
@@ -2637,33 +2691,43 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
 
 
     // ==================== TASK MANAGEMENT ====================
-    const calculateFollowUpDate = (lastContactDate, status) => {
+    // Base follow-up days (without target action - added dynamically)
+    const BASE_FOLLOW_UP_DAYS = {
+      'Deck Sent': 7,
+      'Follow Up': 3,
+      'Call Scheduled': 1,
+      'Discovery Call Done': 2,
+      'Qualified': 5,
+      'Proposal Sent': 3,
+      'New Lead': 0,
+      'No Answer': 2
+    };
+
+    const calculateFollowUpDate = (lastContactDate, status, targetActionConfig = null) => {
       const now = new Date();
       const lastContact = lastContactDate ? new Date(lastContactDate) : now;
-      
-      // Follow-up schedule based on status
+
+      // Build follow-up days map with configurable target action
+      const targetAction = targetActionConfig || DEFAULT_TARGET_ACTION;
       const followUpDays = {
-        'Deck Sent': 7,
-        'Follow Up': 3,
-        'Call Scheduled': 1,
-        'Discovery Call Done': 2,
-        'Qualified': 5,
-        'CEO Meeting Booked': 1,
-        'Proposal Sent': 3,
-        'New Lead': 0,
-        'No Answer': 2
+        ...BASE_FOLLOW_UP_DAYS,
+        [targetAction.statusLabel]: targetAction.followUpDays ?? 1
       };
-      
+
       const days = followUpDays[status] || 7;
       const followUp = new Date(lastContact);
       followUp.setDate(followUp.getDate() + days);
       return followUp;
     };
 
-    const getTaskPriority = (lead) => {
+    const getTaskPriority = (lead, targetActionConfig = null) => {
+      const targetAction = targetActionConfig || DEFAULT_TARGET_ACTION;
+      const targetStatus = targetAction.statusLabel;
+      const targetPriority = targetAction.priority ?? 1;
+
       // High priority: Hot leads, scheduled calls, overdue follow-ups
       if (lead.score >= 85) return 1;
-      if (lead.status === 'CEO Meeting Booked') return 1;
+      if (lead.status === targetStatus) return targetPriority;
       if (lead.status === 'Call Scheduled') return 1;
       if (lead.score >= 75 && ['Qualified', 'Discovery Call Done'].includes(lead.status)) return 2;
       if (lead.status === 'Deck Sent') return 3;
@@ -2702,6 +2766,16 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const tasks = dataContext?.tasks ?? localTasks;
       const dataLoading = dataContext?.loading ?? false;
       const isSupabaseMode = dataContext?.isSupabase ?? false;
+
+      // Get target action config - supports both Supabase and local modes
+      const orgConfig = dataContext?.config || dataContext?.organization?.config || {};
+      const targetAction = getTargetAction(orgConfig);
+
+      // Admin info for role-based access control
+      const isAdmin = dataContext?.isAdmin ?? true; // Local mode = admin
+      const isOwner = dataContext?.isOwner ?? true; // Local mode = owner
+      const updateOrgConfig = dataContext?.updateConfig;
+      const membership = dataContext?.membership;
 
       // Unified setLeads that works with both modes
       const setLeads = (newLeadsOrFn) => {
@@ -2847,8 +2921,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         { title: '2. Your Next Action', description: 'The Today dashboard shows your #1 priority lead with a Smart Next Action button. Use the arrows to see other priority leads.', target: 'today-tab' },
         { title: '3. Call Center', description: 'Select a lead to see Quick Actions (Email, Schedule Meeting, Research, Playbook) and update Major Milestones with one click.', target: 'call-center-tab' },
         { title: '4. Use the Playbook', description: 'Click the Playbook button to open call scripts in a popup. Industry-specific openings, objection handlers, and closes.', target: null },
-        { title: '5. Track Major Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, CEO Meeting Held, Proposal, Won, Lost. Multiple can be selected.', target: null },
-        { title: '6. Book CEO Meetings', description: 'Use Schedule CEO Meeting or check the CEO Meeting milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
+        { title: '5. Track Major Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, Meeting Held, Proposal, Won, Lost. Multiple can be selected.', target: null },
+        { title: '6. Book Meetings', description: 'Use the Schedule Meeting button or check the milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
         { title: "You're Ready!", description: 'Check Settings for API keys (AI Research, Apollo). Good luck!', target: null }
       ];
 
@@ -2980,7 +3054,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           }
           stats[source].total++;
           stats[source].scores.push(lead.score || 0);
-          if (['CEO Meeting Booked', 'Proposal Sent', 'Closed Won'].includes(lead.status)) {
+          if ([targetAction.statusLabel, 'Proposal Sent', 'Closed Won'].includes(lead.status)) {
             stats[source].converted++;
           }
         });
@@ -3582,14 +3656,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
       // Initialize meeting details when selectedLead changes (moved from MeetingModal)
       useEffect(() => {
         if (selectedLead && showMeetingModal && !meetingDetails.title) {
-          const vertical = verticalData[selectedLead.vertical];
           setMeetingDetails(prev => ({
             ...prev,
-            title: `Fexle CEO Call - ${selectedLead.company}`,
-            description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations and how they might help ${selectedLead.company}.\n\nTopics:\n- ${vertical?.salesforceSolution || 'Salesforce'} capabilities\n- Agentforce and AI automation opportunities\n- Quick wins for ${vertical?.name || 'your industry'}`
+            title: `${targetAction.shortLabel} - ${selectedLead.company}`,
+            description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()} with ${selectedLead.company}.`
           }));
         }
-      }, [selectedLead, showMeetingModal]);
+      }, [selectedLead, showMeetingModal, targetAction]);
 
       // Scroll to top when Call Center tab opens
       useEffect(() => {
@@ -3656,10 +3729,10 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             ));
           }
 
-          // Update lead status
+          // Update lead status with configurable target action
           setLeads(prev => prev.map(l =>
             l.id === selectedLead.id
-              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: new Date().toISOString() }
+              ? { ...l, status: targetAction.statusLabel, lastContact: 'Just now', lastContactDate: new Date().toISOString() }
               : l
           ));
 
@@ -3672,7 +3745,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             id: Date.now(),
             leadId: selectedLead.id,
             type: 'meeting',
-            description: `Prep for CEO meeting with ${selectedLead.company}`,
+            description: `Prep for ${targetAction.shortLabel} with ${selectedLead.company}`,
             dueDate: reminderDate.toISOString().split('T')[0],
             dueTime: '09:00',
             completed: false,
@@ -3702,16 +3775,17 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         }
       }, [ceoAvailability, bookedMeetings]);
 
-      // Data integrity check: fix leads with "CEO Meeting Booked" but no actual meeting
+      // Data integrity check: fix leads with target action status but no actual meeting
       useEffect(() => {
         if (leads.length > 0) {
-          const leadsWithMeetingStatus = leads.filter(l => l.status === 'CEO Meeting Booked');
+          const targetStatus = targetAction.statusLabel;
+          const leadsWithMeetingStatus = leads.filter(l => l.status === targetStatus);
           const leadsWithoutActualMeeting = leadsWithMeetingStatus.filter(lead =>
             !bookedMeetings.some(m => m.leadId === lead.id)
           );
 
           if (leadsWithoutActualMeeting.length > 0) {
-            console.log('Data integrity: Found leads with CEO Meeting Booked status but no meeting:', leadsWithoutActualMeeting.map(l => l.company));
+            console.log(`Data integrity: Found leads with ${targetStatus} status but no meeting:`, leadsWithoutActualMeeting.map(l => l.company));
             setLeads(leads.map(lead =>
               leadsWithoutActualMeeting.some(l => l.id === lead.id)
                 ? { ...lead, status: 'Follow Up' }
@@ -3719,7 +3793,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             ));
           }
         }
-      }, [bookedMeetings.length]); // Only run when bookedMeetings changes
+      }, [bookedMeetings.length, targetAction.statusLabel]); // Run when bookedMeetings or targetAction changes
 
       // Availability management
       const toggleAvailability = (date, time) => {
@@ -3901,26 +3975,39 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         return 'text-red-600 bg-red-50';
       };
 
-      const getStatusColor = (status) => ({
-        'New Lead': 'bg-purple-100 text-purple-800',
-        'Qualified': 'bg-blue-100 text-blue-800',
-        'Call Scheduled': 'bg-cyan-100 text-cyan-800',
-        'Discovery Call Done': 'bg-green-100 text-green-800',
-        'Follow Up': 'bg-orange-100 text-orange-800',
-        'Proposal Sent': 'bg-indigo-100 text-indigo-800',
-        'Deck Sent': 'bg-pink-100 text-pink-800',
-        'CEO Meeting Booked': 'bg-green-200 text-green-900',
-        'Closed Won': 'bg-green-300 text-green-900',
-        'Closed Lost': 'bg-red-100 text-red-800',
-        'No Answer': 'bg-gray-100 text-gray-800'
-      }[status] || 'bg-gray-100 text-gray-800');
+      const getStatusColor = (status) => {
+        // Build status colors with configurable target action
+        const targetStatus = targetAction.statusLabel;
+        const targetColor = `${targetAction.color?.bg || 'bg-green-200'} ${targetAction.color?.text || 'text-green-900'}`;
 
-      // Helper: Check if lead has a meeting booked (checks status, bookedMeetings array, AND prep tasks)
-      const hasMeetingBooked = (lead) => {
-        return lead.status === 'CEO Meeting Booked' ||
-               bookedMeetings.some(m => m.leadId === lead.id) ||
-               tasks.some(t => t.leadId === lead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes('ceo meeting')));
+        const statusColors = {
+          'New Lead': 'bg-purple-100 text-purple-800',
+          'Qualified': 'bg-blue-100 text-blue-800',
+          'Call Scheduled': 'bg-cyan-100 text-cyan-800',
+          'Discovery Call Done': 'bg-green-100 text-green-800',
+          'Follow Up': 'bg-orange-100 text-orange-800',
+          'Proposal Sent': 'bg-indigo-100 text-indigo-800',
+          'Deck Sent': 'bg-pink-100 text-pink-800',
+          [targetStatus]: targetColor,
+          'Closed Won': 'bg-green-300 text-green-900',
+          'Closed Lost': 'bg-red-100 text-red-800',
+          'No Answer': 'bg-gray-100 text-gray-800'
+        };
+
+        return statusColors[status] || 'bg-gray-100 text-gray-800';
       };
+
+      // Helper: Check if lead has target action completed (e.g., meeting booked, demo scheduled)
+      // This replaces the hardcoded hasMeetingBooked function
+      const hasTargetActionCompleted = (lead) => {
+        const targetStatus = targetAction.statusLabel;
+        return lead.status === targetStatus ||
+               bookedMeetings.some(m => m.leadId === lead.id) ||
+               tasks.some(t => t.leadId === lead.id && (t.type === 'meeting' || t.description?.toLowerCase().includes(targetAction.shortLabel.toLowerCase())));
+      };
+
+      // Legacy alias for backward compatibility
+      const hasMeetingBooked = hasTargetActionCompleted;
 
       // Helper: Check if deck has been sent (checks milestones or legacy status)
       const hasDeckSent = (lead) => {
@@ -4788,7 +4875,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
           tasksToday: todaysTasks.explicit.length + todaysTasks.implicit.length,
           completedToday: tasks.filter(t => t.completed && t.completedAt?.startsWith(today.toISOString().split('T')[0])).length,
           decksSent: leads.filter(l => hasDeckSent(l)).length,
-          meetingsBooked: leads.filter(l => l.status === 'CEO Meeting Booked').length
+          meetingsBooked: leads.filter(l => l.status === targetAction.statusLabel).length
         };
 
         const upcomingTasks = tasks
@@ -4941,12 +5028,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                             setSelectedLead(nextLead);
                             setMeetingDetails(prev => ({
                               ...prev,
-                              title: `Fexle CEO Call - ${nextLead.company}`,
-                              description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                              title: `${targetAction.shortLabel} - ${nextLead.company}`,
+                              description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
                             }));
                             setShowMeetingModal(true);
                           }} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl text-base font-semibold hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
-                            <span className="text-xl">📅</span> Book CEO Meeting
+                            <span className="text-xl">{targetAction.icon}</span> {targetAction.buttonText}
                           </button>
                         );
                       })()}
@@ -5049,14 +5136,14 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                       <div className="flex items-start gap-3">
                         <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">5</span>
                         <div>
-                          <div className="font-semibold text-emerald-900">Book CEO Meetings</div>
+                          <div className="font-semibold text-emerald-900">Book Meetings</div>
                           <div className="text-sm text-emerald-700">The goal is to book meetings with decision makers.</div>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">6</span>
                         <div>
-                          <div className="font-semibold text-emerald-900">Keep CEO Calendar Updated</div>
+                          <div className="font-semibold text-emerald-900">Keep Calendar Updated</div>
                           <div className="text-sm text-emerald-700">Ensure availability is current to book meetings on the spot.</div>
                         </div>
                       </div>
@@ -5407,12 +5494,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                                   setSelectedLead(lead);
                                   setMeetingDetails(prev => ({
                                     ...prev,
-                                    title: `Fexle CEO Call - ${lead.company}`,
-                                    description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                                    title: `${targetAction.shortLabel} - ${lead.company}`,
+                                    description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
                                   }));
                                   setShowMeetingModal(true);
                                 }} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center gap-1">
-                                  📅 Book Meeting
+                                  {targetAction.icon} Book Meeting
                                 </button>
                               );
                             })()}
@@ -6326,12 +6413,12 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                               <button onClick={() => {
                                 setMeetingDetails(prev => ({
                                   ...prev,
-                                  title: `Fexle CEO Call - ${selectedLead.company}`,
-                                  description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                                  title: `${targetAction.shortLabel} - ${selectedLead.company}`,
+                                  description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
                                 }));
                                 setShowMeetingModal(true);
                               }} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span>📅</span> Book Meeting
+                                <span>{targetAction.icon}</span> Book Meeting
                               </button>
                             </div>
                           );
@@ -6390,16 +6477,16 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                               setMeetingDetails({
                                 startDate: '',
                                 startTime: '14:00',
-                                duration: 20,
+                                duration: targetAction.duration || 20,
                                 location: 'Video Call - Link to follow',
-                                title: `Fexle CEO Call - ${selectedLead.company}`,
-                                description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.`
+                                title: `${targetAction.shortLabel} - ${selectedLead.company}`,
+                                description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
                               });
                               setShowMeetingModal(true);
                             }}
                             className="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-medium shadow-sm"
                           >
-                            📅 Schedule CEO Meeting
+                            {targetAction.icon} {targetAction.buttonText}
                           </button>
                           <button
                             onClick={() => performResearch(selectedLead)}
@@ -6467,7 +6554,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                             />
                             Deck Sent
                           </label>
-                          {/* CEO Meeting Held */}
+                          {/* Target Action Milestone (CEO Meeting / Demo / etc.) */}
                           <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
                             hasMeetingBooked(selectedLead)
                               ? 'bg-purple-100 border-purple-400 text-purple-800'
@@ -6481,20 +6568,20 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                                   setMeetingDetails({
                                     startDate: '',
                                     startTime: '14:00',
-                                    duration: 20,
+                                    duration: targetAction.duration || 20,
                                     location: 'Video Call - Link to follow',
-                                    title: `Fexle CEO Call - ${selectedLead.company}`,
-                                    description: `20-minute conversation with Fexle CEO.`
+                                    title: `${targetAction.shortLabel} - ${selectedLead.company}`,
+                                    description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
                                   });
                                   setShowMeetingModal(true);
                                 } else {
                                   setBookedMeetings(bookedMeetings.filter(m => m.leadId !== selectedLead.id));
-                                  showNotification('CEO Meeting removed');
+                                  showNotification(`${targetAction.shortLabel} removed`);
                                 }
                               }}
                               className="w-3 h-3 rounded"
                             />
-                            CEO Meeting Held
+                            {targetAction.milestoneLabel}
                           </label>
                           {/* Proposal Sent */}
                           <label className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer transition-all ${
@@ -7211,8 +7298,8 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                                 <div className="flex gap-3">
                                   <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm shrink-0">5</div>
                                   <div>
-                                    <div className="font-medium text-gray-900">Book CEO Meeting</div>
-                                    <div className="text-sm text-gray-500">When ready, book a meeting with the CEO calendar</div>
+                                    <div className="font-medium text-gray-900">Book Meeting</div>
+                                    <div className="text-sm text-gray-500">When ready, book a meeting using the calendar</div>
                                   </div>
                                 </div>
                                 <div className="flex gap-3">
@@ -8579,7 +8666,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
 
       const settingsModalContent = (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden" key="settings-modal" onClick={() => setShowSettings(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
               <h3 className="text-xl font-bold">⚙️ Settings</h3>
               <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
@@ -8625,6 +8712,241 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 </div>
                 <p className="text-xs text-blue-600 mt-3">Used in call scripts, email signatures, and templates</p>
               </div>
+
+              {/* ===== ADMIN SETTINGS (Owner/Admin only) ===== */}
+              {isAdmin && (
+                <>
+                  {/* Mode Indicator */}
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{isSupabaseMode ? '☁️' : '💻'}</span>
+                        <div>
+                          <div className="text-sm font-semibold text-purple-900">
+                            {isSupabaseMode ? 'Cloud Mode' : 'Local Mode'}
+                          </div>
+                          <div className="text-xs text-purple-600">
+                            {isSupabaseMode ? 'Multi-user with Supabase' : 'Single user, browser storage'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 bg-purple-200 text-purple-800 text-xs font-medium rounded-full">
+                        {isOwner ? 'Owner' : 'Admin'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Target Action Configuration */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <span>🎯</span> Conversion Goal
+                      <span className="text-xs font-normal text-gray-500">(what you want prospects to do)</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {[
+                        { key: 'ceoMeeting', label: 'CEO Meeting', icon: '📅', status: 'CEO Meeting Booked' },
+                        { key: 'productDemo', label: 'Product Demo', icon: '🎬', status: 'Demo Booked' },
+                        { key: 'freeConsultation', label: 'Consultation', icon: '💬', status: 'Consultation Booked' },
+                        { key: 'discoveryCall', label: 'Discovery Call', icon: '🔍', status: 'Discovery Booked' },
+                      ].map(preset => (
+                        <button
+                          key={preset.key}
+                          onClick={() => {
+                            const presets = {
+                              ceoMeeting: { type: 'meeting', label: 'CEO Meeting', shortLabel: 'CEO Meeting', statusLabel: 'CEO Meeting Booked', milestoneLabel: 'CEO Meeting Held', milestoneKey: 'ceoMeetingHeld', buttonText: 'Schedule CEO Meeting', description: '20-minute conversation with our CEO', duration: 20, priority: 1, followUpDays: 1, icon: '📅', color: { bg: 'bg-green-200', text: 'text-green-900', border: 'border-green-400' } },
+                              productDemo: { type: 'demo', label: 'Product Demo', shortLabel: 'Demo', statusLabel: 'Demo Booked', milestoneLabel: 'Demo Completed', milestoneKey: 'demoCompleted', buttonText: 'Book a Demo', description: '30-minute product demonstration', duration: 30, priority: 1, followUpDays: 1, icon: '🎬', color: { bg: 'bg-blue-200', text: 'text-blue-900', border: 'border-blue-400' } },
+                              freeConsultation: { type: 'consultation', label: 'Free Consultation', shortLabel: 'Consultation', statusLabel: 'Consultation Booked', milestoneLabel: 'Consultation Completed', milestoneKey: 'consultationCompleted', buttonText: 'Book Free Consultation', description: 'Complimentary strategy consultation', duration: 30, priority: 1, followUpDays: 1, icon: '💬', color: { bg: 'bg-purple-200', text: 'text-purple-900', border: 'border-purple-400' } },
+                              discoveryCall: { type: 'meeting', label: 'Discovery Call', shortLabel: 'Discovery', statusLabel: 'Discovery Booked', milestoneLabel: 'Discovery Completed', milestoneKey: 'discoveryCompleted', buttonText: 'Schedule Discovery Call', description: '15-minute discovery conversation', duration: 15, priority: 1, followUpDays: 1, icon: '🔍', color: { bg: 'bg-cyan-200', text: 'text-cyan-900', border: 'border-cyan-400' } }
+                            };
+                            const newConfig = { targetAction: presets[preset.key] };
+                            if (updateOrgConfig) {
+                              updateOrgConfig(newConfig);
+                              showNotification(`Conversion goal set to: ${preset.label}`);
+                            } else if (dataContext?.updateSettings) {
+                              dataContext.updateSettings({ targetAction: presets[preset.key] });
+                              showNotification(`Conversion goal set to: ${preset.label}`);
+                            }
+                          }}
+                          className={`p-2 rounded-lg border text-left transition-all ${
+                            targetAction.statusLabel === preset.status
+                              ? 'bg-purple-100 border-purple-400 ring-2 ring-purple-300'
+                              : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{preset.icon}</span>
+                            <div className="text-xs font-medium text-gray-900">{preset.label}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <span className="font-medium">Current:</span>
+                        <span className={`px-2 py-0.5 rounded ${targetAction.color?.bg || 'bg-green-200'} ${targetAction.color?.text || 'text-green-900'}`}>
+                          {targetAction.icon} {targetAction.label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Button shows "{targetAction.buttonText}" • Status becomes "{targetAction.statusLabel}"
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Company Settings (Local Mode) */}
+                  {!isSupabaseMode && (
+                    <details className="pt-4 border-t border-gray-100">
+                      <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                        <span>🏢</span> Company Settings
+                        <span className="text-xs font-normal text-gray-500">(white-label)</span>
+                      </summary>
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Company Name</label>
+                          <input
+                            type="text"
+                            value={orgConfig?.company?.name || ''}
+                            onChange={(e) => {
+                              const newConfig = { company: { ...(orgConfig?.company || {}), name: e.target.value } };
+                              if (dataContext?.updateSettings) {
+                                dataContext.updateSettings(newConfig);
+                              }
+                            }}
+                            placeholder="Your Company Name"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">CEO/Host Name</label>
+                          <input
+                            type="text"
+                            value={orgConfig?.company?.ceoName || ''}
+                            onChange={(e) => {
+                              const newConfig = { company: { ...(orgConfig?.company || {}), ceoName: e.target.value } };
+                              if (dataContext?.updateSettings) {
+                                dataContext.updateSettings(newConfig);
+                              }
+                            }}
+                            placeholder="Meeting host name"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">More settings available in config/company.json</p>
+                      </div>
+                    </details>
+                  )}
+
+                  {/* Team Management (Supabase Mode Only) */}
+                  {isSupabaseMode && isOwner && (
+                    <details className="pt-4 border-t border-gray-100">
+                      <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                        <span>👥</span> Team Management
+                        <span className="text-xs font-normal text-gray-500">(owner only)</span>
+                      </summary>
+                      <div className="mt-3 space-y-3">
+                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <p className="text-xs text-amber-800">
+                            <strong>Coming Soon:</strong> Invite team members, manage roles, and control access.
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Team management is available via Supabase dashboard for now.
+                          </p>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          <div className="font-medium mb-1">Current Roles:</div>
+                          <ul className="space-y-1">
+                            <li>• <strong>Owner:</strong> Full access, can delete org</li>
+                            <li>• <strong>Admin:</strong> Manage config and team</li>
+                            <li>• <strong>Member:</strong> Full lead/task access</li>
+                            <li>• <strong>Viewer:</strong> Read-only access</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </details>
+                  )}
+
+                  {/* Data Export/Import */}
+                  <details className="pt-4 border-t border-gray-100">
+                    <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                      <span>📦</span> Backup & Export
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      <button
+                        onClick={() => {
+                          const data = {
+                            leads,
+                            tasks,
+                            config: orgConfig,
+                            targetAction,
+                            exportedAt: new Date().toISOString(),
+                            version: '2.1.0'
+                          };
+                          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `sales-engine-backup-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          showNotification('Backup downloaded');
+                        }}
+                        className="w-full py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium"
+                      >
+                        📥 Download Backup (JSON)
+                      </button>
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '.json';
+                          input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                try {
+                                  const data = JSON.parse(ev.target.result);
+                                  if (data.leads && confirm(`Import ${data.leads.length} leads and ${data.tasks?.length || 0} tasks?`)) {
+                                    setLeads(data.leads);
+                                    if (data.tasks) setTasks(data.tasks);
+                                    if (data.targetAction && dataContext?.updateSettings) {
+                                      dataContext.updateSettings({ targetAction: data.targetAction });
+                                    }
+                                    showNotification('Data imported successfully');
+                                  }
+                                } catch (err) {
+                                  showNotification('Invalid backup file', 'error');
+                                }
+                              };
+                              reader.readAsText(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="w-full py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm font-medium"
+                      >
+                        📤 Import Backup (JSON)
+                      </button>
+                      <button
+                        onClick={() => {
+                          const csvContent = convertLeadsToCSV(leads);
+                          const blob = new Blob([csvContent], { type: 'text/csv' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `leads-export-${new Date().toISOString().split('T')[0]}.csv`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          showNotification('CSV exported');
+                        }}
+                        className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
+                      >
+                        📊 Export Leads as CSV
+                      </button>
+                    </div>
+                  </details>
+                </>
+              )}
 
               {/* Phone Setup Guide */}
               <details className="pt-4 border-t border-gray-100">
@@ -8751,13 +9073,26 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
               </div>
 
               {/* Data Info */}
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="text-sm font-medium text-blue-900 mb-2">💾 Data Storage</h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                  <li>• ✓ Persists when you close the browser</li>
-                  <li>• ✓ Survives computer restarts</li>
-                  <li>• ⚠️ Cleared if you clear browser data</li>
-                  <li>• 💡 Use Backup Data to save your leads!</li>
+              <div className={`p-4 rounded-lg ${isSupabaseMode ? 'bg-green-50' : 'bg-blue-50'}`}>
+                <h4 className={`text-sm font-medium mb-2 ${isSupabaseMode ? 'text-green-900' : 'text-blue-900'}`}>
+                  💾 Data Storage {isSupabaseMode ? '(Cloud)' : '(Local)'}
+                </h4>
+                <ul className={`text-xs space-y-1 ${isSupabaseMode ? 'text-green-700' : 'text-blue-700'}`}>
+                  {isSupabaseMode ? (
+                    <>
+                      <li>• ✓ Synced to cloud (Supabase)</li>
+                      <li>• ✓ Access from any device</li>
+                      <li>• ✓ Team collaboration enabled</li>
+                      <li>• ✓ Automatic backups</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• ✓ Persists when you close the browser</li>
+                      <li>• ✓ Survives computer restarts</li>
+                      <li>• ⚠️ Cleared if you clear browser data</li>
+                      <li>• 💡 Use Backup & Export to save your data!</li>
+                    </>
+                  )}
                 </ul>
               </div>
 
@@ -8986,7 +9321,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
               {/* Fixed Header */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
-                <h3 className="text-xl font-bold">📅 Schedule CEO Meeting</h3>
+                <h3 className="text-xl font-bold">{targetAction.icon} {targetAction.buttonText}</h3>
                 <button onClick={() => setShowMeetingModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
               </div>
 
@@ -9019,7 +9354,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 {/* Available Slots Picker */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Available CEO Slots</label>
+                    <label className="block text-sm font-medium text-gray-700">Available Slots</label>
                     <span className="text-xs text-gray-500">Next 2 weeks</span>
                   </div>
                   {(() => {
@@ -9311,9 +9646,9 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
             duration: meeting.duration,
             location: 'Video Call - Link to follow',
             title: isScheduleChallenge
-              ? `⚠️ [SCHEDULE CHALLENGE] Fexle CEO Call - ${selectedLead.company}`
-              : `Fexle CEO Call - ${selectedLead.company}`,
-            description: `20-minute conversation with Fexle CEO to discuss Salesforce AI innovations.${scheduleNote}`,
+              ? `⚠️ [SCHEDULE CHALLENGE] ${targetAction.shortLabel} - ${selectedLead.company}`
+              : `${targetAction.shortLabel} - ${selectedLead.company}`,
+            description: `${targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`}${scheduleNote}`,
             attendeeName: selectedLead.contact,
             attendeeEmail: selectedLead.email,
             attendeeCompany: selectedLead.company
@@ -9321,7 +9656,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
 
           setLeads(prev => prev.map(l =>
             l.id === selectedLead.id
-              ? { ...l, status: 'CEO Meeting Booked', lastContact: 'Just now', lastContactDate: new Date().toISOString() }
+              ? { ...l, status: targetAction.statusLabel, lastContact: 'Just now', lastContactDate: new Date().toISOString() }
               : l
           ));
 
@@ -9334,8 +9669,8 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
             leadId: selectedLead.id,
             type: 'meeting',
             description: isScheduleChallenge
-              ? `⚠️ CONFIRM CEO AVAILABILITY: Meeting with ${selectedLead.company}`
-              : `Prep for CEO meeting with ${selectedLead.company}`,
+              ? `⚠️ CONFIRM AVAILABILITY: ${targetAction.shortLabel} with ${selectedLead.company}`
+              : `Prep for ${targetAction.shortLabel} with ${selectedLead.company}`,
             dueDate: reminderDate.toISOString().split('T')[0],
             dueTime: '09:00',
             completed: false,
@@ -9519,10 +9854,10 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                               startTime: selectedSlotForBooking.time,
                               duration: selectedSlotForBooking.duration || 20,
                               location: 'Video Call - Link to follow',
-                              title: selectedSlotForBooking.isScheduleChallenge 
-                                ? `⚠️ [SCHEDULE CHALLENGE] Fexle CEO Call - ${selectedSlotForBooking.company}`
-                                : `Fexle CEO Call - ${selectedSlotForBooking.company}`,
-                              description: `CEO meeting with ${selectedSlotForBooking.leadName}${scheduleNote}`,
+                              title: selectedSlotForBooking.isScheduleChallenge
+                                ? `⚠️ [SCHEDULE CHALLENGE] ${targetAction.shortLabel} - ${selectedSlotForBooking.company}`
+                                : `${targetAction.shortLabel} - ${selectedSlotForBooking.company}`,
+                              description: `${targetAction.label} with ${selectedSlotForBooking.leadName}${scheduleNote}`,
                               attendeeName: selectedSlotForBooking.leadName,
                               attendeeEmail: selectedSlotForBooking.email,
                               attendeeCompany: selectedSlotForBooking.company

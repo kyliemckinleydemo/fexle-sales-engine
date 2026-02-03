@@ -27,8 +27,109 @@ This guide explains how to customize the Sales Engine platform for your company.
 | `website` | Company website | Email signatures |
 | `ceoName` | Meeting host name | Meeting invites |
 | `meetingDuration` | Default meeting length | Calendar |
+| `targetAction` | Primary conversion goal | See Target Action section |
 
-### 2. Localization
+### 2. Target Action (Conversion Goal)
+
+The **target action** is your primary conversion goal - the action you want prospects to take. By default, this is "CEO Meeting," but you can customize it for your business model.
+
+**Configuration Schema:**
+
+```json
+{
+  "targetAction": {
+    "type": "meeting",
+    "label": "CEO Meeting",
+    "shortLabel": "CEO Meeting",
+    "statusLabel": "CEO Meeting Booked",
+    "milestoneLabel": "CEO Meeting Held",
+    "milestoneKey": "ceoMeetingHeld",
+    "buttonText": "Schedule CEO Meeting",
+    "description": "20-minute conversation with our CEO",
+    "duration": 20,
+    "priority": 1,
+    "followUpDays": 1,
+    "icon": "📅",
+    "color": {
+      "bg": "bg-green-200",
+      "text": "text-green-900",
+      "border": "border-green-400"
+    }
+  }
+}
+```
+
+**Available Presets:**
+
+| Preset | Type | Status Label | Button Text |
+|--------|------|--------------|-------------|
+| CEO Meeting | `meeting` | CEO Meeting Booked | Schedule CEO Meeting |
+| Product Demo | `demo` | Demo Booked | Book a Demo |
+| Free Consultation | `consultation` | Consultation Booked | Book Free Consultation |
+| Webinar Registration | `webinar` | Webinar Registered | Register for Webinar |
+| Discovery Call | `meeting` | Discovery Booked | Schedule Discovery Call |
+| Callback Request | `callback` | Callback Requested | Request Callback |
+
+**Configuration Fields:**
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `type` | Action category | `meeting`, `demo`, `webinar`, `consultation`, `callback`, `resource` |
+| `label` | Full display name | "Product Demo" |
+| `shortLabel` | Short name for buttons | "Demo" |
+| `statusLabel` | Lead status when booked | "Demo Booked" |
+| `milestoneLabel` | Checkbox label | "Demo Completed" |
+| `milestoneKey` | Milestone field name | "demoCompleted" |
+| `buttonText` | Call-to-action button | "Book a Demo" |
+| `description` | Calendar invite description | "30-minute product demonstration" |
+| `duration` | Default meeting length (minutes) | 30 |
+| `priority` | Task priority (1=highest) | 1 |
+| `followUpDays` | Days until follow-up | 1 |
+| `icon` | Emoji for buttons | "🎬" |
+| `color.bg` | Background color class | "bg-blue-200" |
+| `color.text` | Text color class | "text-blue-900" |
+| `color.border` | Border color class | "border-blue-400" |
+
+**Example: Product Demo Configuration**
+
+```json
+{
+  "targetAction": {
+    "type": "demo",
+    "label": "Product Demo",
+    "shortLabel": "Demo",
+    "statusLabel": "Demo Booked",
+    "milestoneLabel": "Demo Completed",
+    "milestoneKey": "demoCompleted",
+    "buttonText": "Book a Demo",
+    "description": "30-minute product demonstration showing key features",
+    "duration": 30,
+    "priority": 1,
+    "followUpDays": 1,
+    "icon": "🎬",
+    "color": {
+      "bg": "bg-blue-200",
+      "text": "text-blue-900",
+      "border": "border-blue-400"
+    }
+  }
+}
+```
+
+**What Changes:**
+
+When you customize the target action, the following UI elements update automatically:
+- Status dropdown options
+- Milestone checkbox labels
+- Quick action buttons (e.g., "Schedule CEO Meeting" → "Book a Demo")
+- Meeting modal titles
+- Calendar invite content
+- Lead status colors
+- Task priorities
+- Follow-up schedules
+- Dashboard metrics
+
+### 3. Localization
 
 | Field | Options | Effect |
 |-------|---------|--------|
