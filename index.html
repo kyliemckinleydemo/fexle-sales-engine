@@ -2982,10 +2982,12 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       // Core data - from context if available, otherwise local state
       const [localLeads, setLocalLeads] = useState([]);
       const [localTasks, setLocalTasks] = useState([]);
+      const [localMeetings, setLocalMeetings] = useState([]);
 
       // Use context data or local state
       const leads = dataContext?.leads ?? localLeads;
       const tasks = dataContext?.tasks ?? localTasks;
+      const meetings = dataContext?.meetings ?? localMeetings;
       const dataLoading = dataContext?.loading ?? false;
       const isSupabaseMode = dataContext?.isSupabase ?? false;
 
