@@ -51,7 +51,10 @@
     };
 
     const SUPABASE_CONFIG = getSupabaseConfig();
-    const isHostedMode = HOSTED_SUPABASE.url && HOSTED_SUPABASE.anonKey;
+    // Allow E2E test mode via query param or localStorage (bypasses auth for testing)
+    const isE2ETestMode = new URLSearchParams(window.location.search).get('e2e') === 'true'
+      || localStorage.getItem('e2eTestMode') === 'true';
+    const isHostedMode = !isE2ETestMode && HOSTED_SUPABASE.url && HOSTED_SUPABASE.anonKey;
     const supabase = SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey
       ? window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey)
       : null;
