@@ -69,3 +69,16 @@ export {
   formatDuration,
   calculateTrend
 } from './analytics.js';
+
+export {
+  validateStep1,
+  validateStep2,
+  generateVerticalKey,
+  parseAIResponse,
+  buildVerticalObject,
+  mergeVerticals,
+  saveCustomScriptsToStorage,
+  loadCustomScriptsFromStorage,
+  deleteScript,
+  CUSTOM_SCRIPTS_KEY
+} from './scriptBuilder.js';
