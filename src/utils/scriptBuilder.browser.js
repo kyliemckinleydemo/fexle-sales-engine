@@ -5,6 +5,7 @@
  * PURPOSE:
  * - Expose scriptBuilder functions globally for use in index.html
  * - Same logic as scriptBuilder.js but without ES module syntax
+ * - Support white-label customization of default vertical scripts
  *
  * USAGE:
  * - Load via <script src="src/utils/scriptBuilder.browser.js"></script>
@@ -19,17 +20,25 @@
  * - saveCustomScriptsToStorage, loadCustomScriptsFromStorage
  * - deleteScript
  * - CUSTOM_SCRIPTS_KEY
+ * - getMergedVertical - Apply overrides to a base vertical
+ * - hasOverride - Check if an item has an override
+ * - saveVerticalOverridesToStorage, loadVerticalOverridesFromStorage
+ * - setOverride, removeOverride - Manage individual overrides
+ * - VERTICAL_OVERRIDES_KEY
  *
  * CLAUDE NOTES:
  * - This is a browser-compatible version of scriptBuilder.js
  * - Keep in sync with scriptBuilder.js when making changes
  * - Used by index.html single-file React app
+ * - Overrides support both default verticals (openings, objections) and
+ *   custom verticals (openingScripts, objectionHandlers)
  */
 
 (function(global) {
   'use strict';
 
   var CUSTOM_SCRIPTS_KEY = 'customScripts';
+  var VERTICAL_OVERRIDES_KEY = 'verticalOverrides';
 
   function validateStep1(data) {
     if (!data || typeof data !== 'object') {
@@ -195,9 +204,214 @@
     return result;
   }
 
+  /**
+   * Get merged vertical with overrides applied
+   * @param {string} verticalKey - Key of the vertical
+   * @param {Object} baseVertical - Base vertical data
+   * @param {Object} overrides - Overrides object for all verticals
+   * @returns {Object} Merged vertical with overrides applied
+   */
+  function getMergedVertical(verticalKey, baseVertical, overrides) {
+    if (!baseVertical || typeof baseVertical !== 'object') {
+      return baseVertical;
+    }
+
+    var verticalOverrides = overrides && overrides[verticalKey];
+    if (!verticalOverrides) {
+      return baseVertical;
+    }
+
+    var merged = Object.assign({}, baseVertical);
+
+    // Apply opening script overrides (for default verticals with 'openings' array)
+    if (verticalOverrides.openings && merged.openings) {
+      merged.openings = merged.openings.map(function(opening, index) {
+        var override = verticalOverrides.openings.find(function(o) { return o.index === index; });
+        if (override) {
+          return Object.assign({}, opening, { script: override.script });
+        }
+        return opening;
+      });
+    }
+
+    // Apply opening script overrides (for custom verticals with 'openingScripts' array)
+    if (verticalOverrides.openingScripts && merged.openingScripts) {
+      merged.openingScripts = merged.openingScripts.map(function(opening, index) {
+        var override = verticalOverrides.openingScripts.find(function(o) { return o.index === index; });
+        if (override) {
+          return Object.assign({}, opening, { script: override.script });
+        }
+        return opening;
+      });
+    }
+
+    // Apply objection handler overrides (for default verticals with 'objections' object)
+    if (verticalOverrides.objections && merged.objections) {
+      merged.objections = Object.assign({}, merged.objections, verticalOverrides.objections);
+    }
+
+    // Apply objection handler overrides (for custom verticals with 'objectionHandlers' object)
+    if (verticalOverrides.objectionHandlers && merged.objectionHandlers) {
+      merged.objectionHandlers = Object.assign({}, merged.objectionHandlers, verticalOverrides.objectionHandlers);
+    }
+
+    // Apply pain point overrides
+    if (verticalOverrides.painPoints && merged.painPoints) {
+      merged.painPoints = merged.painPoints.map(function(pain, index) {
+        var override = verticalOverrides.painPoints.find(function(p) { return p.index === index; });
+        if (override) {
+          return override.text;
+        }
+        return pain;
+      });
+    }
+
+    return merged;
+  }
+
+  /**
+   * Check if an item has an override
+   * @param {Object} overrides - All overrides object
+   * @param {string} verticalKey - Vertical key
+   * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+   * @param {number|string} identifier - Index for arrays, objection text for objects
+   * @returns {boolean} True if has override
+   */
+  function hasOverride(overrides, verticalKey, type, identifier) {
+    if (!overrides || !overrides[verticalKey] || !overrides[verticalKey][type]) {
+      return false;
+    }
+
+    var typeOverrides = overrides[verticalKey][type];
+
+    // For objects (objections/objectionHandlers)
+    if (type === 'objections' || type === 'objectionHandlers') {
+      return Object.prototype.hasOwnProperty.call(typeOverrides, identifier);
+    }
+
+    // For arrays (openings, openingScripts, painPoints)
+    return typeOverrides.some(function(o) { return o.index === identifier; });
+  }
+
+  /**
+   * Save vertical overrides to localStorage
+   * @param {Object} overrides - Overrides object
+   * @returns {boolean} True if save succeeded
+   */
+  function saveVerticalOverridesToStorage(overrides) {
+    try {
+      localStorage.setItem(VERTICAL_OVERRIDES_KEY, JSON.stringify(overrides || {}));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Load vertical overrides from localStorage
+   * @returns {Object} Overrides or empty object
+   */
+  function loadVerticalOverridesFromStorage() {
+    try {
+      var stored = localStorage.getItem(VERTICAL_OVERRIDES_KEY);
+      if (!stored) {
+        return {};
+      }
+      var parsed = JSON.parse(stored);
+      return parsed || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  /**
+   * Set an override for a specific item
+   * @param {Object} overrides - Current overrides
+   * @param {string} verticalKey - Vertical key
+   * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+   * @param {number|string} identifier - Index for arrays, objection text for objects
+   * @param {string} value - New value (script text, response text, or pain point text)
+   * @returns {Object} New overrides object
+   */
+  function setOverride(overrides, verticalKey, type, identifier, value) {
+    var newOverrides = Object.assign({}, overrides);
+    // Deep clone the vertical to avoid mutation
+    newOverrides[verticalKey] = newOverrides[verticalKey]
+      ? Object.assign({}, newOverrides[verticalKey])
+      : {};
+
+    // For objects (objections/objectionHandlers)
+    if (type === 'objections' || type === 'objectionHandlers') {
+      newOverrides[verticalKey][type] = newOverrides[verticalKey][type]
+        ? Object.assign({}, newOverrides[verticalKey][type])
+        : {};
+      newOverrides[verticalKey][type][identifier] = value;
+    } else {
+      // For arrays (openings, openingScripts, painPoints)
+      // Deep clone the array and its items
+      newOverrides[verticalKey][type] = newOverrides[verticalKey][type]
+        ? newOverrides[verticalKey][type].map(function(item) { return Object.assign({}, item); })
+        : [];
+      var existingIndex = newOverrides[verticalKey][type].findIndex(function(o) { return o.index === identifier; });
+      if (existingIndex >= 0) {
+        newOverrides[verticalKey][type][existingIndex] = type === 'painPoints'
+          ? { index: identifier, text: value }
+          : { index: identifier, script: value };
+      } else {
+        newOverrides[verticalKey][type].push(type === 'painPoints'
+          ? { index: identifier, text: value }
+          : { index: identifier, script: value });
+      }
+    }
+
+    return newOverrides;
+  }
+
+  /**
+   * Remove an override for a specific item
+   * @param {Object} overrides - Current overrides
+   * @param {string} verticalKey - Vertical key
+   * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+   * @param {number|string} identifier - Index for arrays, objection text for objects
+   * @returns {Object} New overrides object
+   */
+  function removeOverride(overrides, verticalKey, type, identifier) {
+    if (!overrides || !overrides[verticalKey] || !overrides[verticalKey][type]) {
+      return overrides;
+    }
+
+    var newOverrides = Object.assign({}, overrides);
+    newOverrides[verticalKey] = Object.assign({}, newOverrides[verticalKey]);
+
+    // For objects (objections/objectionHandlers)
+    if (type === 'objections' || type === 'objectionHandlers') {
+      newOverrides[verticalKey][type] = Object.assign({}, newOverrides[verticalKey][type]);
+      delete newOverrides[verticalKey][type][identifier];
+      // Clean up empty type
+      if (Object.keys(newOverrides[verticalKey][type]).length === 0) {
+        delete newOverrides[verticalKey][type];
+      }
+    } else {
+      // For arrays
+      newOverrides[verticalKey][type] = newOverrides[verticalKey][type].filter(function(o) { return o.index !== identifier; });
+      // Clean up empty type
+      if (newOverrides[verticalKey][type].length === 0) {
+        delete newOverrides[verticalKey][type];
+      }
+    }
+
+    // Clean up empty vertical
+    if (Object.keys(newOverrides[verticalKey]).length === 0) {
+      delete newOverrides[verticalKey];
+    }
+
+    return newOverrides;
+  }
+
   // Export to global namespace
   global.ScriptBuilder = {
     CUSTOM_SCRIPTS_KEY: CUSTOM_SCRIPTS_KEY,
+    VERTICAL_OVERRIDES_KEY: VERTICAL_OVERRIDES_KEY,
     validateStep1: validateStep1,
     validateStep2: validateStep2,
     generateVerticalKey: generateVerticalKey,
@@ -206,7 +420,13 @@
     mergeVerticals: mergeVerticals,
     saveCustomScriptsToStorage: saveCustomScriptsToStorage,
     loadCustomScriptsFromStorage: loadCustomScriptsFromStorage,
-    deleteScript: deleteScript
+    deleteScript: deleteScript,
+    getMergedVertical: getMergedVertical,
+    hasOverride: hasOverride,
+    saveVerticalOverridesToStorage: saveVerticalOverridesToStorage,
+    loadVerticalOverridesFromStorage: loadVerticalOverridesFromStorage,
+    setOverride: setOverride,
+    removeOverride: removeOverride
   };
 
 })(typeof window !== 'undefined' ? window : this);

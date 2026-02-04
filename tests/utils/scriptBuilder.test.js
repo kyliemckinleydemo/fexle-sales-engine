@@ -10,14 +10,17 @@
  * - Test merging default and custom verticals
  * - Test localStorage persistence
  * - Test script deletion
+ * - Test vertical override functions (getMergedVertical, hasOverride, setOverride, removeOverride)
+ * - Test vertical override storage functions
  *
  * EXPORTS:
- * - Test suites for all scriptBuilder functions (~50 tests)
+ * - Test suites for all scriptBuilder functions (~120 tests)
  *
  * CLAUDE NOTES:
  * - Uses jsdom localStorage (provided by vitest)
  * - Tests are grouped by function
  * - Round-trip tests verify data integrity
+ * - Override tests cover both array types (openings, painPoints) and object types (objections)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -31,7 +34,14 @@ import {
   saveCustomScriptsToStorage,
   loadCustomScriptsFromStorage,
   deleteScript,
-  CUSTOM_SCRIPTS_KEY
+  CUSTOM_SCRIPTS_KEY,
+  getMergedVertical,
+  hasOverride,
+  saveVerticalOverridesToStorage,
+  loadVerticalOverridesFromStorage,
+  setOverride,
+  removeOverride,
+  VERTICAL_OVERRIDES_KEY
 } from '../../src/utils/scriptBuilder.js';
 
 describe('validateStep1', () => {
@@ -635,5 +645,323 @@ describe('Round-trip Tests', () => {
 describe('CUSTOM_SCRIPTS_KEY', () => {
   it('has the expected value', () => {
     expect(CUSTOM_SCRIPTS_KEY).toBe('customScripts');
+  });
+});
+
+describe('VERTICAL_OVERRIDES_KEY', () => {
+  it('has the expected value', () => {
+    expect(VERTICAL_OVERRIDES_KEY).toBe('verticalOverrides');
+  });
+});
+
+describe('getMergedVertical', () => {
+  const baseVertical = {
+    name: 'Healthcare',
+    openings: [
+      { name: 'Direct', script: 'Original script 1' },
+      { name: 'Curiosity', script: 'Original script 2' }
+    ],
+    objections: {
+      'Not interested': 'Original response 1',
+      'Too expensive': 'Original response 2'
+    },
+    painPoints: ['Pain 1', 'Pain 2', 'Pain 3']
+  };
+
+  it('returns base vertical when no overrides', () => {
+    const result = getMergedVertical('healthcare', baseVertical, {});
+    expect(result).toEqual(baseVertical);
+  });
+
+  it('returns base vertical when vertical key not in overrides', () => {
+    const overrides = { fintech: { openings: [{ index: 0, script: 'Custom' }] } };
+    const result = getMergedVertical('healthcare', baseVertical, overrides);
+    expect(result).toEqual(baseVertical);
+  });
+
+  it('applies opening script override', () => {
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom opening' }]
+      }
+    };
+    const result = getMergedVertical('healthcare', baseVertical, overrides);
+    expect(result.openings[0].script).toBe('Custom opening');
+    expect(result.openings[1].script).toBe('Original script 2');
+  });
+
+  it('applies objection override', () => {
+    const overrides = {
+      healthcare: {
+        objections: { 'Not interested': 'Custom response' }
+      }
+    };
+    const result = getMergedVertical('healthcare', baseVertical, overrides);
+    expect(result.objections['Not interested']).toBe('Custom response');
+    expect(result.objections['Too expensive']).toBe('Original response 2');
+  });
+
+  it('applies pain point override', () => {
+    const overrides = {
+      healthcare: {
+        painPoints: [{ index: 1, text: 'Custom pain' }]
+      }
+    };
+    const result = getMergedVertical('healthcare', baseVertical, overrides);
+    expect(result.painPoints[0]).toBe('Pain 1');
+    expect(result.painPoints[1]).toBe('Custom pain');
+    expect(result.painPoints[2]).toBe('Pain 3');
+  });
+
+  it('handles null base vertical', () => {
+    const result = getMergedVertical('healthcare', null, {});
+    expect(result).toBe(null);
+  });
+
+  it('handles undefined base vertical', () => {
+    const result = getMergedVertical('healthcare', undefined, {});
+    expect(result).toBe(undefined);
+  });
+
+  it('applies multiple override types', () => {
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom opening' }],
+        objections: { 'Not interested': 'Custom response' },
+        painPoints: [{ index: 2, text: 'Custom pain' }]
+      }
+    };
+    const result = getMergedVertical('healthcare', baseVertical, overrides);
+    expect(result.openings[0].script).toBe('Custom opening');
+    expect(result.objections['Not interested']).toBe('Custom response');
+    expect(result.painPoints[2]).toBe('Custom pain');
+  });
+});
+
+describe('hasOverride', () => {
+  const overrides = {
+    healthcare: {
+      openings: [{ index: 0, script: 'Custom' }],
+      objections: { 'Not interested': 'Response' },
+      painPoints: [{ index: 1, text: 'Custom pain' }]
+    }
+  };
+
+  it('returns true for existing opening override', () => {
+    expect(hasOverride(overrides, 'healthcare', 'openings', 0)).toBe(true);
+  });
+
+  it('returns false for non-existing opening override', () => {
+    expect(hasOverride(overrides, 'healthcare', 'openings', 1)).toBe(false);
+  });
+
+  it('returns true for existing objection override', () => {
+    expect(hasOverride(overrides, 'healthcare', 'objections', 'Not interested')).toBe(true);
+  });
+
+  it('returns false for non-existing objection override', () => {
+    expect(hasOverride(overrides, 'healthcare', 'objections', 'Other')).toBe(false);
+  });
+
+  it('returns true for existing pain point override', () => {
+    expect(hasOverride(overrides, 'healthcare', 'painPoints', 1)).toBe(true);
+  });
+
+  it('returns false for non-existing vertical', () => {
+    expect(hasOverride(overrides, 'fintech', 'openings', 0)).toBe(false);
+  });
+
+  it('returns false for null overrides', () => {
+    expect(hasOverride(null, 'healthcare', 'openings', 0)).toBe(false);
+  });
+
+  it('returns false for undefined overrides', () => {
+    expect(hasOverride(undefined, 'healthcare', 'openings', 0)).toBe(false);
+  });
+});
+
+describe('setOverride', () => {
+  it('creates override for opening script', () => {
+    const result = setOverride({}, 'healthcare', 'openings', 0, 'Custom script');
+    expect(result.healthcare.openings).toEqual([{ index: 0, script: 'Custom script' }]);
+  });
+
+  it('creates override for objection', () => {
+    const result = setOverride({}, 'healthcare', 'objections', 'Not interested', 'Custom response');
+    expect(result.healthcare.objections['Not interested']).toBe('Custom response');
+  });
+
+  it('creates override for pain point', () => {
+    const result = setOverride({}, 'healthcare', 'painPoints', 0, 'Custom pain');
+    expect(result.healthcare.painPoints).toEqual([{ index: 0, text: 'Custom pain' }]);
+  });
+
+  it('updates existing opening override', () => {
+    const existing = {
+      healthcare: { openings: [{ index: 0, script: 'Old' }] }
+    };
+    const result = setOverride(existing, 'healthcare', 'openings', 0, 'New');
+    expect(result.healthcare.openings).toEqual([{ index: 0, script: 'New' }]);
+  });
+
+  it('adds to existing overrides', () => {
+    const existing = {
+      healthcare: { openings: [{ index: 0, script: 'Script 0' }] }
+    };
+    const result = setOverride(existing, 'healthcare', 'openings', 1, 'Script 1');
+    expect(result.healthcare.openings).toHaveLength(2);
+    expect(result.healthcare.openings).toContainEqual({ index: 0, script: 'Script 0' });
+    expect(result.healthcare.openings).toContainEqual({ index: 1, script: 'Script 1' });
+  });
+
+  it('does not mutate original', () => {
+    const original = { healthcare: { openings: [{ index: 0, script: 'Old' }] } };
+    const result = setOverride(original, 'healthcare', 'openings', 0, 'New');
+    expect(original.healthcare.openings[0].script).toBe('Old');
+    expect(result.healthcare.openings[0].script).toBe('New');
+  });
+});
+
+describe('removeOverride', () => {
+  it('removes opening override', () => {
+    const overrides = {
+      healthcare: { openings: [{ index: 0, script: 'Custom' }] }
+    };
+    const result = removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(result.healthcare).toBeUndefined();
+  });
+
+  it('removes objection override', () => {
+    const overrides = {
+      healthcare: { objections: { 'Not interested': 'Response' } }
+    };
+    const result = removeOverride(overrides, 'healthcare', 'objections', 'Not interested');
+    expect(result.healthcare).toBeUndefined();
+  });
+
+  it('keeps other overrides in same type', () => {
+    const overrides = {
+      healthcare: { openings: [{ index: 0, script: 'Script 0' }, { index: 1, script: 'Script 1' }] }
+    };
+    const result = removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(result.healthcare.openings).toEqual([{ index: 1, script: 'Script 1' }]);
+  });
+
+  it('keeps other types when removing one type', () => {
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom' }],
+        objections: { 'Not interested': 'Response' }
+      }
+    };
+    const result = removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(result.healthcare.objections['Not interested']).toBe('Response');
+  });
+
+  it('returns original when type does not exist', () => {
+    const overrides = { healthcare: {} };
+    const result = removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(result).toEqual(overrides);
+  });
+
+  it('returns original when vertical does not exist', () => {
+    const overrides = {};
+    const result = removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(result).toEqual(overrides);
+  });
+
+  it('does not mutate original', () => {
+    const original = {
+      healthcare: { openings: [{ index: 0, script: 'Custom' }] }
+    };
+    const result = removeOverride(original, 'healthcare', 'openings', 0);
+    expect(original.healthcare.openings).toHaveLength(1);
+    expect(result.healthcare).toBeUndefined();
+  });
+});
+
+describe('saveVerticalOverridesToStorage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('saves overrides to localStorage', () => {
+    const overrides = {
+      healthcare: { openings: [{ index: 0, script: 'Custom' }] }
+    };
+    const result = saveVerticalOverridesToStorage(overrides);
+    expect(result).toBe(true);
+    expect(localStorage.getItem(VERTICAL_OVERRIDES_KEY)).toBe(JSON.stringify(overrides));
+  });
+
+  it('handles empty object', () => {
+    saveVerticalOverridesToStorage({});
+    expect(localStorage.getItem(VERTICAL_OVERRIDES_KEY)).toBe('{}');
+  });
+
+  it('handles null', () => {
+    saveVerticalOverridesToStorage(null);
+    expect(localStorage.getItem(VERTICAL_OVERRIDES_KEY)).toBe('{}');
+  });
+});
+
+describe('loadVerticalOverridesFromStorage', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('loads overrides from localStorage', () => {
+    const overrides = {
+      healthcare: { openings: [{ index: 0, script: 'Custom' }] }
+    };
+    localStorage.setItem(VERTICAL_OVERRIDES_KEY, JSON.stringify(overrides));
+    const result = loadVerticalOverridesFromStorage();
+    expect(result).toEqual(overrides);
+  });
+
+  it('returns empty object when nothing saved', () => {
+    const result = loadVerticalOverridesFromStorage();
+    expect(result).toEqual({});
+  });
+
+  it('returns empty object for corrupted JSON', () => {
+    localStorage.setItem(VERTICAL_OVERRIDES_KEY, 'not valid json');
+    const result = loadVerticalOverridesFromStorage();
+    expect(result).toEqual({});
+  });
+});
+
+describe('Override Round-trip Tests', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('save/load preserves complex overrides', () => {
+    const overrides = {
+      healthcare: {
+        openings: [
+          { index: 0, script: 'Custom opening 1' },
+          { index: 2, script: 'Custom opening 3' }
+        ],
+        objections: {
+          'Not interested': 'Custom response 1',
+          'Too expensive': 'Custom response 2'
+        },
+        painPoints: [
+          { index: 1, text: 'Custom pain' }
+        ]
+      },
+      fintech: {
+        openings: [{ index: 0, script: 'Fintech opening' }]
+      }
+    };
+
+    saveVerticalOverridesToStorage(overrides);
+    const loaded = loadVerticalOverridesFromStorage();
+
+    expect(loaded).toEqual(overrides);
+    expect(loaded.healthcare.openings).toHaveLength(2);
+    expect(loaded.healthcare.objections['Not interested']).toBe('Custom response 1');
+    expect(loaded.fintech.openings[0].script).toBe('Fintech opening');
   });
 });

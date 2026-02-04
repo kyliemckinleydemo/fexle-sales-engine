@@ -9,6 +9,7 @@
  * - Build vertical objects from parsed AI data
  * - Merge default and custom verticals
  * - Persist custom scripts to localStorage
+ * - Support white-label customization of default vertical scripts
  *
  * DEPENDENCIES:
  * - None (pure functions, browser localStorage for storage functions)
@@ -24,24 +25,39 @@
  * - loadCustomScriptsFromStorage - Load from localStorage
  * - deleteScript - Remove script by key
  * - CUSTOM_SCRIPTS_KEY - localStorage key constant
+ * - getMergedVertical - Apply overrides to a base vertical
+ * - hasOverride - Check if an item has an override
+ * - saveVerticalOverridesToStorage - Save overrides to localStorage
+ * - loadVerticalOverridesFromStorage - Load overrides from localStorage
+ * - setOverride - Set an override for a specific item
+ * - removeOverride - Remove an override for a specific item
+ * - VERTICAL_OVERRIDES_KEY - localStorage key for overrides
  *
  * PATTERNS:
  * - All validation functions return boolean
  * - parseAIResponse returns null on failure
  * - Storage functions handle errors gracefully
  * - deleteScript returns new object (immutable)
+ * - Override functions are immutable (return new objects)
  *
  * CLAUDE NOTES:
  * - Extracted from index.html lines 5816-6012
  * - These functions are used by the Script Builder modal
  * - generateVerticalKey replaces non-alphanumeric with underscore
  * - parseAIResponse handles markdown code blocks
+ * - Overrides support both default verticals (openings, objections) and
+ *   custom verticals (openingScripts, objectionHandlers)
  */
 
 /**
  * localStorage key for custom scripts
  */
 export const CUSTOM_SCRIPTS_KEY = 'customScripts';
+
+/**
+ * localStorage key for vertical overrides
+ */
+export const VERTICAL_OVERRIDES_KEY = 'verticalOverrides';
 
 /**
  * Validate step 1 form data
@@ -270,4 +286,208 @@ export function deleteScript(scripts, key) {
 
   const { [key]: deleted, ...remaining } = scripts;
   return remaining;
+}
+
+/**
+ * Get merged vertical with overrides applied
+ * @param {string} verticalKey - Key of the vertical
+ * @param {Object} baseVertical - Base vertical data
+ * @param {Object} overrides - Overrides object for all verticals
+ * @returns {Object} Merged vertical with overrides applied
+ */
+export function getMergedVertical(verticalKey, baseVertical, overrides) {
+  if (!baseVertical || typeof baseVertical !== 'object') {
+    return baseVertical;
+  }
+
+  const verticalOverrides = overrides?.[verticalKey];
+  if (!verticalOverrides) {
+    return baseVertical;
+  }
+
+  const merged = { ...baseVertical };
+
+  // Apply opening script overrides (for default verticals with 'openings' array)
+  if (verticalOverrides.openings && merged.openings) {
+    merged.openings = merged.openings.map((opening, index) => {
+      const override = verticalOverrides.openings.find(o => o.index === index);
+      if (override) {
+        return { ...opening, script: override.script };
+      }
+      return opening;
+    });
+  }
+
+  // Apply opening script overrides (for custom verticals with 'openingScripts' array)
+  if (verticalOverrides.openingScripts && merged.openingScripts) {
+    merged.openingScripts = merged.openingScripts.map((opening, index) => {
+      const override = verticalOverrides.openingScripts.find(o => o.index === index);
+      if (override) {
+        return { ...opening, script: override.script };
+      }
+      return opening;
+    });
+  }
+
+  // Apply objection handler overrides (for default verticals with 'objections' object)
+  if (verticalOverrides.objections && merged.objections) {
+    merged.objections = { ...merged.objections, ...verticalOverrides.objections };
+  }
+
+  // Apply objection handler overrides (for custom verticals with 'objectionHandlers' object)
+  if (verticalOverrides.objectionHandlers && merged.objectionHandlers) {
+    merged.objectionHandlers = { ...merged.objectionHandlers, ...verticalOverrides.objectionHandlers };
+  }
+
+  // Apply pain point overrides
+  if (verticalOverrides.painPoints && merged.painPoints) {
+    merged.painPoints = merged.painPoints.map((pain, index) => {
+      const override = verticalOverrides.painPoints.find(p => p.index === index);
+      if (override) {
+        return override.text;
+      }
+      return pain;
+    });
+  }
+
+  return merged;
+}
+
+/**
+ * Check if an item has an override
+ * @param {Object} overrides - All overrides object
+ * @param {string} verticalKey - Vertical key
+ * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+ * @param {number|string} identifier - Index for arrays, objection text for objects
+ * @returns {boolean} True if has override
+ */
+export function hasOverride(overrides, verticalKey, type, identifier) {
+  if (!overrides?.[verticalKey]?.[type]) {
+    return false;
+  }
+
+  const typeOverrides = overrides[verticalKey][type];
+
+  // For objects (objections/objectionHandlers)
+  if (type === 'objections' || type === 'objectionHandlers') {
+    return Object.prototype.hasOwnProperty.call(typeOverrides, identifier);
+  }
+
+  // For arrays (openings, openingScripts, painPoints)
+  return typeOverrides.some(o => o.index === identifier);
+}
+
+/**
+ * Save vertical overrides to localStorage
+ * @param {Object} overrides - Overrides object
+ * @returns {boolean} True if save succeeded
+ */
+export function saveVerticalOverridesToStorage(overrides) {
+  try {
+    localStorage.setItem(VERTICAL_OVERRIDES_KEY, JSON.stringify(overrides || {}));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Load vertical overrides from localStorage
+ * @returns {Object} Overrides or empty object
+ */
+export function loadVerticalOverridesFromStorage() {
+  try {
+    const stored = localStorage.getItem(VERTICAL_OVERRIDES_KEY);
+    if (!stored) {
+      return {};
+    }
+    const parsed = JSON.parse(stored);
+    return parsed || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+/**
+ * Set an override for a specific item
+ * @param {Object} overrides - Current overrides
+ * @param {string} verticalKey - Vertical key
+ * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+ * @param {number|string} identifier - Index for arrays, objection text for objects
+ * @param {string} value - New value (script text, response text, or pain point text)
+ * @returns {Object} New overrides object
+ */
+export function setOverride(overrides, verticalKey, type, identifier, value) {
+  const newOverrides = { ...overrides };
+  // Deep clone the vertical to avoid mutation
+  newOverrides[verticalKey] = newOverrides[verticalKey]
+    ? { ...newOverrides[verticalKey] }
+    : {};
+
+  // For objects (objections/objectionHandlers)
+  if (type === 'objections' || type === 'objectionHandlers') {
+    newOverrides[verticalKey][type] = newOverrides[verticalKey][type]
+      ? { ...newOverrides[verticalKey][type] }
+      : {};
+    newOverrides[verticalKey][type][identifier] = value;
+  } else {
+    // For arrays (openings, openingScripts, painPoints)
+    // Deep clone the array and its items
+    newOverrides[verticalKey][type] = newOverrides[verticalKey][type]
+      ? newOverrides[verticalKey][type].map(item => ({ ...item }))
+      : [];
+    const existingIndex = newOverrides[verticalKey][type].findIndex(o => o.index === identifier);
+    if (existingIndex >= 0) {
+      newOverrides[verticalKey][type][existingIndex] = type === 'painPoints'
+        ? { index: identifier, text: value }
+        : { index: identifier, script: value };
+    } else {
+      newOverrides[verticalKey][type].push(type === 'painPoints'
+        ? { index: identifier, text: value }
+        : { index: identifier, script: value });
+    }
+  }
+
+  return newOverrides;
+}
+
+/**
+ * Remove an override for a specific item
+ * @param {Object} overrides - Current overrides
+ * @param {string} verticalKey - Vertical key
+ * @param {string} type - Type: 'openings', 'openingScripts', 'objections', 'objectionHandlers', 'painPoints'
+ * @param {number|string} identifier - Index for arrays, objection text for objects
+ * @returns {Object} New overrides object
+ */
+export function removeOverride(overrides, verticalKey, type, identifier) {
+  if (!overrides?.[verticalKey]?.[type]) {
+    return overrides;
+  }
+
+  const newOverrides = { ...overrides };
+  newOverrides[verticalKey] = { ...newOverrides[verticalKey] };
+
+  // For objects (objections/objectionHandlers)
+  if (type === 'objections' || type === 'objectionHandlers') {
+    newOverrides[verticalKey][type] = { ...newOverrides[verticalKey][type] };
+    delete newOverrides[verticalKey][type][identifier];
+    // Clean up empty type
+    if (Object.keys(newOverrides[verticalKey][type]).length === 0) {
+      delete newOverrides[verticalKey][type];
+    }
+  } else {
+    // For arrays
+    newOverrides[verticalKey][type] = newOverrides[verticalKey][type].filter(o => o.index !== identifier);
+    // Clean up empty type
+    if (newOverrides[verticalKey][type].length === 0) {
+      delete newOverrides[verticalKey][type];
+    }
+  }
+
+  // Clean up empty vertical
+  if (Object.keys(newOverrides[verticalKey]).length === 0) {
+    delete newOverrides[verticalKey];
+  }
+
+  return newOverrides;
 }

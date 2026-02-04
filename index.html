@@ -3171,6 +3171,13 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         return ScriptBuilder.loadCustomScriptsFromStorage();
       });
       const [editingVerticalKey, setEditingVerticalKey] = useState(null);
+
+      // White-label script customization state
+      const [verticalOverrides, setVerticalOverrides] = useState(() => {
+        return orgConfig?.verticalOverrides || ScriptBuilder.loadVerticalOverridesFromStorage();
+      });
+      const [editingScriptItem, setEditingScriptItem] = useState(null);
+      // editingScriptItem shape: { verticalKey, type, identifier, originalValue, currentValue }
       const [scriptBuilderData, setScriptBuilderData] = useState({
         verticalName: '',
         verticalIcon: '🏢',
@@ -5987,9 +5994,55 @@ Return your response as valid JSON with this exact structure:
         }
       };
 
-      // Get combined verticals (default + custom) using ScriptBuilder module
+      // Get combined verticals (default + custom) with overrides applied
       const getAllVerticals = () => {
-        return ScriptBuilder.mergeVerticals(verticalData, customScripts);
+        const merged = ScriptBuilder.mergeVerticals(verticalData, customScripts);
+        // Apply vertical overrides to all verticals
+        const withOverrides = {};
+        Object.keys(merged).forEach(key => {
+          withOverrides[key] = ScriptBuilder.getMergedVertical(key, merged[key], verticalOverrides);
+        });
+        return withOverrides;
+      };
+
+      // Save vertical override and persist to storage/org config
+      const saveVerticalOverride = async (verticalKey, type, identifier, value) => {
+        const newOverrides = ScriptBuilder.setOverride(verticalOverrides, verticalKey, type, identifier, value);
+        setVerticalOverrides(newOverrides);
+
+        // Persist to org config (Supabase) or localStorage
+        if (isSupabaseMode && updateOrgConfig) {
+          try {
+            await updateOrgConfig({ verticalOverrides: newOverrides });
+            showNotification('Script customization saved', 'success');
+          } catch (error) {
+            console.error('Failed to save override to org config:', error);
+            showNotification('Failed to save customization', 'error');
+          }
+        } else {
+          ScriptBuilder.saveVerticalOverridesToStorage(newOverrides);
+          showNotification('Script customization saved', 'success');
+        }
+      };
+
+      // Remove vertical override and persist
+      const removeVerticalOverride = async (verticalKey, type, identifier) => {
+        const newOverrides = ScriptBuilder.removeOverride(verticalOverrides, verticalKey, type, identifier);
+        setVerticalOverrides(newOverrides);
+
+        // Persist
+        if (isSupabaseMode && updateOrgConfig) {
+          try {
+            await updateOrgConfig({ verticalOverrides: newOverrides });
+            showNotification('Reset to default', 'success');
+          } catch (error) {
+            console.error('Failed to remove override from org config:', error);
+            showNotification('Failed to reset', 'error');
+          }
+        } else {
+          ScriptBuilder.saveVerticalOverridesToStorage(newOverrides);
+          showNotification('Reset to default', 'success');
+        }
       };
 
       // ==================== DASHBOARD CONTENT - TODAY FOCUSED ====================
@@ -9538,23 +9591,91 @@ Return your response as valid JSON with this exact structure:
                   )}
                 </div>
 
+                {/* Admin Customization Banner for Custom Verticals */}
+                {isAdmin && verticalOverrides[selectedVertical] && Object.keys(verticalOverrides[selectedVertical]).length > 0 && (
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-purple-600 text-xl">✨</span>
+                      <div>
+                        <p className="font-medium text-purple-900">Organization Customizations Active</p>
+                        <p className="text-sm text-purple-600">
+                          {Object.keys(verticalOverrides[selectedVertical]).reduce((count, type) => {
+                            const items = verticalOverrides[selectedVertical][type];
+                            return count + (Array.isArray(items) ? items.length : Object.keys(items).length);
+                          }, 0)} script{Object.keys(verticalOverrides[selectedVertical]).reduce((count, type) => {
+                            const items = verticalOverrides[selectedVertical][type];
+                            return count + (Array.isArray(items) ? items.length : Object.keys(items).length);
+                          }, 0) !== 1 ? 's' : ''} customized
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Reset all customizations for this playbook to defaults?')) {
+                          const newOverrides = { ...verticalOverrides };
+                          delete newOverrides[selectedVertical];
+                          setVerticalOverrides(newOverrides);
+                          if (isSupabaseMode && updateOrgConfig) {
+                            updateOrgConfig({ verticalOverrides: newOverrides });
+                          } else {
+                            ScriptBuilder.saveVerticalOverridesToStorage(newOverrides);
+                          }
+                          showNotification('All customizations reset to defaults', 'success');
+                        }
+                      }}
+                      className="text-sm px-3 py-1.5 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      Reset All
+                    </button>
+                  </div>
+                )}
+
                 {/* Opening Scripts */}
                 {vertical.openingScripts && vertical.openingScripts.length > 0 && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                    <h3 className="font-semibold text-blue-900 mb-4 text-lg">📞 Opening Scripts</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-blue-900 text-lg">📞 Opening Scripts</h3>
+                      {isAdmin && vertical.openingScripts.some((_, i) => ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'openingScripts', i)) && (
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                      )}
+                    </div>
                     <p className="text-sm text-blue-700 mb-4">Pattern-interrupt openings designed to get prospects talking.</p>
                     <div className="grid grid-cols-1 gap-4">
-                      {vertical.openingScripts.map((opening, i) => (
-                        <div key={i} className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-blue-800">{opening.name}</span>
-                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">#{i+1}</span>
+                      {vertical.openingScripts.map((opening, i) => {
+                        const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'openingScripts', i);
+                        const originalScript = customScripts[selectedVertical]?.openingScripts?.[i]?.script;
+                        return (
+                          <div key={i} className={`bg-white rounded-xl p-4 border shadow-sm ${hasCustom ? 'border-purple-200' : 'border-blue-100'}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-blue-800">{opening.name}</span>
+                                {hasCustom && <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">Edited</span>}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => setEditingScriptItem({
+                                      verticalKey: selectedVertical,
+                                      type: 'openingScripts',
+                                      identifier: i,
+                                      originalValue: originalScript || opening.script,
+                                      currentValue: opening.script
+                                    })}
+                                    className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    title="Edit this script"
+                                  >
+                                    ✏️ Edit
+                                  </button>
+                                )}
+                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">#{i+1}</span>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-700 italic bg-blue-50 p-3 rounded-lg">
+                              "{opening.script?.replace(/\[PROSPECT_NAME\]/g, 'John').replace(/\[YOUR_NAME\]/g, callerName || 'Your Name')}"
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-700 italic bg-blue-50 p-3 rounded-lg">
-                            "{opening.script?.replace(/\[PROSPECT_NAME\]/g, 'John').replace(/\[YOUR_NAME\]/g, callerName || 'Your Name')}"
-                          </p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -9592,14 +9713,38 @@ Return your response as valid JSON with this exact structure:
                 {/* Pain Points */}
                 {vertical.painPoints && vertical.painPoints.length > 0 && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-semibold text-gray-900 mb-4 text-lg">😰 Pain Points to Probe</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900 text-lg">😰 Pain Points to Probe</h3>
+                      {isAdmin && vertical.painPoints.some((_, i) => ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'painPoints', i)) && (
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
-                      {vertical.painPoints.map((pain, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm p-3 bg-red-50 rounded-lg">
-                          <span className="text-red-500">•</span>
-                          <span>{pain}</span>
-                        </div>
-                      ))}
+                      {vertical.painPoints.map((pain, i) => {
+                        const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'painPoints', i);
+                        const originalPain = customScripts[selectedVertical]?.painPoints?.[i];
+                        return (
+                          <div key={i} className={`flex items-start gap-2 text-sm p-3 rounded-lg ${hasCustom ? 'bg-purple-50 border border-purple-200' : 'bg-red-50'}`}>
+                            <span className={hasCustom ? 'text-purple-500' : 'text-red-500'}>•</span>
+                            <span className="flex-1">{pain}</span>
+                            {isAdmin && (
+                              <button
+                                onClick={() => setEditingScriptItem({
+                                  verticalKey: selectedVertical,
+                                  type: 'painPoints',
+                                  identifier: i,
+                                  originalValue: originalPain || pain,
+                                  currentValue: pain
+                                })}
+                                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Edit this pain point"
+                              >
+                                ✏️
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -9607,14 +9752,43 @@ Return your response as valid JSON with this exact structure:
                 {/* Objection Handlers */}
                 {vertical.objectionHandlers && Object.keys(vertical.objectionHandlers).length > 0 && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="font-semibold text-gray-900 mb-4 text-lg">🛡️ Objection Handling</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900 text-lg">🛡️ Objection Handling</h3>
+                      {isAdmin && Object.keys(vertical.objectionHandlers).some(obj => ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'objectionHandlers', obj)) && (
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                      )}
+                    </div>
                     <div className="space-y-4">
-                      {Object.entries(vertical.objectionHandlers).map(([objection, response], i) => (
-                        <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
-                          <div className="bg-red-50 px-5 py-3 font-medium text-red-800">🚫 "{objection}"</div>
-                          <div className="px-5 py-4 text-sm bg-green-50 text-green-900">✅ {response}</div>
-                        </div>
-                      ))}
+                      {Object.entries(vertical.objectionHandlers).map(([objection, response], i) => {
+                        const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'objectionHandlers', objection);
+                        const originalResponse = customScripts[selectedVertical]?.objectionHandlers?.[objection];
+                        return (
+                          <div key={i} className={`border rounded-xl overflow-hidden ${hasCustom ? 'border-purple-200' : 'border-gray-200'}`}>
+                            <div className="bg-red-50 px-5 py-3 font-medium text-red-800 flex items-center justify-between">
+                              <span>🚫 "{objection}"</span>
+                              {hasCustom && <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">Edited</span>}
+                            </div>
+                            <div className="px-5 py-4 text-sm bg-green-50 text-green-900 flex items-start justify-between gap-3">
+                              <span>✅ {response}</span>
+                              {isAdmin && (
+                                <button
+                                  onClick={() => setEditingScriptItem({
+                                    verticalKey: selectedVertical,
+                                    type: 'objectionHandlers',
+                                    identifier: objection,
+                                    originalValue: originalResponse || response,
+                                    currentValue: response
+                                  })}
+                                  className="text-xs px-2 py-1 text-green-700 hover:bg-green-100 rounded transition-colors shrink-0"
+                                  title="Edit this response"
+                                >
+                                  ✏️ Edit
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -9684,6 +9858,45 @@ Return your response as valid JSON with this exact structure:
             {/* Default Vertical Content - Only show for non-custom */}
             {!vertical?.isCustom && (
               <>
+            {/* Admin Customization Banner */}
+            {isAdmin && verticalOverrides[selectedVertical] && Object.keys(verticalOverrides[selectedVertical]).length > 0 && (
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-purple-600 text-xl">✨</span>
+                  <div>
+                    <p className="font-medium text-purple-900">Organization Customizations Active</p>
+                    <p className="text-sm text-purple-600">
+                      {Object.keys(verticalOverrides[selectedVertical]).reduce((count, type) => {
+                        const items = verticalOverrides[selectedVertical][type];
+                        return count + (Array.isArray(items) ? items.length : Object.keys(items).length);
+                      }, 0)} script{Object.keys(verticalOverrides[selectedVertical]).reduce((count, type) => {
+                        const items = verticalOverrides[selectedVertical][type];
+                        return count + (Array.isArray(items) ? items.length : Object.keys(items).length);
+                      }, 0) !== 1 ? 's' : ''} customized for this vertical
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Reset all customizations for this vertical to defaults?')) {
+                      const newOverrides = { ...verticalOverrides };
+                      delete newOverrides[selectedVertical];
+                      setVerticalOverrides(newOverrides);
+                      if (isSupabaseMode && updateOrgConfig) {
+                        updateOrgConfig({ verticalOverrides: newOverrides });
+                      } else {
+                        ScriptBuilder.saveVerticalOverridesToStorage(newOverrides);
+                      }
+                      showNotification('All customizations reset to defaults', 'success');
+                    }
+                  }}
+                  className="text-sm px-3 py-1.5 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors"
+                >
+                  Reset All
+                </button>
+              </div>
+            )}
+
             {/* Fexle Value Prop */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
               <h2 className="text-xl font-bold mb-2">Fexle Services - Key Differentiators</h2>
@@ -9753,33 +9966,86 @@ Return your response as valid JSON with this exact structure:
 
             {/* Pain Points */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4 text-lg">😰 Pain Points to Probe</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900 text-lg">😰 Pain Points to Probe</h3>
+                {isAdmin && vertical.painPoints?.some((_, i) => ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'painPoints', i)) && (
+                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                {vertical.painPoints.map((pain, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm p-3 bg-red-50 rounded-lg">
-                    <span className="text-red-500">•</span>
-                    <span>{pain}</span>
-                  </div>
-                ))}
+                {vertical.painPoints.map((pain, i) => {
+                  const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'painPoints', i);
+                  const originalPain = verticalData[selectedVertical]?.painPoints?.[i];
+                  return (
+                    <div key={i} className={`flex items-start gap-2 text-sm p-3 rounded-lg ${hasCustom ? 'bg-purple-50 border border-purple-200' : 'bg-red-50'}`}>
+                      <span className={hasCustom ? 'text-purple-500' : 'text-red-500'}>•</span>
+                      <span className="flex-1">{pain}</span>
+                      {isAdmin && (
+                        <button
+                          onClick={() => setEditingScriptItem({
+                            verticalKey: selectedVertical,
+                            type: 'painPoints',
+                            identifier: i,
+                            originalValue: originalPain || pain,
+                            currentValue: pain
+                          })}
+                          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                          title="Edit this pain point"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Industry-Specific Opening Scripts */}
             {vertical.openings && vertical.openings.length > 0 && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                <h3 className="font-semibold text-blue-900 mb-4 text-lg">📞 {vertical.name} Opening Scripts</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-blue-900 text-lg">📞 {vertical.name} Opening Scripts</h3>
+                  {isAdmin && ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'openings', 0) && (
+                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                  )}
+                </div>
                 <p className="text-sm text-blue-700 mb-4">Industry-tailored opening lines designed for {vertical.name.toLowerCase()} prospects.</p>
                 <div className="grid grid-cols-1 gap-4">
-                  {vertical.openings.map((opening, i) => (
-                    <div key={i} className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-blue-800">{opening.name}</span>
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Opening #{i+1}</span>
+                  {vertical.openings.map((opening, i) => {
+                    const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'openings', i);
+                    const originalOpening = verticalData[selectedVertical]?.openings?.[i];
+                    return (
+                      <div key={i} className={`bg-white rounded-xl p-4 border shadow-sm ${hasCustom ? 'border-purple-200' : 'border-blue-100'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-blue-800">{opening.name}</span>
+                            {hasCustom && <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">Edited</span>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isAdmin && (
+                              <button
+                                onClick={() => setEditingScriptItem({
+                                  verticalKey: selectedVertical,
+                                  type: 'openings',
+                                  identifier: i,
+                                  originalValue: originalOpening?.script || opening.script,
+                                  currentValue: opening.script
+                                })}
+                                className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title="Edit this script"
+                              >
+                                ✏️ Edit
+                              </button>
+                            )}
+                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Opening #{i+1}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-3 italic bg-blue-50 p-3 rounded-lg">"{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', callerName || 'Your Name')}"</p>
+                        <p className="text-xs text-blue-600"><strong>Why it works:</strong> {opening.why}</p>
                       </div>
-                      <p className="text-sm text-gray-700 mb-3 italic bg-blue-50 p-3 rounded-lg">"{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', callerName || 'Your Name')}"</p>
-                      <p className="text-xs text-blue-600"><strong>Why it works:</strong> {opening.why}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -9787,15 +10053,44 @@ Return your response as valid JSON with this exact structure:
             {/* Industry-Specific Objection Handling */}
             {vertical.objections && Object.keys(vertical.objections).length > 0 && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-4 text-lg">🛡️ {vertical.name} Objection Handling</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900 text-lg">🛡️ {vertical.name} Objection Handling</h3>
+                  {isAdmin && Object.keys(vertical.objections).some(obj => ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'objections', obj)) && (
+                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Customized</span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-600 mb-4">Common objections specific to {vertical.name.toLowerCase()} and how to handle them.</p>
                 <div className="space-y-4">
-                  {Object.entries(vertical.objections).map(([objection, response], i) => (
-                    <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
-                      <div className="bg-red-50 px-5 py-3 font-medium text-red-800">🚫 "{objection}"</div>
-                      <div className="px-5 py-4 text-sm bg-green-50 text-green-900">✅ {response}</div>
-                    </div>
-                  ))}
+                  {Object.entries(vertical.objections).map(([objection, response], i) => {
+                    const hasCustom = ScriptBuilder.hasOverride(verticalOverrides, selectedVertical, 'objections', objection);
+                    const originalResponse = verticalData[selectedVertical]?.objections?.[objection];
+                    return (
+                      <div key={i} className={`border rounded-xl overflow-hidden ${hasCustom ? 'border-purple-200' : 'border-gray-200'}`}>
+                        <div className="bg-red-50 px-5 py-3 font-medium text-red-800 flex items-center justify-between">
+                          <span>🚫 "{objection}"</span>
+                          {hasCustom && <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">Edited</span>}
+                        </div>
+                        <div className="px-5 py-4 text-sm bg-green-50 text-green-900 flex items-start justify-between gap-3">
+                          <span>✅ {response}</span>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setEditingScriptItem({
+                                verticalKey: selectedVertical,
+                                type: 'objections',
+                                identifier: objection,
+                                originalValue: originalResponse || response,
+                                currentValue: response
+                              })}
+                              className="text-xs px-2 py-1 text-green-700 hover:bg-green-100 rounded transition-colors shrink-0"
+                              title="Edit this response"
+                            >
+                              ✏️ Edit
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -13900,6 +14195,106 @@ Return your response as valid JSON with this exact structure:
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Script Edit Modal - White-label customization */}
+          {editingScriptItem && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setEditingScriptItem(null)}>
+              <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[85vh] flex flex-col mx-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-bold">
+                      {editingScriptItem.type === 'openings' || editingScriptItem.type === 'openingScripts' ? '📞 Edit Opening Script' :
+                       editingScriptItem.type === 'objections' || editingScriptItem.type === 'objectionHandlers' ? '🛡️ Edit Objection Response' :
+                       '😰 Edit Pain Point'}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Customize this script for your organization
+                      {ScriptBuilder.hasOverride(verticalOverrides, editingScriptItem.verticalKey, editingScriptItem.type, editingScriptItem.identifier) && (
+                        <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">Customized</span>
+                      )}
+                    </p>
+                  </div>
+                  <button onClick={() => setEditingScriptItem(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Original Script (Read-only) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-2">Original (Default)</label>
+                    <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 border border-gray-200">
+                      {editingScriptItem.originalValue}
+                    </div>
+                  </div>
+
+                  {/* Editable Custom Script */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Your Customized Version</label>
+                    <textarea
+                      value={editingScriptItem.currentValue}
+                      onChange={(e) => setEditingScriptItem({...editingScriptItem, currentValue: e.target.value})}
+                      rows={6}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      placeholder="Enter your customized script..."
+                    />
+                    <p className="text-xs text-gray-400 mt-2">
+                      Variables: [NAME] or [PROSPECT_NAME] = prospect name, [YOUR_NAME] = your name
+                    </p>
+                  </div>
+
+                  {/* Preview */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+                    <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-900 border border-blue-200 italic">
+                      "{editingScriptItem.currentValue
+                        .replace(/\[NAME\]/g, 'John')
+                        .replace(/\[PROSPECT_NAME\]/g, 'John')
+                        .replace(/\[YOUR_NAME\]/g, callerName || 'Your Name')}"
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center p-6 pt-4 border-t border-gray-100 shrink-0">
+                  <div>
+                    {ScriptBuilder.hasOverride(verticalOverrides, editingScriptItem.verticalKey, editingScriptItem.type, editingScriptItem.identifier) && (
+                      <button
+                        onClick={() => {
+                          removeVerticalOverride(editingScriptItem.verticalKey, editingScriptItem.type, editingScriptItem.identifier);
+                          setEditingScriptItem(null);
+                        }}
+                        className="px-4 py-2 text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Reset to Default
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setEditingScriptItem(null)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        saveVerticalOverride(
+                          editingScriptItem.verticalKey,
+                          editingScriptItem.type,
+                          editingScriptItem.identifier,
+                          editingScriptItem.currentValue
+                        );
+                        setEditingScriptItem(null);
+                      }}
+                      disabled={editingScriptItem.currentValue === editingScriptItem.originalValue || !editingScriptItem.currentValue.trim()}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

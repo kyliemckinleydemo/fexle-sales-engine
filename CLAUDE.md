@@ -13,7 +13,7 @@ AI-powered cold calling and lead generation platform for Australian B2B sales te
 | AI | Claude API | Lead research and insights |
 | Lead Data | Apollo.io | Lead search and enrichment |
 | Runtime | Node.js (ES Modules) | For utilities and testing |
-| Testing | Vitest | 328 tests with coverage |
+| Testing | Vitest | 480 tests with coverage |
 
 ## Project Structure
 
@@ -171,8 +171,9 @@ detectPhoneCountry(phone)           // → 'AU' | 'US' | 'CA' | 'UK' | null
 - **Google Sheets**: Optional sync via Apps Script
 
 ### Testing
-- 328 tests total, all passing
+- 480 tests total, all passing
 - Phone utilities: 92 tests (including E.164 functions)
+- Script builder utilities: 120+ tests (including override functions)
 - Run `npm test` before committing
 
 ### Single-File Architecture
@@ -234,4 +235,34 @@ milestonesExpanded    // Milestones accordion (persisted to localStorage)
 showNotesPanel        // Notes slide-out panel
 playbookSearch        // Playbook filter text
 showAdvancedFilters   // Apollo progressive disclosure
+verticalOverrides     // White-label script customizations
+editingScriptItem     // Script item being edited in modal
 ```
+
+### White-Label Script Customization (v2.2)
+Admins can customize default vertical scripts per-organization without modifying the codebase.
+
+**Storage:**
+- Local mode: `localStorage:verticalOverrides`
+- Supabase mode: `organizations.config.verticalOverrides`
+
+**Editable Items:**
+- Opening scripts (openings, openingScripts)
+- Objection responses (objections, objectionHandlers)
+- Pain points
+
+**Key Functions in ScriptBuilder:**
+```javascript
+getMergedVertical(key, base, overrides)  // Apply overrides to base vertical
+hasOverride(overrides, key, type, id)    // Check if item has override
+setOverride(overrides, key, type, id, value)  // Create/update override
+removeOverride(overrides, key, type, id)      // Reset to default
+saveVerticalOverridesToStorage(overrides)     // Persist to localStorage
+loadVerticalOverridesFromStorage()            // Load from localStorage
+```
+
+**UI Components:**
+- Edit buttons on script cards (admin only)
+- Script Edit Modal with original/custom comparison
+- "Customized" badges on edited items
+- "Reset All" button in admin banner
