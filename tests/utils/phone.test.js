@@ -8,7 +8,10 @@ import {
   detectPhoneCountry,
   formatPhoneForTel,
   formatPhoneDisplay,
-  validatePhone
+  validatePhone,
+  formatPhoneE164,
+  isValidE164,
+  parsePhone
 } from '../../src/utils/phone.js';
 
 describe('detectPhoneCountry', () => {
@@ -305,6 +308,237 @@ describe('validatePhone', () => {
       expect(validatePhone('(02) 9876 5432', 'AU')).toBe(true);
       expect(validatePhone('+61 412 345 678', 'AU')).toBe(false); // +61 format not matched by local patterns
       expect(validatePhone('0412-345-678', 'AU')).toBe(true);
+    });
+  });
+});
+
+describe('formatPhoneE164', () => {
+  describe('Australian Numbers', () => {
+    it('formats AU mobile from local format', () => {
+      expect(formatPhoneE164('0412345678')).toBe('+61412345678');
+      expect(formatPhoneE164('0498765432')).toBe('+61498765432');
+    });
+
+    it('formats AU mobile with spaces', () => {
+      expect(formatPhoneE164('0412 345 678')).toBe('+61412345678');
+    });
+
+    it('formats AU landline from local format', () => {
+      expect(formatPhoneE164('0298765432')).toBe('+61298765432');
+      expect(formatPhoneE164('(02) 9876 5432')).toBe('+61298765432');
+    });
+
+    it('preserves AU international format', () => {
+      expect(formatPhoneE164('+61412345678')).toBe('+61412345678');
+      expect(formatPhoneE164('61412345678')).toBe('+61412345678');
+    });
+
+    it('formats AU 1300/1800 numbers with country hint', () => {
+      // 1300/1800 numbers need AU country hint as they start with 1 like US numbers
+      expect(formatPhoneE164('1300123456', 'AU')).toBe('+611300123456');
+      expect(formatPhoneE164('1800123456', 'AU')).toBe('+611800123456');
+    });
+  });
+
+  describe('US/Canadian Numbers', () => {
+    it('formats US 10-digit to E.164', () => {
+      expect(formatPhoneE164('2025551234')).toBe('+12025551234');
+      expect(formatPhoneE164('(202) 555-1234')).toBe('+12025551234');
+    });
+
+    it('formats US with country code override', () => {
+      expect(formatPhoneE164('5551234567', 'US')).toBe('+15551234567');
+    });
+
+    it('preserves US E.164 format', () => {
+      expect(formatPhoneE164('+12025551234')).toBe('+12025551234');
+    });
+
+    it('handles 11-digit US with leading 1', () => {
+      expect(formatPhoneE164('12025551234')).toBe('+12025551234');
+    });
+
+    it('formats CA numbers with country override', () => {
+      expect(formatPhoneE164('4165551234', 'CA')).toBe('+14165551234');
+    });
+  });
+
+  describe('UK Numbers', () => {
+    it('formats UK mobile from local format', () => {
+      expect(formatPhoneE164('07700900123')).toBe('+447700900123');
+      expect(formatPhoneE164('07700 900 123')).toBe('+447700900123');
+    });
+
+    it('formats UK landline from local format', () => {
+      expect(formatPhoneE164('02071234567')).toBe('+442071234567');
+    });
+
+    it('preserves UK E.164 format', () => {
+      expect(formatPhoneE164('+447700900123')).toBe('+447700900123');
+    });
+
+    it('handles UK international without +', () => {
+      expect(formatPhoneE164('447700900123')).toBe('+447700900123');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('returns null for empty input', () => {
+      expect(formatPhoneE164('')).toBe(null);
+      expect(formatPhoneE164(null)).toBe(null);
+      expect(formatPhoneE164(undefined)).toBe(null);
+    });
+
+    it('returns null for too short numbers', () => {
+      expect(formatPhoneE164('123')).toBe(null);
+      expect(formatPhoneE164('12345')).toBe(null);
+    });
+
+    it('cleans spaces from E.164 format', () => {
+      expect(formatPhoneE164('+1 555 123 4567')).toBe('+15551234567');
+      expect(formatPhoneE164('+61 412 345 678')).toBe('+61412345678');
+    });
+
+    it('handles numbers with dashes and parentheses', () => {
+      expect(formatPhoneE164('(555) 123-4567', 'US')).toBe('+15551234567');
+    });
+  });
+});
+
+describe('isValidE164', () => {
+  describe('Valid Formats', () => {
+    it('validates AU E.164 numbers', () => {
+      expect(isValidE164('+61412345678')).toBe(true);
+      expect(isValidE164('+61298765432')).toBe(true);
+    });
+
+    it('validates US E.164 numbers', () => {
+      expect(isValidE164('+12025551234')).toBe(true);
+      expect(isValidE164('+15551234567')).toBe(true);
+    });
+
+    it('validates UK E.164 numbers', () => {
+      expect(isValidE164('+447700900123')).toBe(true);
+      expect(isValidE164('+442071234567')).toBe(true);
+    });
+
+    it('validates minimum length (7 digits after country code)', () => {
+      expect(isValidE164('+1234567')).toBe(true);
+    });
+
+    it('validates maximum length (15 digits total)', () => {
+      expect(isValidE164('+123456789012345')).toBe(true);
+    });
+  });
+
+  describe('Invalid Formats', () => {
+    it('rejects numbers without +', () => {
+      expect(isValidE164('61412345678')).toBe(false);
+      expect(isValidE164('12025551234')).toBe(false);
+    });
+
+    it('rejects numbers starting with 0 after +', () => {
+      expect(isValidE164('+0412345678')).toBe(false);
+    });
+
+    it('rejects too short numbers', () => {
+      expect(isValidE164('+12345')).toBe(false);
+      expect(isValidE164('+123456')).toBe(false);
+    });
+
+    it('rejects too long numbers', () => {
+      expect(isValidE164('+1234567890123456')).toBe(false);
+    });
+
+    it('rejects empty and null values', () => {
+      expect(isValidE164('')).toBe(false);
+      expect(isValidE164(null)).toBe(false);
+      expect(isValidE164(undefined)).toBe(false);
+    });
+
+    it('rejects non-string values', () => {
+      expect(isValidE164(61412345678)).toBe(false);
+      expect(isValidE164({})).toBe(false);
+      expect(isValidE164([])).toBe(false);
+    });
+
+    it('rejects numbers with spaces or formatting', () => {
+      expect(isValidE164('+61 412 345 678')).toBe(false);
+      expect(isValidE164('+1-202-555-1234')).toBe(false);
+    });
+  });
+});
+
+describe('parsePhone', () => {
+  describe('Complete Parsing', () => {
+    it('parses AU mobile number', () => {
+      const result = parsePhone('0412345678');
+      expect(result.e164).toBe('+61412345678');
+      expect(result.tel).toBe('+61412345678');
+      expect(result.display).toBe('0412 345 678');
+      expect(result.country).toBe('AU');
+      expect(result.valid).toBe(true);
+      expect(result.original).toBe('0412345678');
+    });
+
+    it('parses US number', () => {
+      const result = parsePhone('2025551234');
+      expect(result.e164).toBe('+12025551234');
+      expect(result.country).toBe('US');
+      expect(result.valid).toBe(true);
+      expect(result.display).toBe('(202) 555-1234');
+    });
+
+    it('parses UK mobile number', () => {
+      const result = parsePhone('07700900123');
+      expect(result.e164).toBe('+447700900123');
+      expect(result.country).toBe('UK');
+      expect(result.valid).toBe(true);
+    });
+
+    it('parses with country override', () => {
+      const result = parsePhone('4165551234', 'CA');
+      expect(result.e164).toBe('+14165551234');
+      expect(result.country).toBe('CA');
+      expect(result.valid).toBe(true);
+    });
+
+    it('parses already formatted E.164 number', () => {
+      const result = parsePhone('+61412345678');
+      expect(result.e164).toBe('+61412345678');
+      expect(result.country).toBe('AU');
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('handles invalid numbers', () => {
+      const result = parsePhone('123');
+      expect(result.valid).toBe(false);
+      expect(result.e164).toBe(null);
+      expect(result.original).toBe('123');
+    });
+
+    it('handles empty input', () => {
+      const result = parsePhone('');
+      expect(result.valid).toBe(false);
+      expect(result.e164).toBe(null);
+      expect(result.tel).toBe('');
+      expect(result.display).toBe('');
+      expect(result.country).toBe(null);
+    });
+
+    it('handles null input', () => {
+      const result = parsePhone(null);
+      expect(result.valid).toBe(false);
+      expect(result.e164).toBe(null);
+      expect(result.original).toBe(null);
+    });
+
+    it('handles undefined input', () => {
+      const result = parsePhone(undefined);
+      expect(result.valid).toBe(false);
+      expect(result.e164).toBe(null);
     });
   });
 });
