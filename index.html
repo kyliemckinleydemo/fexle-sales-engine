@@ -10,6 +10,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://sdk.twilio.com/js/client/v1.14/twilio.min.js"></script>
+  <script src="config/supabase.js"></script>
   <script src="src/utils/scriptBuilder.browser.js"></script>
   <style>
     .scrollbar-thin::-webkit-scrollbar { width: 6px; }
@@ -28,19 +29,13 @@
     const { useState, useEffect, useRef, createContext, useContext } = React;
 
     // ==================== SUPABASE CONFIGURATION ====================
-    // OPTION 1: Pre-hosted (recommended) - Set your Supabase credentials here
-    // Users will just see Login/Register - no setup needed
-    const HOSTED_SUPABASE = {
-      url: 'https://mswvvtufnrxrxxelrjnq.supabase.co',
-      anonKey: 'sb_publishable_4GtfZG1TER573OACV_Hp2w_mOihuRHc'
-    };
-
-    // OPTION 2: Allow users to configure their own Supabase (advanced)
-    // Falls back to URL params or localStorage if HOSTED_SUPABASE is empty
+    // Configuration is loaded from config/supabase.js (edit that file for deployments)
+    // Falls back to URL params or localStorage for self-hosted/development setups
     const getSupabaseConfig = () => {
-      // Use hosted config if provided
-      if (HOSTED_SUPABASE.url && HOSTED_SUPABASE.anonKey) {
-        return HOSTED_SUPABASE;
+      // Use external config if provided (from config/supabase.js)
+      const externalConfig = window.SUPABASE_CONFIG || {};
+      if (externalConfig.url && externalConfig.anonKey) {
+        return externalConfig;
       }
       // Otherwise check URL params or localStorage (for self-hosted setups)
       const params = new URLSearchParams(window.location.search);
@@ -49,6 +44,9 @@
         anonKey: params.get('supabase_key') || localStorage.getItem('supabase_key') || ''
       };
     };
+
+    // Reference for hosted mode detection
+    const HOSTED_SUPABASE = window.SUPABASE_CONFIG || { url: '', anonKey: '' };
 
     const SUPABASE_CONFIG = getSupabaseConfig();
     // Allow E2E test mode via query param or localStorage (bypasses auth for testing)

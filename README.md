@@ -265,6 +265,7 @@ fexle-sales-engine/
 | Document | Description |
 |----------|-------------|
 | [Setup Guide](docs/SETUP.md) | Supabase and multi-user setup |
+| [Migration Guide](docs/MIGRATION.md) | Migrate from localStorage to Supabase |
 | [Customization](docs/CUSTOMIZATION.md) | White-label configuration |
 | [Testing](docs/TESTING.md) | Test documentation |
 | [User Guide](docs/USER_GUIDE.md) | Feature documentation |

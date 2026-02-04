@@ -55,18 +55,30 @@ supabase/migrations/003_functions.sql
 
 ### 5. Connect the App
 
-**Option A: URL Parameters**
+**Option A: Config File (recommended for deployments)**
+
+Edit `config/supabase.js` with your credentials:
+```javascript
+window.SUPABASE_CONFIG = {
+  url: 'https://your-project.supabase.co',
+  anonKey: 'eyJ...'
+};
+```
+
+This is the recommended method for production deployments. The anon key is safe to include in client-side code (Supabase designed it this way), and RLS policies protect your data.
+
+**Option B: URL Parameters**
 ```
 index.html?supabase_url=https://xxxxx.supabase.co&supabase_key=eyJ...
 ```
 
-**Option B: In-App Setup**
+**Option C: In-App Setup**
 1. Open the app
 2. Click "Configure Database Connection"
 3. Paste your Project URL and Anon Key
 4. Click "Connect & Save"
 
-**Option C: localStorage (developers)**
+**Option D: localStorage (developers)**
 ```javascript
 localStorage.setItem('supabase_url', 'https://xxxxx.supabase.co');
 localStorage.setItem('supabase_key', 'eyJ...');
