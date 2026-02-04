@@ -9123,7 +9123,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
 
                 // 2. Verticals from call list leads
                 const callListVerticals = {};
-                callList.forEach(lead => {
+                todayCallList.forEach(lead => {
                   if (lead.vertical && verticalData[lead.vertical]) {
                     callListVerticals[lead.vertical] = (callListVerticals[lead.vertical] || 0) + 1;
                   }
