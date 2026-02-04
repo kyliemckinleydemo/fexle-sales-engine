@@ -3160,14 +3160,14 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         return saved || null;
       });
       const onboardingSteps = [
-        { title: 'Welcome to Fexle Sales Engine!', description: 'This quick tour will show you the key features. The app follows a simple workflow: Add leads → Research → Call → Book CEO meetings.', target: null },
-        { title: '1. Add Your Leads', description: 'Click "Add Lead" to add prospects with company, contact name, and title. You can also import CSV or search Apollo.io.', target: 'add-lead-btn' },
-        { title: '2. Your Next Action', description: 'The Today dashboard shows your #1 priority lead with a Smart Next Action button. Use the arrows to see other priority leads.', target: 'today-tab' },
-        { title: '3. Call Center', description: 'Select a lead to see Quick Actions (Email, Schedule Meeting, Research, Playbook) and update Major Milestones with one click.', target: 'call-center-tab' },
-        { title: '4. Use the Playbook', description: 'Click the Playbook button to open call scripts in a popup. Industry-specific openings, objection handlers, and closes.', target: null },
-        { title: '5. Track Major Milestones', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, Meeting Held, Proposal, Won, Lost. Multiple can be selected.', target: null },
-        { title: '6. Book Meetings', description: 'Use the Schedule Meeting button or check the milestone to book. Calendar tab shows all scheduled meetings.', target: 'calendar-tab' },
-        { title: "You're Ready!", description: "Start by adding your first lead or importing from CSV. Features like AI Research and Apollo search will prompt you to set up when you first use them. Good luck!", target: null }
+        { title: 'Welcome to Outbound Sales Engine!', description: 'Let\'s get you set up in 2 minutes. First, we\'ll configure your profile, then show you how to use the app.', target: null },
+        { title: '1. Set Up Your Profile', description: 'Click Settings (gear icon) and enter your name, email, and phone. This info appears in call scripts and email templates.', target: 'settings-btn', action: 'openSettings' },
+        { title: '2. Add Your First Lead', description: 'Click "Add Lead" to add a prospect. Enter company, contact name, and title. You can also import a CSV or search Apollo.io.', target: 'add-lead-btn' },
+        { title: '3. Dashboard Overview', description: 'The Today tab shows your #1 priority lead with a Smart Next Action. The Leads tab shows all your prospects with scores.', target: 'today-tab' },
+        { title: '4. Make Calls', description: 'Select a lead in Call Center to see Quick Actions: Email, Schedule Meeting, Research, and Playbook for call scripts.', target: 'call-center-tab' },
+        { title: '5. Use Playbooks', description: 'Playbooks contain industry-specific scripts. Select your lead\'s industry to see openers, objection handlers, and closes.', target: 'playbooks-tab' },
+        { title: '6. Track Progress', description: 'Check off milestones as you progress: Discovery Call, Deck Sent, Meeting Held, Proposal, Won/Lost.', target: null },
+        { title: "You're Ready!", description: "Open Settings anytime to configure AI Research, Apollo.io, or other integrations. Good luck with your calls!", target: null }
       ];
 
       // Apollo.io Search Function
@@ -4139,7 +4139,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const icsContent = [
           'BEGIN:VCALENDAR',
           'VERSION:2.0',
-          'PRODID:-//Fexle Sales Engine//EN',
+          'PRODID:-//Outbound Sales Engine//EN',
           'CALSCALE:GREGORIAN',
           'METHOD:REQUEST',
           'BEGIN:VTIMEZONE',
@@ -4250,9 +4250,9 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const icsContent = [
           'BEGIN:VCALENDAR',
           'VERSION:2.0',
-          'PRODID:-//Fexle Sales Engine//EN',
+          'PRODID:-//Outbound Sales Engine//EN',
           'CALSCALE:GREGORIAN',
-          'X-WR-CALNAME:Fexle CEO Meetings',
+          'X-WR-CALNAME:Scheduled Meetings',
           'BEGIN:VTIMEZONE',
           'TZID:Australia/Sydney',
           'BEGIN:STANDARD',
@@ -10791,6 +10791,47 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     </details>
                   )}
 
+                  {/* Call Scripts Setup */}
+                  <details className="pt-4 border-t border-gray-100">
+                    <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                      <span>📜</span> Call Scripts
+                      <span className="text-xs font-normal text-gray-500">(playbooks)</span>
+                    </summary>
+                    <div className="mt-3 space-y-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                      <div className="text-xs text-indigo-900">
+                        <strong>How Scripts Work:</strong>
+                      </div>
+                      <ul className="text-xs text-indigo-800 space-y-2">
+                        <li className="flex gap-2">
+                          <span>1.</span>
+                          <span>Scripts automatically use <strong>[YOUR_NAME]</strong> from your profile above</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span>2.</span>
+                          <span>Go to <strong>Playbooks</strong> tab to see industry-specific scripts</span>
+                        </li>
+                        <li className="flex gap-2">
+                          <span>3.</span>
+                          <span>Select a lead, then click <strong>Playbook</strong> in Call Center to see scripts with their name filled in</span>
+                        </li>
+                      </ul>
+                      <div className="pt-2 border-t border-indigo-200">
+                        <div className="text-xs text-indigo-700">
+                          <strong>Included for each industry:</strong>
+                        </div>
+                        <div className="text-xs text-indigo-600 mt-1">
+                          ✓ Opening scripts • ✓ Pain point questions • ✓ Objection handlers • ✓ Closing scripts
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => { setShowSettings(false); setActiveTab('playbooks'); }}
+                        className="w-full mt-2 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+                      >
+                        View Playbooks →
+                      </button>
+                    </div>
+                  </details>
+
                   {/* Team Management (Supabase Mode Only) */}
                   {isSupabaseMode && isOwner && (
                     <details className="pt-4 border-t border-gray-100">
@@ -11914,6 +11955,39 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                 )}
               </div>
 
+              {/* Twilio Voice (Local Mode) */}
+              {!isSupabaseMode && (
+                <details className="pt-4 border-t border-gray-100">
+                  <summary className="cursor-pointer text-sm font-semibold text-gray-700 hover:text-gray-900 flex items-center gap-2">
+                    <span>📞</span> Twilio Voice
+                    <span className="text-xs font-normal text-gray-500">(click-to-call)</span>
+                    {twilioConfigured && (
+                      <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Ready</span>
+                    )}
+                  </summary>
+                  <div className="mt-3 space-y-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                    <p className="text-xs text-orange-800">
+                      <strong>Note:</strong> Twilio calling requires a backend server to generate tokens securely.
+                      For local mode, use the tel: links to call via your phone system instead.
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      To enable browser-based calling:
+                    </p>
+                    <ol className="text-xs text-gray-600 list-decimal ml-4 space-y-1">
+                      <li>Switch to <strong>Cloud Mode</strong> (Supabase) for full Twilio integration</li>
+                      <li>Or deploy your own backend with Twilio token generation</li>
+                    </ol>
+                    <a
+                      href="https://www.twilio.com/docs/voice/sdks/javascript/get-started"
+                      target="_blank"
+                      className="inline-block mt-2 text-xs text-orange-700 hover:text-orange-900 underline"
+                    >
+                      Learn more about Twilio Voice SDK →
+                    </a>
+                  </div>
+                </details>
+              )}
+
               {/* Test Data Toggle */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
@@ -12958,10 +13032,10 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                   onClick={() => { setSelectedLead(null); setActiveTab('dashboard'); }}
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-                    <span className="text-white text-lg font-bold">F</span>
+                    <span className="text-white text-lg font-bold">O</span>
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900">Fexle Sales Engine</h1>
+                    <h1 className="text-xl font-bold text-gray-900">Outbound Sales Engine</h1>
                     <p className="text-xs text-gray-500">AI-Powered Cold Calling & Lead Generation</p>
                   </div>
                 </div>
