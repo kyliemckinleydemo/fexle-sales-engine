@@ -11104,6 +11104,296 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
                     </details>
                   )}
 
+                  {/* Webhooks & Integrations (Admin only, Supabase mode) */}
+                  {isSupabaseMode && isAdmin && (
+                    <details className="pt-4 border-t border-gray-100">
+                      <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                        <span>🔗</span> Webhooks & Integrations
+                        <span className="text-xs font-normal text-gray-500">(Zapier, automation)</span>
+                      </summary>
+                      <div className="mt-3">
+                        {(() => {
+                          const [webhooks, setWebhooks] = useState([]);
+                          const [apiKeys, setApiKeys] = useState([]);
+                          const [webhookLoading, setWebhookLoading] = useState(true);
+                          const [showNewWebhook, setShowNewWebhook] = useState(false);
+                          const [showNewKey, setShowNewKey] = useState(false);
+                          const [newWebhook, setNewWebhook] = useState({ name: '', url: '', events: [] });
+                          const [newKeyName, setNewKeyName] = useState('');
+                          const [generatedKey, setGeneratedKey] = useState(null);
+
+                          const WEBHOOK_EVENTS = [
+                            { value: 'lead.created', label: 'Lead Created' },
+                            { value: 'lead.status_changed', label: 'Lead Status Changed' },
+                            { value: 'lead.milestone_reached', label: 'Milestone Reached' },
+                            { value: 'meeting.booked', label: 'Meeting Booked' },
+                            { value: 'meeting.completed', label: 'Meeting Completed' },
+                            { value: 'call.completed', label: 'Call Completed' },
+                            { value: 'sms.received', label: 'SMS Received' },
+                          ];
+
+                          // Load webhooks and API keys
+                          useEffect(() => {
+                            const loadData = async () => {
+                              if (!supabase || !dataContext?.organization?.id) return;
+                              try {
+                                const [webhooksRes, keysRes] = await Promise.all([
+                                  supabase.from('webhooks').select('*').eq('organization_id', dataContext.organization.id),
+                                  supabase.from('inbound_webhook_keys').select('id, name, is_active, created_at, last_used_at').eq('organization_id', dataContext.organization.id)
+                                ]);
+                                setWebhooks(webhooksRes.data || []);
+                                setApiKeys(keysRes.data || []);
+                              } catch (e) {
+                                console.error('Failed to load webhook data:', e);
+                              } finally {
+                                setWebhookLoading(false);
+                              }
+                            };
+                            loadData();
+                          }, []);
+
+                          const createWebhook = async () => {
+                            if (!newWebhook.name || !newWebhook.url || newWebhook.events.length === 0) {
+                              showNotification('Name, URL, and at least one event are required', 'error');
+                              return;
+                            }
+                            try {
+                              // Generate secret
+                              const secret = 'whsec_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                                .map(b => b.toString(16).padStart(2, '0')).join('');
+
+                              const { data, error } = await supabase.from('webhooks').insert({
+                                organization_id: dataContext.organization.id,
+                                name: newWebhook.name,
+                                url: newWebhook.url,
+                                events: newWebhook.events,
+                                secret: secret,
+                                is_active: true
+                              }).select().single();
+
+                              if (error) throw error;
+                              setWebhooks(prev => [...prev, data]);
+                              setShowNewWebhook(false);
+                              setNewWebhook({ name: '', url: '', events: [] });
+                              showNotification('Webhook created. Secret: ' + secret.substring(0, 20) + '...');
+                            } catch (e) {
+                              showNotification('Failed to create webhook: ' + e.message, 'error');
+                            }
+                          };
+
+                          const deleteWebhook = async (id) => {
+                            if (!confirm('Delete this webhook?')) return;
+                            try {
+                              await supabase.from('webhooks').delete().eq('id', id);
+                              setWebhooks(prev => prev.filter(w => w.id !== id));
+                              showNotification('Webhook deleted');
+                            } catch (e) {
+                              showNotification('Failed to delete webhook', 'error');
+                            }
+                          };
+
+                          const toggleWebhook = async (id, isActive) => {
+                            try {
+                              await supabase.from('webhooks').update({ is_active: !isActive }).eq('id', id);
+                              setWebhooks(prev => prev.map(w => w.id === id ? { ...w, is_active: !isActive } : w));
+                            } catch (e) {
+                              showNotification('Failed to update webhook', 'error');
+                            }
+                          };
+
+                          const createApiKey = async () => {
+                            if (!newKeyName) {
+                              showNotification('Name is required', 'error');
+                              return;
+                            }
+                            try {
+                              const apiKey = 'sk_live_' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                                .map(b => b.toString(16).padStart(2, '0')).join('');
+
+                              const { data, error } = await supabase.from('inbound_webhook_keys').insert({
+                                organization_id: dataContext.organization.id,
+                                name: newKeyName,
+                                api_key: apiKey,
+                                is_active: true
+                              }).select('id, name, is_active, created_at').single();
+
+                              if (error) throw error;
+                              setApiKeys(prev => [...prev, data]);
+                              setGeneratedKey(apiKey);
+                              setNewKeyName('');
+                            } catch (e) {
+                              showNotification('Failed to create API key: ' + e.message, 'error');
+                            }
+                          };
+
+                          const deleteApiKey = async (id) => {
+                            if (!confirm('Delete this API key? Any integrations using it will stop working.')) return;
+                            try {
+                              await supabase.from('inbound_webhook_keys').delete().eq('id', id);
+                              setApiKeys(prev => prev.filter(k => k.id !== id));
+                              showNotification('API key deleted');
+                            } catch (e) {
+                              showNotification('Failed to delete API key', 'error');
+                            }
+                          };
+
+                          if (webhookLoading) {
+                            return <div className="text-sm text-gray-500">Loading...</div>;
+                          }
+
+                          return (
+                            <div className="space-y-4">
+                              {/* Outbound Webhooks */}
+                              <div className="p-3 bg-blue-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-sm font-medium text-blue-900">Outbound Webhooks</h4>
+                                  <button
+                                    onClick={() => setShowNewWebhook(!showNewWebhook)}
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    {showNewWebhook ? 'Cancel' : '+ Add Webhook'}
+                                  </button>
+                                </div>
+
+                                {showNewWebhook && (
+                                  <div className="space-y-2 mb-3 p-2 bg-white rounded border border-blue-200">
+                                    <input
+                                      type="text"
+                                      value={newWebhook.name}
+                                      onChange={(e) => setNewWebhook(prev => ({ ...prev, name: e.target.value }))}
+                                      placeholder="Webhook name (e.g., Zapier)"
+                                      className="w-full px-2 py-1 text-sm border rounded"
+                                    />
+                                    <input
+                                      type="url"
+                                      value={newWebhook.url}
+                                      onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
+                                      placeholder="https://hooks.zapier.com/..."
+                                      className="w-full px-2 py-1 text-sm border rounded"
+                                    />
+                                    <div className="flex flex-wrap gap-1">
+                                      {WEBHOOK_EVENTS.map(evt => (
+                                        <label key={evt.value} className="flex items-center gap-1 text-xs">
+                                          <input
+                                            type="checkbox"
+                                            checked={newWebhook.events.includes(evt.value)}
+                                            onChange={(e) => {
+                                              setNewWebhook(prev => ({
+                                                ...prev,
+                                                events: e.target.checked
+                                                  ? [...prev.events, evt.value]
+                                                  : prev.events.filter(v => v !== evt.value)
+                                              }));
+                                            }}
+                                          />
+                                          {evt.label}
+                                        </label>
+                                      ))}
+                                    </div>
+                                    <button onClick={createWebhook} className="w-full py-1 bg-blue-600 text-white rounded text-xs">
+                                      Create Webhook
+                                    </button>
+                                  </div>
+                                )}
+
+                                {webhooks.length === 0 ? (
+                                  <p className="text-xs text-blue-600">No webhooks configured</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {webhooks.map(wh => (
+                                      <div key={wh.id} className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
+                                        <div>
+                                          <div className="text-sm font-medium">{wh.name}</div>
+                                          <div className="text-xs text-gray-500 truncate max-w-[200px]">{wh.url}</div>
+                                          <div className="text-xs text-gray-400">{wh.events?.join(', ')}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={() => toggleWebhook(wh.id, wh.is_active)}
+                                            className={`px-2 py-0.5 rounded text-xs ${wh.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                                          >
+                                            {wh.is_active ? 'Active' : 'Paused'}
+                                          </button>
+                                          <button onClick={() => deleteWebhook(wh.id)} className="text-red-500 text-xs">✕</button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Inbound API Keys */}
+                              <div className="p-3 bg-purple-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="text-sm font-medium text-purple-900">Inbound API Keys</h4>
+                                  <button
+                                    onClick={() => setShowNewKey(!showNewKey)}
+                                    className="text-xs text-purple-600 hover:underline"
+                                  >
+                                    {showNewKey ? 'Cancel' : '+ Generate Key'}
+                                  </button>
+                                </div>
+
+                                {showNewKey && (
+                                  <div className="space-y-2 mb-3 p-2 bg-white rounded border border-purple-200">
+                                    <input
+                                      type="text"
+                                      value={newKeyName}
+                                      onChange={(e) => setNewKeyName(e.target.value)}
+                                      placeholder="Key name (e.g., Zapier Integration)"
+                                      className="w-full px-2 py-1 text-sm border rounded"
+                                    />
+                                    <button onClick={createApiKey} className="w-full py-1 bg-purple-600 text-white rounded text-xs">
+                                      Generate API Key
+                                    </button>
+                                  </div>
+                                )}
+
+                                {generatedKey && (
+                                  <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded">
+                                    <p className="text-xs text-green-800 font-medium">New API Key (copy now, won't be shown again):</p>
+                                    <code className="text-xs break-all bg-green-100 p-1 block mt-1 rounded">{generatedKey}</code>
+                                    <button
+                                      onClick={() => { navigator.clipboard.writeText(generatedKey); showNotification('Copied!'); }}
+                                      className="mt-1 text-xs text-green-600 hover:underline"
+                                    >
+                                      Copy to clipboard
+                                    </button>
+                                  </div>
+                                )}
+
+                                {apiKeys.length === 0 ? (
+                                  <p className="text-xs text-purple-600">No API keys configured</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {apiKeys.map(key => (
+                                      <div key={key.id} className="flex items-center justify-between p-2 bg-white rounded border border-purple-100">
+                                        <div>
+                                          <div className="text-sm font-medium">{key.name}</div>
+                                          <div className="text-xs text-gray-500">
+                                            Created {new Date(key.created_at).toLocaleDateString()}
+                                            {key.last_used_at && ` • Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
+                                          </div>
+                                        </div>
+                                        <button onClick={() => deleteApiKey(key.id)} className="text-red-500 text-xs">✕</button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                <div className="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                                  <strong>Endpoint:</strong> POST {supabase?.supabaseUrl || 'https://your-project.supabase.co'}/functions/v1/webhook-inbound
+                                  <br />
+                                  <strong>Header:</strong> X-API-Key: your_api_key
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </details>
+                  )}
+
                   {/* Data Export/Import */}
                   <details className="pt-4 border-t border-gray-100">
                     <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
