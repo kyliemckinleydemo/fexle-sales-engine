@@ -70,8 +70,8 @@ test.describe('Script Builder Modal', () => {
       await page.click('text=Playbooks');
       await page.click('text=Create Script');
 
-      // Click the X button
-      await page.click('button:has-text("✕")');
+      // Click the X button (uses × which is &times; in HTML)
+      await page.click('button:has-text("×")');
 
       // Modal should be closed
       await expect(page.locator('text=AI Script Builder')).not.toBeVisible();
@@ -84,8 +84,8 @@ test.describe('Script Builder Modal', () => {
       // Fill in some data
       await page.fill('input[placeholder*="SaaS Sales"]', 'Test Vertical');
 
-      // Close modal
-      await page.click('button:has-text("✕")');
+      // Close modal (uses × which is &times; in HTML)
+      await page.click('button:has-text("×")');
 
       // Reopen modal
       await page.click('text=Create Script');
@@ -488,45 +488,67 @@ test.describe('Script Builder Modal', () => {
     test('deleting removes playbook from list', async ({ page }) => {
       await page.click('text=Playbooks');
 
-      // Verify the playbook exists
-      await expect(page.locator('text=Deletable Vertical')).toBeVisible();
+      // Verify the playbook exists and select it
+      const playbookButton = page.locator('button:has-text("Deletable Vertical")');
+      await expect(playbookButton).toBeVisible();
+      await playbookButton.click();
 
-      // Find and click the delete button for this playbook
-      const deleteButton = page.locator('button:has-text("🗑")').first();
-      if (await deleteButton.isVisible()) {
-        await deleteButton.click();
+      // Click "Edit Playbook" to open modal in edit mode
+      await page.click('text=Edit Playbook');
+      // In edit mode, the modal title is "Edit Script Builder"
+      await expect(page.locator('text=Edit Script Builder')).toBeVisible();
 
-        // May need to confirm deletion
-        const confirmButton = page.locator('button:has-text("Delete")');
-        if (await confirmButton.isVisible()) {
-          await confirmButton.click();
-        }
+      // Navigate to Step 3 (data is pre-filled, so Next buttons should be enabled)
+      await page.click('button:has-text("Next →")');
+      await page.click('button:has-text("Next →")');
 
-        // Playbook should be removed
-        await expect(page.locator('text=Deletable Vertical')).not.toBeVisible();
-      }
+      // Should be on Step 3
+      await expect(page.locator('text=AI Will Generate')).toBeVisible();
+
+      // Set up dialog handler for browser confirm
+      page.on('dialog', dialog => dialog.accept());
+
+      // Click "Delete Playbook"
+      await page.click('text=Delete Playbook');
+
+      // Modal should close and playbook should be removed
+      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible();
+
+      // Verify playbook is removed from list (the custom playbooks section)
+      await expect(page.locator('button:has-text("Deletable Vertical")')).not.toBeVisible({ timeout: 5000 });
     });
 
     test('deleting updates localStorage', async ({ page }) => {
       await page.click('text=Playbooks');
 
-      // Delete the playbook
-      const deleteButton = page.locator('button:has-text("🗑")').first();
-      if (await deleteButton.isVisible()) {
-        await deleteButton.click();
+      // Select and click on the custom playbook
+      const playbookButton = page.locator('button:has-text("Deletable Vertical")');
+      await playbookButton.click();
 
-        const confirmButton = page.locator('button:has-text("Delete")');
-        if (await confirmButton.isVisible()) {
-          await confirmButton.click();
-        }
+      // Click "Edit Playbook" to open modal in edit mode
+      await page.click('text=Edit Playbook');
+      // In edit mode, the modal title is "Edit Script Builder"
+      await expect(page.locator('text=Edit Script Builder')).toBeVisible();
 
-        // Check localStorage
-        const scripts = await page.evaluate(() => {
-          return JSON.parse(localStorage.getItem('customScripts') || '{}');
-        });
+      // Navigate to Step 3
+      await page.click('button:has-text("Next →")');
+      await page.click('button:has-text("Next →")');
 
-        expect(scripts.deletable_vertical).toBeUndefined();
-      }
+      // Set up dialog handler for browser confirm
+      page.on('dialog', dialog => dialog.accept());
+
+      // Click "Delete Playbook"
+      await page.click('text=Delete Playbook');
+
+      // Wait for modal to close
+      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible();
+
+      // Check localStorage - the key should be removed
+      const scripts = await page.evaluate(() => {
+        return JSON.parse(localStorage.getItem('customScripts') || '{}');
+      });
+
+      expect(scripts.deletable_vertical).toBeUndefined();
     });
   });
 });
