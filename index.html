@@ -13743,13 +13743,118 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
       );
     }
 
+    // ==================== MODE SELECTION SCREEN ====================
+    const ModeSelectionScreen = ({ onSelectLocal, onSelectCloud }) => {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">📞</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">Welcome to Outbound Sales Engine</h1>
+              <p className="text-blue-100">AI-Powered Cold Calling & Lead Generation</p>
+            </div>
+
+            {/* Mode Selection */}
+            <div className="p-8">
+              <h2 className="text-lg font-semibold text-gray-900 text-center mb-6">How will you be using this app?</h2>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Single User Option */}
+                <button
+                  onClick={onSelectLocal}
+                  className="p-6 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-blue-200 transition-colors">
+                      💻
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Single User</div>
+                      <div className="text-xs text-green-600 font-medium">Quick Start</div>
+                    </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>✓ No account required</li>
+                    <li>✓ Data saved in browser</li>
+                    <li>✓ Full feature access</li>
+                    <li>✓ Works offline</li>
+                  </ul>
+                  <div className="mt-4 text-xs text-gray-400">Best for individual sales reps</div>
+                </button>
+
+                {/* Multi-User Option */}
+                <button
+                  onClick={onSelectCloud}
+                  className="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-purple-200 transition-colors">
+                      ☁️
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Multi-User / Team</div>
+                      <div className="text-xs text-purple-600 font-medium">Requires Setup</div>
+                    </div>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>✓ Team collaboration</li>
+                    <li>✓ Cloud sync across devices</li>
+                    <li>✓ Twilio calling & SMS</li>
+                    <li>✓ White-label branding</li>
+                  </ul>
+                  <div className="mt-4 text-xs text-gray-400">Requires Supabase backend</div>
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center mt-6">
+                You can switch modes later in Settings
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     // ==================== ROOT WRAPPER ====================
     const RootApp = () => {
       const [authPage, setAuthPage] = useState('login');
       const [showSetup, setShowSetup] = useState(false);
-      const [useLocalMode, setUseLocalMode] = useState(!supabase);
+      const [useLocalMode, setUseLocalMode] = useState(() => {
+        // Check if user has already chosen a mode
+        const savedMode = localStorage.getItem('outboundSalesEngineMode');
+        if (savedMode === 'local') return true;
+        if (savedMode === 'cloud') return false;
+        // No choice made yet - will show selection screen
+        return null;
+      });
+      const [showModeSelection, setShowModeSelection] = useState(() => {
+        const savedMode = localStorage.getItem('outboundSalesEngineMode');
+        return savedMode === null; // Show selection if no mode saved
+      });
 
-      // If no Supabase configured and user wants local mode, show the app directly
+      // Show mode selection for first-time users
+      if (showModeSelection && useLocalMode === null) {
+        return (
+          <ModeSelectionScreen
+            onSelectLocal={() => {
+              localStorage.setItem('outboundSalesEngineMode', 'local');
+              setUseLocalMode(true);
+              setShowModeSelection(false);
+            }}
+            onSelectCloud={() => {
+              localStorage.setItem('outboundSalesEngineMode', 'cloud');
+              setUseLocalMode(false);
+              setShowModeSelection(false);
+              setShowSetup(true); // Go to Supabase setup
+            }}
+          />
+        );
+      }
+
+      // If local mode selected or no Supabase configured, show the app directly
       if (useLocalMode || !supabase) {
         return (
           <DataProvider forceLocal={true}>
