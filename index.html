@@ -27,9 +27,21 @@
     const { useState, useEffect, useRef, createContext, useContext } = React;
 
     // ==================== SUPABASE CONFIGURATION ====================
-    // Configure these values for your Supabase project
-    // You can set these via URL params: ?supabase_url=...&supabase_key=...
+    // OPTION 1: Pre-hosted (recommended) - Set your Supabase credentials here
+    // Users will just see Login/Register - no setup needed
+    const HOSTED_SUPABASE = {
+      url: '',      // e.g., 'https://xxxxx.supabase.co'
+      anonKey: ''   // e.g., 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    };
+
+    // OPTION 2: Allow users to configure their own Supabase (advanced)
+    // Falls back to URL params or localStorage if HOSTED_SUPABASE is empty
     const getSupabaseConfig = () => {
+      // Use hosted config if provided
+      if (HOSTED_SUPABASE.url && HOSTED_SUPABASE.anonKey) {
+        return HOSTED_SUPABASE;
+      }
+      // Otherwise check URL params or localStorage (for self-hosted setups)
       const params = new URLSearchParams(window.location.search);
       return {
         url: params.get('supabase_url') || localStorage.getItem('supabase_url') || '',
@@ -38,6 +50,7 @@
     };
 
     const SUPABASE_CONFIG = getSupabaseConfig();
+    const isHostedMode = HOSTED_SUPABASE.url && HOSTED_SUPABASE.anonKey;
     const supabase = SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey
       ? window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey)
       : null;
@@ -13823,6 +13836,8 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
       const [authPage, setAuthPage] = useState('login');
       const [showSetup, setShowSetup] = useState(false);
       const [useLocalMode, setUseLocalMode] = useState(() => {
+        // If hosted mode is configured, always use cloud (users just login)
+        if (isHostedMode) return false;
         // Check if user has already chosen a mode
         const savedMode = localStorage.getItem('outboundSalesEngineMode');
         if (savedMode === 'local') return true;
@@ -13831,12 +13846,14 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
         return null;
       });
       const [showModeSelection, setShowModeSelection] = useState(() => {
+        // Skip mode selection in hosted mode - go straight to login
+        if (isHostedMode) return false;
         const savedMode = localStorage.getItem('outboundSalesEngineMode');
         return savedMode === null; // Show selection if no mode saved
       });
 
-      // Show mode selection for first-time users
-      if (showModeSelection && useLocalMode === null) {
+      // Show mode selection for first-time users (only when NOT in hosted mode)
+      if (!isHostedMode && showModeSelection && useLocalMode === null) {
         return (
           <ModeSelectionScreen
             onSelectLocal={() => {
