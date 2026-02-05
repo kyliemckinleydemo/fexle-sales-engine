@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://sdk.twilio.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.anthropic.com https://api.apollo.io https://api.resend.com https://api.stripe.com wss://*.supabase.co; frame-src https://checkout.stripe.com https://billing.stripe.com; img-src 'self' data: https:; font-src 'self' data:;">
   <title>Sales Engine - AI-Powered Lead Generation</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -11,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://sdk.twilio.com/js/client/v1.14/twilio.min.js"></script>
   <script src="config/supabase.js"></script>
+  <script src="config/app-config.js"></script>
   <script src="src/utils/scriptBuilder.browser.js"></script>
   <style>
     .scrollbar-thin::-webkit-scrollbar { width: 6px; }
@@ -27,6 +29,65 @@
   <div id="root"></div>
   <script type="text/babel">
     const { useState, useEffect, useRef, createContext, useContext } = React;
+
+    // ==================== ERROR BOUNDARY ====================
+    // Catches render errors and shows friendly fallback UI
+    class ErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+      }
+      static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+      }
+      componentDidCatch(error, errorInfo) {
+        console.error('ErrorBoundary caught:', error, errorInfo);
+      }
+      render() {
+        if (this.state.hasError) {
+          return React.createElement('div', {
+            className: 'min-h-screen bg-gray-50 flex items-center justify-center p-8'
+          },
+            React.createElement('div', { className: 'text-center max-w-md' },
+              React.createElement('div', { className: 'text-5xl mb-4' }, '\u26A0\uFE0F'),
+              React.createElement('h1', { className: 'text-2xl font-bold text-gray-900 mb-2' }, 'Something went wrong'),
+              React.createElement('p', { className: 'text-gray-600 mb-6' },
+                'An unexpected error occurred. Please reload the page to continue.'
+              ),
+              React.createElement('button', {
+                onClick: () => window.location.reload(),
+                className: 'px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium'
+              }, 'Reload Page')
+            )
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    // ==================== APP CONFIG ====================
+    // Runtime configuration loaded from config/app-config.js
+    // Deep-merges config values over hardcoded defaults
+    const APP_CONFIG = window.APP_CONFIG || {};
+
+    // Deep merge utility: merges source into target (source wins)
+    // Arrays replace entirely, objects merge recursively, primitives override
+    const mergeConfig = (defaults, overrides) => {
+      if (!overrides || typeof overrides !== 'object') return defaults;
+      if (!defaults || typeof defaults !== 'object') return overrides;
+      if (Array.isArray(overrides)) return overrides;
+      const result = { ...defaults };
+      for (const key of Object.keys(overrides)) {
+        if (overrides[key] !== undefined && overrides[key] !== null) {
+          if (typeof overrides[key] === 'object' && !Array.isArray(overrides[key]) && typeof defaults[key] === 'object' && !Array.isArray(defaults[key])) {
+            result[key] = mergeConfig(defaults[key], overrides[key]);
+          } else {
+            result[key] = overrides[key];
+          }
+        }
+      }
+      return result;
+    };
 
     // ==================== SUPABASE CONFIGURATION ====================
     // Configuration is loaded from config/supabase.js (edit that file for deployments)
@@ -58,9 +119,9 @@
       : null;
 
     // ==================== TARGET ACTION CONFIG ====================
-    // Configurable target action (CEO Meeting, Demo, Consultation, etc.)
-    // Organizations can customize this in their config
-    const DEFAULT_TARGET_ACTION = {
+    // Configurable via APP_CONFIG.targetActions — see config/app-config.js
+    // Layering: hardcoded defaults ← APP_CONFIG.targetActions.default ← orgConfig.targetAction
+    const _HARDCODED_TARGET_ACTION = {
       type: 'meeting',
       label: 'CEO Meeting',
       shortLabel: 'CEO Meeting',
@@ -93,6 +154,7 @@
         allowMultipleBookings: false
       }
     };
+    const DEFAULT_TARGET_ACTION = mergeConfig(_HARDCODED_TARGET_ACTION, APP_CONFIG.targetActions?.default);
 
     // Helper to get calendar config with defaults
     const getCalendarConfig = (targetAction) => {
@@ -1647,12 +1709,12 @@
     };
 
     // ==================== LEAD SCORING MODEL ====================
-    const SCORING_WEIGHTS = {
+    const DEFAULT_SCORING_WEIGHTS = {
       // Company Attributes (max 40 points)
       companySize: {
         '1-50': 5,
         '51-200': 15,
-        '201-500': 20,  // Sweet spot for Fexle
+        '201-500': 20,
         '501-1000': 15,
         '1000+': 10
       },
@@ -1660,7 +1722,7 @@
         'Under $5M': 5,
         '$5M-$20M': 10,
         '$20M-$50M': 15,
-        '$50M-$200M': 20,  // Sweet spot
+        '$50M-$200M': 20,
         '$200M+': 15
       },
       // Role/Title (max 25 points)
@@ -1694,6 +1756,7 @@
         hospitality: 8
       }
     };
+    const SCORING_WEIGHTS = mergeConfig(DEFAULT_SCORING_WEIGHTS, APP_CONFIG.scoring);
 
     const calculateLeadScore = (lead) => {
       let score = 0;
@@ -1856,8 +1919,9 @@
       return lead;
     };
 
-    // ==================== FEXLE COMPANY DATA ====================
-    const FEXLE_INFO = {
+    // ==================== COMPANY DATA ====================
+    // Configurable via APP_CONFIG.company — see config/app-config.js
+    const DEFAULT_COMPANY_INFO = {
       name: "Fexle Services",
       tagline: "Australia's Most Cost-Effective Salesforce Implementation Partner",
       size: "300+ Salesforce Professionals",
@@ -1866,6 +1930,8 @@
       costAdvantage: "30-40% lower cost than traditional consultancies",
       status: "Salesforce Platinum Partner",
       parentCompany: "Xoriant (since 2024)",
+      website: "www.fexle.com",
+      contactEmail: "contact@fexle.com",
       keyProducts: ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"],
       proofPoints: [
         "One client cut support ticket volume by 40% in 8 weeks",
@@ -1874,38 +1940,95 @@
         "84% faster resolution times",
         "700+ successful implementations"
       ],
-      aiDeck: "AI Implementation Deck - practical guide on implementing Salesforce AI with real business impact"
+      aiDeck: "AI Implementation Deck - practical guide on implementing Salesforce AI with real business impact",
+      stats: [
+        { value: "300+", label: "Salesforce Professionals" },
+        { value: "30-40%", label: "Lower Cost" },
+        { value: "700+", label: "Implementations" }
+      ],
+      services: [
+        { icon: "☁️", name: "Salesforce", detail: "Platinum Partner", bg: "#dbeafe", nameColor: "#1e40af", detailColor: "#3b82f6" },
+        { icon: "🛒", name: "E-Commerce", detail: "B2B & B2C", bg: "#dcfce7", nameColor: "#166534", detailColor: "#22c55e" },
+        { icon: "📱", name: "Mobile Apps", detail: "iOS & Android", bg: "#fef3c7", nameColor: "#92400e", detailColor: "#d97706" },
+        { icon: "💻", name: "Web Dev", detail: "Full-Stack", bg: "#f3e8ff", nameColor: "#7c3aed", detailColor: "#a855f7" }
+      ],
+      whyUsTitle: "Fexle Services \u2014 Full-Stack System Integrator",
+      whyUsSubtitle: "Salesforce • E-Commerce • Web & Mobile • Custom Development",
+      whyUsStats: [
+        { value: "700+", label: "Projects" },
+        { value: "500+", label: "Clients" },
+        { value: "5.0★", label: "Rating" }
+      ],
+      collateral: {
+        salesforcePdf: "Your-Customers-Wont-Wait-Neither-Should-You.pdf",
+        generalPdf: "How-to-Succeed-with-AI-Implementation.pdf",
+        salesforceGuideName: "Agentforce Guide",
+        generalGuideName: "AI Success Guide"
+      }
+    };
+    const COMPANY_INFO = mergeConfig(DEFAULT_COMPANY_INFO, APP_CONFIG.company);
+    // Backward-compatible alias
+    const FEXLE_INFO = COMPANY_INFO;
+
+    // Update page title from config
+    if (APP_CONFIG.company?.name) {
+      document.title = `Sales Engine - ${COMPANY_INFO.name}`;
+    }
+
+    // Resolve {COMPANY}, {TAGLINE}, {COST_ADVANTAGE} tokens in config override strings
+    // This allows config overrides to reference company info without hardcoding names
+    const resolveCompanyTokens = (obj) => {
+      if (!obj) return obj;
+      if (typeof obj === 'string') {
+        return obj
+          .replace(/\{COMPANY\}/g, COMPANY_INFO.name)
+          .replace(/\{TAGLINE\}/g, COMPANY_INFO.tagline)
+          .replace(/\{COST_ADVANTAGE\}/g, COMPANY_INFO.costAdvantage)
+          .replace(/\{STATUS\}/g, COMPANY_INFO.status)
+          .replace(/\{MODEL\}/g, COMPANY_INFO.model)
+          .replace(/\{SIZE\}/g, COMPANY_INFO.size);
+      }
+      if (Array.isArray(obj)) return obj.map(resolveCompanyTokens);
+      if (typeof obj === 'object') {
+        const result = {};
+        for (const key of Object.keys(obj)) {
+          result[key] = resolveCompanyTokens(obj[key]);
+        }
+        return result;
+      }
+      return obj;
     };
 
-    // ==================== FEXLE CALL SCRIPTS ====================
-    const FEXLE_SCRIPTS = {
+    // ==================== CALL SCRIPTS ====================
+    // Configurable via APP_CONFIG.scripts — see config/app-config.js
+    const DEFAULT_SCRIPTS = {
       openings: {
         aiPressure: {
           name: "AI Pressure Question (Recommended)",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be honest — this is a cold call, so I'll be quick. Are you seeing pressure to do more with AI in your Salesforce environment, or is that not really on your radar yet?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. I'll be honest — this is a cold call, so I'll be quick. Are you seeing pressure to do more with AI in your Salesforce environment, or is that not really on your radar yet?"`,
           why: "Opens with THEIR situation. Acknowledges the interruption. The question is easy to answer and gets them talking."
         },
         supportCost: {
           name: "Support Cost Question",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. Quick question — is reducing customer support costs something that's on your priority list this year, or is that not where the pressure is right now?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. Quick question — is reducing customer support costs something that's on your priority list this year, or is that not where the pressure is right now?"`,
           why: "Goes straight to a pain point. If they say yes, you have an opening. If they say no, you can pivot to sales performance."
         },
         salesPerformance: {
           name: "Sales Performance Question",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'm curious — are you getting everything you need out of Salesforce right now, or is there a gap between what it could do for your sales team and what it's actually doing?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. I'm curious — are you getting everything you need out of Salesforce right now, or is there a gap between what it could do for your sales team and what it's actually doing?"`,
           why: "Invites them to share frustrations. Most Salesforce users feel they're not getting full value."
         },
         permissionHybrid: {
           name: "Permission + Problem Hybrid",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be honest — this is a cold call, so I'll be quick. A lot of companies we talk to are sitting on AI features in Salesforce they're not using yet — stuff that could genuinely cut support costs or speed up their sales cycle. Is that something you'd want to explore, or is this a bad time?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. I'll be honest — this is a cold call, so I'll be quick. A lot of companies we talk to are sitting on AI features in Salesforce they're not using yet — stuff that could genuinely cut support costs or speed up their sales cycle. Is that something you'd want to explore, or is this a bad time?"`,
           why: "Acknowledges the cold call, hints at value, gives them an easy out (which paradoxically makes them more likely to engage)."
         }
       },
       pivots: {
-        primary: `"So here's why I called you specifically. Fexle is Australia's most cost-effective Salesforce implementation partner — we're 300 people with a hybrid onshore-offshore model that delivers implementations at 30-40% less than traditional consultancies. But what's really relevant right now is that Salesforce just released Agentforce — AI agents that can handle customer inquiries autonomously. One of our clients cut their support ticket volume by 40% in 8 weeks. Is that the kind of thing that would be useful to explore?"`,
+        primary: `"So here's why I called you specifically. ${COMPANY_INFO.name} is ${COMPANY_INFO.tagline} — we're ${COMPANY_INFO.size} with ${COMPANY_INFO.model}. ${COMPANY_INFO.costAdvantage}. But what's really relevant right now is that Salesforce just released Agentforce — AI agents that can handle customer inquiries autonomously. ${COMPANY_INFO.proofPoints[0]}. Is that the kind of thing that would be useful to explore?"`,
         aiInterest: `"Perfect — that's exactly why I'm reaching out. Salesforce has released some genuinely useful AI this year — Agentforce for autonomous customer service, Einstein Copilot for sales reps, automated workflows that actually work. Most companies haven't dug into it yet because, frankly, their existing partners haven't either. We're different — we're 300 people focused only on Salesforce, and we're Australia's most cost-effective implementation partner. Our hybrid model means you get Australian project leadership with global development capacity at 30-40% lower cost. Would it be useful to see what's actually possible with these new tools?"`,
-        costPressure: `"That's exactly what we help with. Fexle is Australia's most cost-effective Salesforce implementation partner — our hybrid onshore-offshore model delivers implementations at 30-40% less than Big Four consultancies. Same quality, smarter delivery model. And the new Salesforce AI features — Agentforce, Einstein — can dramatically reduce support costs in months, not years. We helped one client cut support ticket volume by 40% in 8 weeks. Would it be worth exploring what's possible for your situation?"`,
-        salesGaps: `"You're not alone — most companies feel that way about Salesforce. Here's the thing: Salesforce's new AI tools — Einstein Copilot for reps, AI-powered forecasting, automated lead scoring — can genuinely close that gap. We're Fexle, Australia's most cost-effective Salesforce partner. Our hybrid model means you get enterprise-quality implementations at 30-40% less than traditional consultancies. We've helped companies improve deal velocity and win rates using these new tools. Would it be useful to see what might work for your team?"`
+        costPressure: `"That's exactly what we help with. ${COMPANY_INFO.name} is ${COMPANY_INFO.tagline} — our hybrid model delivers implementations at ${COMPANY_INFO.costAdvantage}. Same quality, smarter delivery model. And the new Salesforce AI features — Agentforce, Einstein — can dramatically reduce support costs in months, not years. ${COMPANY_INFO.proofPoints[0]}. Would it be worth exploring what's possible for your situation?"`,
+        salesGaps: `"You're not alone — most companies feel that way about Salesforce. Here's the thing: Salesforce's new AI tools — Einstein Copilot for reps, AI-powered forecasting, automated lead scoring — can genuinely close that gap. We're ${COMPANY_INFO.name}, ${COMPANY_INFO.tagline}. Our hybrid model means you get enterprise-quality implementations at ${COMPANY_INFO.costAdvantage}. We've helped companies improve deal velocity and win rates using these new tools. Would it be useful to see what might work for your team?"`
       },
       closes: {
         ceoMeeting: `"Here's what I'd suggest. I'd love to set up a 20-minute call with our CEO — no pitch, just a conversation. He'll walk you through the latest Salesforce AI innovations, what we're seeing work in companies like yours, and whether any of it makes sense for your plans. If it's not relevant, you'll know in 20 minutes. Would [specific day] at [specific time] work?"`,
@@ -1926,7 +2049,7 @@
         "Too expensive": `"I understand budget is critical. Here's the thing — our hybrid model means we deliver at 30-40% less than traditional consultancies. And the AI features we implement typically show ROI in months, not years. One client cut support ticket volume by 40% in 8 weeks. Would it help to see a business case from a similar company?"`
       },
       followUp: {
-        call: `"Hi [NAME], it's [YOUR_NAME] from Fexle. I sent over our AI implementation deck last week — did you get a chance to look at it? [If yes] What stood out to you? [If no] No worries — I know things get busy. The key takeaway is how companies are using Agentforce to cut support costs and Einstein to improve sales performance — real results, not just theory. Would it be worth a quick call with our CEO to explore whether any of that applies to your situation?"`,
+        call: `"Hi [NAME], it's [YOUR_NAME] from ${COMPANY_INFO.name}. I sent over our AI implementation deck last week — did you get a chance to look at it? [If yes] What stood out to you? [If no] No worries — I know things get busy. The key takeaway is how companies are using Agentforce to cut support costs and Einstein to improve sales performance — real results, not just theory. Would it be worth a quick call with our CEO to explore whether any of that applies to your situation?"`,
         email: {
           subject: "Quick question about the AI deck",
           body: `Hi [NAME],
@@ -1939,7 +2062,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         }
       },
       keyMessages: [
-        "Fexle — 300-person Salesforce specialist based in Sydney",
+        `${COMPANY_INFO.name} — ${COMPANY_INFO.size} based in ${COMPANY_INFO.locations[0] || 'Sydney'}`,
         "Australia's most cost-effective Salesforce implementation partner",
         "Hybrid onshore-offshore — Australian leadership, global development capacity, 30-40% lower cost",
         "Agentforce, Einstein Copilot, automated workflows — stuff that actually works now",
@@ -1951,46 +2074,46 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       openingsNonSF: {
         crmPain: {
           name: "CRM Pain Question (Recommended)",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be quick — I'm calling because we help Australian companies get better visibility into their sales pipeline and customer relationships. Quick question: are you happy with how you're currently tracking customer interactions and sales opportunities, or is that an area where you're looking to improve?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. I'll be quick — I'm calling because we help Australian companies get better visibility into their sales pipeline and customer relationships. Quick question: are you happy with how you're currently tracking customer interactions and sales opportunities, or is that an area where you're looking to improve?"`,
           why: "Opens with business value, not product. Gets them talking about their current situation without assuming any tool."
         },
         growthChallenge: {
           name: "Growth Challenge Question",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. Quick question for you — as your business has grown, has keeping track of customer relationships and sales opportunities become harder, or do you have that pretty well sorted?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. Quick question for you — as your business has grown, has keeping track of customer relationships and sales opportunities become harder, or do you have that pretty well sorted?"`,
           why: "Connects to a universal growth pain point. Works whether they use spreadsheets, basic tools, or nothing at all."
         },
         techStack: {
           name: "Tech Stack Curiosity",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. We're a Salesforce implementation partner, and I'm curious — what are you using to manage customer relationships and sales tracking today? Spreadsheets, another CRM, or something else?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. We're a Salesforce implementation partner, and I'm curious — what are you using to manage customer relationships and sales tracking today? Spreadsheets, another CRM, or something else?"`,
           why: "Direct and honest. Gets intel on their current setup immediately so you can tailor the conversation."
         },
         aiOpportunity: {
           name: "AI Opportunity Question",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. I'll be honest — this is a cold call, so I'll keep it short. We're seeing a lot of companies looking at AI to automate customer service and boost sales productivity. Is that something on your radar, or is that not where your priorities are right now?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. I'll be honest — this is a cold call, so I'll keep it short. We're seeing a lot of companies looking at AI to automate customer service and boost sales productivity. Is that something on your radar, or is that not where your priorities are right now?"`,
           why: "Leads with AI value prop which is relevant regardless of current CRM. Opens door to discuss Salesforce as the AI-ready platform."
         },
         competitorPain: {
           name: "Current System Frustration",
-          script: `"Hi [NAME], this is [YOUR_NAME] from Fexle. We specialise in helping companies move to Salesforce from other systems — or from spreadsheets and manual processes. Quick question: are you getting everything you need from your current setup, or are there gaps that are starting to slow the business down?"`,
+          script: `"Hi [NAME], this is [YOUR_NAME] from ${COMPANY_INFO.name}. We specialise in helping companies move to Salesforce from other systems — or from spreadsheets and manual processes. Quick question: are you getting everything you need from your current setup, or are there gaps that are starting to slow the business down?"`,
           why: "Positions migration expertise upfront. Invites them to share frustrations with their current approach."
         }
       },
       pivotsNonSF: {
-        fromSpreadsheets: `"I hear that a lot — spreadsheets work until they don't. The challenge is when you need to see your full pipeline at a glance, or when multiple people need to update the same data, or when a key person leaves and takes all the relationship knowledge with them. That's exactly when companies look at Salesforce. The good news is, Salesforce has gotten much more accessible, and with Fexle's hybrid model, we can implement it at 30-40% less than the big consultancies. Would it be worth a quick conversation to see what's actually involved?"`,
+        fromSpreadsheets: `"I hear that a lot — spreadsheets work until they don't. The challenge is when you need to see your full pipeline at a glance, or when multiple people need to update the same data, or when a key person leaves and takes all the relationship knowledge with them. That's exactly when companies look at Salesforce. The good news is, Salesforce has gotten much more accessible, and with ${COMPANY_INFO.name}'s ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model, we can implement it at ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} less than the big consultancies. Would it be worth a quick conversation to see what's actually involved?"`,
         fromHubSpot: `"HubSpot's a good starting point, but a lot of companies outgrow it — especially around reporting, workflow automation, and now AI. Salesforce's new AI features like Agentforce and Einstein are genuinely game-changing, and HubSpot isn't anywhere close. The other thing is scale — Salesforce handles enterprise complexity that HubSpot struggles with. We've helped several companies migrate from HubSpot to Salesforce, and the ROI is usually clear within months. Want to hear what that looks like?"`,
         fromDynamics: `"Dynamics works for some companies, but what we often hear is that it's clunky, the Salesforce integrations are better, and the AI features aren't as mature. Salesforce has really pulled ahead on the AI side — Agentforce, Einstein Copilot, automated workflows. And as a pure-play Salesforce partner, we can implement faster and at lower cost than the Microsoft consultancies. Would it be worth exploring what a migration could look like?"`,
         fromLegacy: `"Legacy systems are tough — they work until you need them to do something new. The challenge is they can't adapt to things like AI, modern integrations, or mobile access. A lot of companies are facing this right now. Salesforce is designed to evolve with you, and with the new AI capabilities, you're not just fixing today's problems — you're setting up for the next 10 years. We specialise in helping companies migrate from legacy systems. Would a conversation about what's involved be useful?"`,
-        fromNothing: `"Honestly, that's where a lot of growing companies are. You get by with spreadsheets and email until suddenly you can't — deals fall through, customer history is scattered, and growth actually becomes harder. The smart move is getting on a proper platform before it becomes urgent. Salesforce is the market leader for good reason, and with Fexle's hybrid model, it's more affordable than most people think. Would it be useful to see what's actually involved in getting started?"`,
-        aiAngle: `"Here's what's changed: AI is no longer future stuff — it's working right now. Salesforce's Agentforce can handle customer inquiries 24/7, Einstein Copilot helps sales reps work faster, and automated workflows can replace hours of manual work. But you need a platform that supports it. Salesforce is purpose-built for AI in a way that other CRMs and definitely spreadsheets aren't. And with Fexle, you get Salesforce implementation at 30-40% less than traditional consultancies. Would it be worth exploring what AI could do for your business?"`
+        fromNothing: `"Honestly, that's where a lot of growing companies are. You get by with spreadsheets and email until suddenly you can't — deals fall through, customer history is scattered, and growth actually becomes harder. The smart move is getting on a proper platform before it becomes urgent. Salesforce is the market leader for good reason, and with ${COMPANY_INFO.name}'s ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model, it's more affordable than most people think. Would it be useful to see what's actually involved in getting started?"`,
+        aiAngle: `"Here's what's changed: AI is no longer future stuff — it's working right now. Salesforce's Agentforce can handle customer inquiries 24/7, Einstein Copilot helps sales reps work faster, and automated workflows can replace hours of manual work. But you need a platform that supports it. Salesforce is purpose-built for AI in a way that other CRMs and definitely spreadsheets aren't. And with ${COMPANY_INFO.name}, you get Salesforce implementation at ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} less than traditional consultancies. Would it be worth exploring what AI could do for your business?"`
       },
       objectionsNonSF: {
         "We use HubSpot and it works fine": `"That's fair — HubSpot is solid for getting started. The question is: are you bumping into its limits yet? Things like complex reporting, workflow automation, or scaling with your growth? And the big one now is AI — Salesforce's Agentforce and Einstein are way ahead of anything HubSpot offers. We've helped companies migrate when they hit that ceiling. Would it be useful to understand what the upgrade path looks like, even if you're not ready now?"`,
         "We use Dynamics 365": `"Makes sense — it's a common choice, especially for Microsoft shops. What we often hear is that the CRM side of Dynamics is clunky compared to Salesforce, and the ecosystem isn't as rich. Plus Salesforce is genuinely ahead on AI right now. We've done several Dynamics to Salesforce migrations, and the feedback is usually 'wish we'd done this sooner.' Would it be worth a conversation about what's involved?"`,
-        "We just use spreadsheets": `"Honestly, a lot of companies do — and it works until it doesn't. The tipping point is usually when you can't see your full pipeline, when deals slip through the cracks, or when someone leaves and takes all the relationship knowledge with them. The good news is Salesforce is more accessible than people think, especially with Fexle's 30-40% lower cost model. Would it be useful to see what getting started actually looks like?"`,
+        "We just use spreadsheets": `"Honestly, a lot of companies do — and it works until it doesn't. The tipping point is usually when you can't see your full pipeline, when deals slip through the cracks, or when someone leaves and takes all the relationship knowledge with them. The good news is Salesforce is more accessible than people think, especially with ${COMPANY_INFO.name}'s ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} lower cost model. Would it be useful to see what getting started actually looks like?"`,
         "CRM seems like overkill for us": `"I hear that a lot. Here's the thing though — the companies that grow successfully usually have their customer data sorted before they need it urgently. Salesforce can start lean and scale with you. And with the new AI features, you're not just getting a database — you're getting automation that saves real time. Would a quick conversation about what makes sense for your situation be useful?"`,
-        "We tried CRM before and it didn't stick": `"That's really common, actually — and usually it's not the tool, it's the implementation. Either it wasn't set up for how your team actually works, or there wasn't proper training and adoption support. That's exactly what we focus on at Fexle. We don't just implement and leave — we make sure it actually gets used. Would it be worth hearing how we approach that differently?"`,
-        "Salesforce is too expensive": `"That's what a lot of people think — and it used to be more true. Two things have changed: first, Salesforce has more flexible pricing now, including Starter editions. Second, Fexle's hybrid model means implementation costs are 30-40% lower than traditional consultancies. When you factor in the productivity gains and the AI capabilities, the ROI is usually clear within 6-12 months. Would it be useful to see what it might actually cost for your situation?"`,
-        "We don't have the bandwidth to implement a CRM": `"That's exactly why our model works. Fexle handles the heavy lifting — we configure it for how your team works, migrate your data, and train your people. Your team's involvement is minimal. And because of our hybrid model, it costs less than you might expect. Would it be worth a conversation about what a realistic timeline and commitment looks like?"`,
+        "We tried CRM before and it didn't stick": `"That's really common, actually — and usually it's not the tool, it's the implementation. Either it wasn't set up for how your team actually works, or there wasn't proper training and adoption support. That's exactly what we focus on at ${COMPANY_INFO.name}. We don't just implement and leave — we make sure it actually gets used. Would it be worth hearing how we approach that differently?"`,
+        "Salesforce is too expensive": `"That's what a lot of people think — and it used to be more true. Two things have changed: first, Salesforce has more flexible pricing now, including Starter editions. Second, ${COMPANY_INFO.name}'s ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model means implementation costs are ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} lower than traditional consultancies. When you factor in the productivity gains and the AI capabilities, the ROI is usually clear within 6-12 months. Would it be useful to see what it might actually cost for your situation?"`,
+        "We don't have the bandwidth to implement a CRM": `"That's exactly why our model works. ${COMPANY_INFO.name} handles the heavy lifting — we configure it for how your team works, migrate your data, and train your people. Your team's involvement is minimal. And because of our ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model, it costs less than you might expect. Would it be worth a conversation about what a realistic timeline and commitment looks like?"`,
         "Our industry is different / We have specific needs": `"That's actually where Salesforce shines — it's incredibly customisable. We've implemented it across healthcare, manufacturing, financial services, you name it. Whatever your specific workflows are, we can build them in. And the AI features work across industries. What's unique about your business that you think might be challenging?"`,
         "We're waiting to see how AI develops": `"Fair enough — but here's the thing: AI is working right now, not future tense. Salesforce's Agentforce is handling customer inquiries autonomously today. Companies are cutting support costs by 40%+ in weeks. Waiting means your competitors might get there first. Would it be worth at least understanding what's possible now, so you can make an informed decision about timing?"`,
         "We've heard Salesforce is hard to use": `"That used to be more true, but the interface has improved a lot. More importantly, that's where implementation matters. A well-configured Salesforce that matches how your team actually works is intuitive. A poorly implemented one is painful. That's why we focus so much on understanding your processes before we build anything. Would it help to see a demo of how it actually looks when it's done right?"`
@@ -2002,9 +2125,13 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         competitorComparison: `"I know you're using [competitor/current system]. What I'd suggest is a side-by-side comparison — not marketing material, but an honest look at where Salesforce is stronger and where it might not matter for your situation. That way you can make an informed decision. Would that be useful to see?"`
       }
     };
+    const CALL_SCRIPTS = resolveCompanyTokens(mergeConfig(DEFAULT_SCRIPTS, APP_CONFIG.scripts));
+    // Backward-compatible alias
+    const FEXLE_SCRIPTS = CALL_SCRIPTS;
 
-    // ==================== VERTICAL DATA WITH FEXLE CONTEXT ====================
-    const verticalData = {
+    // ==================== VERTICAL DATA ====================
+    // Configurable via APP_CONFIG.verticals — see config/app-config.js
+    const DEFAULT_VERTICALS = {
       healthcare: {
         name: "Healthcare & Aged Care",
         icon: "🏥",
@@ -2719,7 +2846,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         objections: {
           "We have a DMS already": "DMS handles transactions — but customer engagement needs more. Salesforce sits on top of your DMS: better lead management, automated follow-ups, service marketing. They integrate directly.",
           "Our salespeople work their own way": "That's often the problem — inconsistent follow-up means lost sales. CRM doesn't change how they sell, it makes sure nothing falls through the cracks.",
-          "We tried CRM before and it didn't stick": "Usually that's a training or configuration issue, not a CRM issue. Fexle specialises in dealer implementations — we know what works and what doesn't.",
+          "We tried CRM before and it didn't stick": `Usually that's a training or configuration issue, not a CRM issue. ${COMPANY_INFO.name} specialises in dealer implementations — we know what works and what doesn't.`,
           "The OEM has their own CRM requirements": "Many OEM programs are built on Salesforce. Even if they're not, Salesforce data can feed their systems. You get a better tool and stay compliant.",
           "Margins are too tight for new technology": "Tight margins mean you can't afford to lose a single lead. One extra car sale per month pays for the entire system. The math works."
         }
@@ -2759,10 +2886,23 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
           "We're too small": "Now is actually the perfect time — before bad habits and scattered data become problems. The system scales with you, so you won't outgrow it.",
           "We don't have time to implement": "That's the irony — you're too busy because you don't have systems. Implementation takes weeks, not months. Then you get time back every day.",
           "Technology isn't our strength": "It doesn't need to be. Salesforce is designed for business users. We handle the setup, train your team, and you use it like any other business tool.",
-          "We've tried CRM before": "Most failed CRM implementations fail because of poor setup or training, not the software. Fexle specialises in making it work — we've done 700+ implementations."
+          "We've tried CRM before": `Most failed CRM implementations fail because of poor setup or training, not the software. ${COMPANY_INFO.name} specialises in making it work — we've done ${COMPANY_INFO.whyUsStats?.[0]?.value || '700+'} implementations.`
         }
       }
     };
+    // Merge config verticals over defaults (config can override existing or add new verticals)
+    const verticalData = (() => {
+      const configVerticals = APP_CONFIG.verticals || {};
+      const merged = { ...DEFAULT_VERTICALS };
+      for (const key of Object.keys(configVerticals)) {
+        if (merged[key]) {
+          merged[key] = mergeConfig(merged[key], configVerticals[key]);
+        } else {
+          merged[key] = configVerticals[key];
+        }
+      }
+      return resolveCompanyTokens(merged);
+    })();
 
     // ==================== STORAGE FUNCTIONS ====================
     const STORAGE_KEY = 'fexle_sales_engine_data';
@@ -3016,6 +3156,13 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const updateOrgConfig = dataContext?.updateConfig;
       const membership = dataContext?.membership;
 
+      // Pro plan check: local mode = always Pro (no billing), Supabase mode = check org.plan
+      const isPro = () => {
+        if (!isSupabaseMode) return true;
+        const plan = dataContext?.organization?.plan;
+        return plan === 'pro' || plan === 'trial';
+      };
+
       // Unified setLeads that works with both modes
       const setLeads = (newLeadsOrFn) => {
         if (dataContext?.setLeads) {
@@ -3216,7 +3363,12 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
 
       // Apollo.io Search Function
       const searchApollo = async () => {
-        if (!apolloApiKey && !proxyUrl) {
+        // Pro feature gate
+        if (!isPro()) {
+          showNotification('Apollo Search is a Pro feature. Upgrade to Pro to unlock.', 'error');
+          return;
+        }
+        if (!isSupabaseMode && !apolloApiKey && !proxyUrl) {
           showNotification('Please add your Apollo API key or Google Apps Script proxy URL in Settings', 'error');
           return;
         }
@@ -3248,7 +3400,19 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
 
           let response;
 
-          if (proxyUrl) {
+          if (isSupabaseMode && supabase) {
+            // Route through edge function (API key stays server-side)
+            const session = await supabase.auth.getSession();
+            const token = session?.data?.session?.access_token;
+            response = await fetch(`${supabase.supabaseUrl}/functions/v1/apollo-search`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ searchParams })
+            });
+          } else if (proxyUrl) {
             // Route through Google Apps Script proxy (bypasses CORS, hides API key)
             response = await fetch(proxyUrl, {
               method: 'POST',
@@ -3361,8 +3525,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
         return stats;
       };
 
-      // Email Templates
-      const emailTemplates = {
+      // Email Templates — overridable via APP_CONFIG.emailTemplates
+      const defaultEmailTemplates = {
         aiDeck: {
           name: "📧 Send Agentforce Guide",
           subject: "Agentforce Implementation Guide - As Discussed",
@@ -3387,7 +3551,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
         },
         aiDeckGeneral: {
           name: "📧 Send AI Success Guide",
@@ -3415,7 +3579,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Full-Stack System Integrator`
+[COMPANY_SIGNATURE]`
         },
         deckFollowUp: {
           name: "🔄 Follow Up (Agentforce Guide)",
@@ -3435,7 +3599,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
         },
         deckFollowUpGeneral: {
           name: "🔄 Follow Up (AI Success Guide)",
@@ -3455,7 +3619,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Full-Stack System Integrator`
+[COMPANY_SIGNATURE]`
         },
         // Dynamic target action confirmation - uses [TARGET_*] tokens
         targetActionConfirm: {
@@ -3650,7 +3814,7 @@ I just tried to reach you by phone — appreciate you're busy so I'll keep this 
 
 I'm reaching out because a lot of [INDUSTRY] companies we talk to are sitting on AI features in Salesforce they're not using yet — stuff that could genuinely cut support costs or speed up sales cycles.
 
-We're Fexle — Australia's most cost-effective Salesforce implementation partner. Our hybrid model means you get enterprise-quality work at 30-40% less than traditional consultancies.
+We're ${COMPANY_INFO.name} — ${COMPANY_INFO.tagline}. Our ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model means you get enterprise-quality work at ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} less than traditional consultancies.
 
 I've attached our AI Implementation Guide — it's practical, not salesy, and shows how companies are getting real results from Salesforce AI.
 
@@ -3660,7 +3824,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner
+[COMPANY_SIGNATURE]
 
 P.S. One of our clients cut support ticket volume by 40% in 8 weeks using Agentforce.`
         },
@@ -3676,7 +3840,7 @@ I ask because a lot of [INDUSTRY] companies we talk to are sitting on AI feature
 • Agentforce — AI agents that handle customer inquiries autonomously (70% case deflection)
 • Einstein Copilot — AI assistant for sales reps (35% productivity gains)
 
-We're Fexle, Australia's most cost-effective Salesforce partner. Our hybrid model delivers enterprise-quality implementations at 30-40% less than Big Four consultancies.
+We're ${COMPANY_INFO.name}, ${COMPANY_INFO.tagline.toLowerCase()}. Our ${COMPANY_INFO.model.split(' - ')[0].toLowerCase() || 'hybrid'} model delivers enterprise-quality implementations at ${COMPANY_INFO.costAdvantage.match(/[\d-]+%/)?.[0] || '30-40%'} less than Big Four consultancies.
 
 I've put together a practical guide on implementing AI in Salesforce with real business impact. Worth sending over?
 
@@ -3684,7 +3848,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
         },
         // Dynamic follow-up after target action was booked
         targetActionFollowUp: {
@@ -3877,7 +4041,7 @@ All the best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner
+[COMPANY_SIGNATURE]
 
 P.S. If you're curious about what's possible, our AI Implementation Guide is still available: [LINK]`
         },
@@ -3896,7 +4060,7 @@ Your Situation:
 • [KEY_CHALLENGE_2]
 • [KEY_CHALLENGE_3]
 
-How Fexle Can Help:
+How We Can Help:
 • [SOLUTION_1]
 • [SOLUTION_2]
 • [SOLUTION_3]
@@ -3913,7 +4077,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
         },
         referralRequest: {
           name: "🤝 Referral Request",
@@ -3940,7 +4104,7 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner`
+[COMPANY_SIGNATURE]`
         },
         healthCheck: {
           name: "🏥 Offer Salesforce Health Check",
@@ -3966,11 +4130,12 @@ Best,
 [YOUR_NAME]
 [YOUR_EMAIL]
 [YOUR_PHONE]
-Fexle Services | Salesforce Platinum Partner
+[COMPANY_SIGNATURE]
 
 P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll still walk away with actionable insights.`
         }
       };
+      const emailTemplates = resolveCompanyTokens(mergeConfig(defaultEmailTemplates, APP_CONFIG.emailTemplates));
 
       // Generate expectation text based on target action type
       const getTargetExpectation = (targetAction, vertical, companyConfig) => {
@@ -4041,7 +4206,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const timezone = orgConfig?.localization?.timezone || 'AEST';
         const companySignature = companyConfig.name
           ? `${companyConfig.name}${companyConfig.tagline ? ' | ' + companyConfig.tagline : ''}`
-          : 'Fexle Services | Salesforce Platinum Partner';
+          : `${COMPANY_INFO.name} | ${COMPANY_INFO.status}`;
 
         // Build target action expectation text
         const targetExpectation = getTargetExpectation(targetAction, vertical, companyConfig);
@@ -4118,9 +4283,11 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
         // Add attachment reminder at the top
         const attachmentName = isSalesforce
-          ? 'Your-Customers-Wont-Wait-Neither-Should-You.pdf'
-          : 'How-to-Succeed-with-AI-Implementation.pdf';
-        const guideName = isSalesforce ? 'Agentforce Guide' : 'AI Success Guide';
+          ? (COMPANY_INFO.collateral?.salesforcePdf || 'Your-Customers-Wont-Wait-Neither-Should-You.pdf')
+          : (COMPANY_INFO.collateral?.generalPdf || 'How-to-Succeed-with-AI-Implementation.pdf');
+        const guideName = isSalesforce
+          ? (COMPANY_INFO.collateral?.salesforceGuideName || 'Agentforce Guide')
+          : (COMPANY_INFO.collateral?.generalGuideName || 'AI Success Guide');
         body = `[📎 REMEMBER: Attach "${attachmentName}" before sending]\n\n${body}`;
 
         let subject = template.subject
@@ -4168,7 +4335,9 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         };
 
         // Generate unique ID
-        const uid = `fexle-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@fexle.com`;
+        const companySlug = COMPANY_INFO.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+        const emailDomain = COMPANY_INFO.contactEmail ? COMPANY_INFO.contactEmail.split('@')[1] : (COMPANY_INFO.website || 'sales-engine.app').replace(/^https?:\/\/(www\.)?/, '');
+        const uid = `${companySlug}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${emailDomain}`;
         
         // Build description with context
         const fullDescription = `${description}\\n\\n` +
@@ -4176,8 +4345,8 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           `Company: ${attendeeCompany}\\n` +
           `Email: ${attendeeEmail}\\n\\n` +
           `---\\n` +
-          `Fexle Services - Australia's Most Cost-Effective Salesforce Implementation Partner\\n` +
-          `www.fexle.com`;
+          `${COMPANY_INFO.name} - ${COMPANY_INFO.tagline}\\n` +
+          `${COMPANY_INFO.website || ''}`;
 
         // ICS file content
         const icsContent = [
@@ -4209,7 +4378,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           `SUMMARY:${title}`,
           `DESCRIPTION:${fullDescription}`,
           `LOCATION:${location}`,
-          `ORGANIZER;CN=Fexle Services:mailto:contact@fexle.com`,
+          `ORGANIZER;CN=${COMPANY_INFO.name}:mailto:${COMPANY_INFO.contactEmail || 'noreply@' + emailDomain}`,
           `ATTENDEE;CN=${attendeeName};RSVP=TRUE:mailto:${attendeeEmail}`,
           'STATUS:CONFIRMED',
           'SEQUENCE:0',
@@ -4265,7 +4434,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           const [hours, minutes] = meeting.time.split(':').map(Number);
           const startDateTime = new Date(year, month - 1, day, hours, minutes);
           const endDateTime = new Date(startDateTime.getTime() + (meeting.duration || 20) * 60000);
-          const uid = `fexle-${meeting.id}@fexle.com`;
+          const uid = `${COMPANY_INFO.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '')}-${meeting.id}@${(COMPANY_INFO.contactEmail || '').split('@')[1] || 'sales-engine.app'}`;
 
           const description = `CEO meeting with ${meeting.leadName}\\n` +
             `Company: ${meeting.company}\\n` +
@@ -4663,6 +4832,26 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           setTimeout(() => setNotification(null), autoCloseMs || 3000);
         }
       };
+
+      // Handle billing redirect URL params
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const billing = params.get('billing');
+        if (billing === 'success') {
+          showNotification('Welcome to Pro! Your subscription is now active.', 'success');
+          // Clean URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('billing');
+          window.history.replaceState({}, '', url.toString());
+          // Reload org data to pick up new plan
+          if (dataContext?.reloadOrg) dataContext.reloadOrg();
+        } else if (billing === 'cancelled') {
+          showNotification('Checkout cancelled. No charges were made.', 'error');
+          const url = new URL(window.location.href);
+          url.searchParams.delete('billing');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }, []);
 
       // Utility functions
       const getVerticalColor = (vertical) => ({
@@ -5574,7 +5763,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
         const leadsUrl = URL.createObjectURL(leadsBlob);
         const leadsLink = document.createElement('a');
         leadsLink.href = leadsUrl;
-        leadsLink.download = `fexle_leads_${timestamp}.csv`;
+        leadsLink.download = `${COMPANY_INFO.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_leads_${timestamp}.csv`;
         leadsLink.click();
         URL.revokeObjectURL(leadsUrl);
         
@@ -5585,7 +5774,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             const tasksUrl = URL.createObjectURL(tasksBlob);
             const tasksLink = document.createElement('a');
             tasksLink.href = tasksUrl;
-            tasksLink.download = `fexle_tasks_${timestamp}.csv`;
+            tasksLink.download = `${COMPANY_INFO.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_tasks_${timestamp}.csv`;
             tasksLink.click();
             URL.revokeObjectURL(tasksUrl);
           }, 500);
@@ -5608,14 +5797,20 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
 
       // AI Research with Claude API
       const performResearch = async (lead) => {
+        // Pro feature gate
+        if (!isPro()) {
+          showNotification('AI Research is a Pro feature. Upgrade to Pro to unlock.', 'error');
+          return;
+        }
+
         setResearchLoading(true);
         setShowResearchModal(true);
         setResearchResult(null);
-        
+
         const vertical = verticalData[lead.vertical];
-        
-        // Check for API key
-        if (!anthropicApiKey) {
+
+        // Check for API key (not needed in Supabase mode — key is server-side)
+        if (!isSupabaseMode && !anthropicApiKey) {
           setResearchResult({
             error: true,
             message: "No API key configured. Go to Settings to add your Anthropic API key for AI-powered research.",
@@ -5640,7 +5835,7 @@ COMPANY TO RESEARCH:
 - Existing Notes: ${lead.notes || 'None'}
 
 CONTEXT - WHAT WE SELL:
-Fexle is Australia's most cost-effective Salesforce implementation partner. We're 300 people with a hybrid onshore-offshore model delivering implementations at 30-40% lower cost than traditional consultancies. Our focus is on Salesforce's AI innovations: Agentforce (autonomous AI agents for customer service), Einstein Copilot (AI for sales reps), and Data Cloud.
+${COMPANY_INFO.name} - ${COMPANY_INFO.tagline}. ${COMPANY_INFO.size} with ${COMPANY_INFO.model}. ${COMPANY_INFO.costAdvantage}. Key products: ${COMPANY_INFO.keyProducts.join(', ')}.
 
 KEY PAIN POINTS FOR ${vertical.name.toUpperCase()}:
 ${vertical.painPoints.map(p => '- ' + p).join('\n')}
@@ -5693,27 +5888,47 @@ Based on the company name and industry, provide a pre-call research brief with:
 Format your response as JSON with these keys: recommendedVertical (REQUIRED - one of: healthcare, professionalServices, manufacturing, financial, retail, education, nonprofit, government, realEstate, logistics, hospitality, telecom, energy, media, agriculture, construction, mining, automotive, general), companyOverview, keyContacts (array of {name, title, phone, email}), salesforceLikelihood, aiReadinessSignals (array), potentialPainPoints (array), triggerEvents (array), recommendedOpening, talkingPoints (array), recentNews (array or null if no major news), priorityLevel, priorityReason`;
 
         try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': anthropicApiKey,
-              'anthropic-version': '2023-06-01',
-              'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 1500,
-              messages: [{
-                role: 'user',
-                content: researchPrompt
-              }]
-            })
-          });
+          let response;
+          if (isSupabaseMode && supabase) {
+            // Route through edge function (API key stays server-side)
+            const session = await supabase.auth.getSession();
+            const token = session?.data?.session?.access_token;
+            response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-research`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                prompt: researchPrompt,
+                maxTokens: 1500,
+                model: 'claude-sonnet-4-20250514'
+              })
+            });
+          } else {
+            // Direct API call (local mode)
+            response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': anthropicApiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1500,
+                messages: [{
+                  role: 'user',
+                  content: researchPrompt
+                }]
+              })
+            });
+          }
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `API error: ${response.status}`);
+            throw new Error(errorData.error?.message || errorData.error || `API error: ${response.status}`);
           }
 
           const data = await response.json();
@@ -5836,7 +6051,11 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
 
       // Generate scripts using Claude AI
       const generateScriptsWithAI = async () => {
-        if (!anthropicApiKey) {
+        if (!isPro()) {
+          showNotification('AI Script Generation is a Pro feature. Upgrade to Pro to unlock.', 'error');
+          return null;
+        }
+        if (!isSupabaseMode && !anthropicApiKey) {
           showNotification('Please add your Anthropic API key in Settings to use AI script generation', 'error');
           return null;
         }
@@ -5923,27 +6142,45 @@ Return your response as valid JSON with this exact structure:
 }`;
 
         try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': anthropicApiKey,
-              'anthropic-version': '2023-06-01',
-              'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 4000,
-              messages: [{
-                role: 'user',
-                content: prompt
-              }]
-            })
-          });
+          let response;
+          if (isSupabaseMode && supabase) {
+            const session = await supabase.auth.getSession();
+            const token = session?.data?.session?.access_token;
+            response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-research`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                prompt,
+                maxTokens: 4000,
+                model: 'claude-sonnet-4-20250514'
+              })
+            });
+          } else {
+            response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': anthropicApiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 4000,
+                messages: [{
+                  role: 'user',
+                  content: prompt
+                }]
+              })
+            });
+          }
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `API error: ${response.status}`);
+            throw new Error(errorData.error?.message || errorData.error || `API error: ${response.status}`);
           }
 
           const data = await response.json();
@@ -6952,7 +7189,7 @@ Return your response as valid JSON with this exact structure:
             <!DOCTYPE html>
             <html>
             <head>
-              <title>Fexle Playbook - ${escapeHtml(selectedLead.company)}</title>
+              <title>${escapeHtml(COMPANY_INFO.name)} Playbook - ${escapeHtml(selectedLead.company)}</title>
               <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; max-width: 800px; margin: 0 auto; background: #f9fafb; }
                 h2 { color: #374151; margin-top: 32px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
@@ -7071,53 +7308,36 @@ Return your response as valid JSON with this exact structure:
                 ${nonSfObjectionsHtml}
               </div>
 
-              <!-- Why Fexle Content -->
+              <!-- Why Us Content -->
               <div class="whyfexle-content">
                 <div style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 16px; border-radius: 12px; margin-bottom: 20px;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                      <div style="font-size: 16px; font-weight: 700;">Fexle Services — Full-Stack System Integrator</div>
-                      <div style="font-size: 13px; opacity: 0.9;">Salesforce • E-Commerce • Web & Mobile • Custom Development</div>
+                      <div style="font-size: 16px; font-weight: 700;">${COMPANY_INFO.whyUsTitle}</div>
+                      <div style="font-size: 13px; opacity: 0.9;">${COMPANY_INFO.whyUsSubtitle}</div>
                     </div>
                     <div style="display: flex; gap: 16px; text-align: center;">
-                      <div><div style="font-size: 20px; font-weight: 700;">700+</div><div style="font-size: 10px; opacity: 0.8;">Projects</div></div>
-                      <div><div style="font-size: 20px; font-weight: 700;">500+</div><div style="font-size: 10px; opacity: 0.8;">Clients</div></div>
-                      <div><div style="font-size: 20px; font-weight: 700;">5.0★</div><div style="font-size: 10px; opacity: 0.8;">Rating</div></div>
+                      ${COMPANY_INFO.whyUsStats.map(s => `<div><div style="font-size: 20px; font-weight: 700;">${s.value}</div><div style="font-size: 10px; opacity: 0.8;">${s.label}</div></div>`).join('')}
                     </div>
                   </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px;">
-                  <div style="background: #dbeafe; padding: 10px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 18px;">☁️</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #1e40af;">Salesforce</div>
-                    <div style="font-size: 9px; color: #3b82f6;">Platinum Partner</div>
-                  </div>
-                  <div style="background: #dcfce7; padding: 10px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 18px;">🛒</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #166534;">E-Commerce</div>
-                    <div style="font-size: 9px; color: #22c55e;">B2B & B2C</div>
-                  </div>
-                  <div style="background: #fef3c7; padding: 10px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 18px;">📱</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #92400e;">Mobile Apps</div>
-                    <div style="font-size: 9px; color: #d97706;">iOS & Android</div>
-                  </div>
-                  <div style="background: #f3e8ff; padding: 10px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 18px;">💻</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #7c3aed;">Web Dev</div>
-                    <div style="font-size: 9px; color: #a855f7;">Full-Stack</div>
-                  </div>
+                <div style="display: grid; grid-template-columns: repeat(${COMPANY_INFO.services.length}, 1fr); gap: 8px; margin-bottom: 20px;">
+                  ${COMPANY_INFO.services.map(svc => `<div style="background: ${svc.bg}; padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 18px;">${svc.icon}</div>
+                    <div style="font-size: 11px; font-weight: 600; color: ${svc.nameColor};">${svc.name}</div>
+                    <div style="font-size: 9px; color: ${svc.detailColor};">${svc.detail}</div>
+                  </div>`).join('')}
                 </div>
 
                 <h2>1️⃣ Opening Scripts</h2>
                 <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 12px;">
-                  <div style="font-size: 12px; color: #1e40af; font-weight: 500; margin-bottom: 4px;">INTRODUCE FEXLE (FULL CAPABILITY)</div>
-                  <p style="font-style: italic; color: #1e40af; margin: 0;">"We're Fexle — a full-stack system integrator based here in Australia. We're best known as a Salesforce Platinum Partner — over 700 implementations — but we also do e-commerce, mobile apps, and custom web development. Basically, if you need technology built or integrated, we can handle it. What makes us different is our hybrid model: senior Australian consultants backed by a global delivery center. Enterprise-quality work at 30-40% less than the Big Four."</p>
+                  <div style="font-size: 12px; color: #1e40af; font-weight: 500; margin-bottom: 4px;">INTRODUCE ${COMPANY_INFO.name.toUpperCase()} (FULL CAPABILITY)</div>
+                  <p style="font-style: italic; color: #1e40af; margin: 0;">"We're ${COMPANY_INFO.name} — a full-stack system integrator based here in Australia. We're best known as a ${COMPANY_INFO.status} — over ${COMPANY_INFO.whyUsStats[0]?.value || '700+'} implementations — but we also do e-commerce, mobile apps, and custom web development. Basically, if you need technology built or integrated, we can handle it. What makes us different is our hybrid model: ${COMPANY_INFO.model}. Enterprise-quality work at ${COMPANY_INFO.costAdvantage}."</p>
                 </div>
                 <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 12px;">
                   <div style="font-size: 12px; color: #1e40af; font-weight: 500; margin-bottom: 4px;">SALESFORCE-FOCUSED INTRO</div>
-                  <p style="font-style: italic; color: #1e40af; margin: 0;">"We're Fexle — a Salesforce Platinum Partner with over 700 implementations and a 5-star client rating. We specialize in Agentforce, Data Cloud, and Industry Clouds. But we're also a full-service integrator — e-commerce, mobile apps, custom development — so if a project needs to extend beyond Salesforce, we can handle that too."</p>
+                  <p style="font-style: italic; color: #1e40af; margin: 0;">"We're ${COMPANY_INFO.name} — a ${COMPANY_INFO.status} with over ${COMPANY_INFO.whyUsStats[0]?.value || '700+'} implementations and a ${COMPANY_INFO.whyUsStats[2]?.value || '5.0★'} client rating. We specialize in ${COMPANY_INFO.keyProducts.slice(0, 3).join(', ')}. But we're also a full-service integrator — e-commerce, mobile apps, custom development — so if a project needs to extend beyond Salesforce, we can handle that too."</p>
                 </div>
                 <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 12px;">
                   <div style="font-size: 12px; color: #1e40af; font-weight: 500; margin-bottom: 4px;">IF THEY HAVE A PARTNER ALREADY</div>
@@ -7185,7 +7405,7 @@ Return your response as valid JSON with this exact structure:
                 <h2>5️⃣ Objection Handling</h2>
                 <div style="display: grid; gap: 12px;">
                   <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "We've never heard of Fexle"</div>
+                    <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "We've never heard of ${COMPANY_INFO.name}"</div>
                     <div style="background: #dcfce7; padding: 12px 16px; color: #166534;">✅ "That's fair — we're not spending millions on marketing like the Big Four. We've been quietly delivering 700+ Salesforce projects with a 5-star rating across 500+ clients. We're a Salesforce Platinum Partner, which puts us in the top tier globally. Happy to share references from companies similar to yours."</div>
                   </div>
                   <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
@@ -7342,12 +7562,14 @@ Return your response as valid JSON with this exact structure:
               }
             }
 
+            function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
             function logOutcome(outcome) {
               var notes = document.getElementById('popup-notes').value;
               var statusEl = document.getElementById('outcome-status');
               if (window.opener && window.opener.logCallFromPopup) {
                 window.opener.logCallFromPopup(${selectedLead.id}, outcome, notes);
-                statusEl.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Logged: ' + outcome + '</span>';
+                statusEl.innerHTML = '<span style="color: #16a34a; font-weight: 600;">✓ Logged: ' + esc(outcome) + '</span>';
                 document.getElementById('popup-notes').value = '';
                 setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
               } else {
@@ -7374,7 +7596,7 @@ Return your response as valid JSON with this exact structure:
             }
           `;
 
-          const popup = window.open('', 'FexlePlaybook', 'width=850,height=900,scrollbars=yes,resizable=yes');
+          const popup = window.open('', 'SalesPlaybook', 'width=850,height=900,scrollbars=yes,resizable=yes');
           if (!popup || popup.closed || typeof popup.closed === 'undefined') {
             showNotification('Popup blocked! Please allow popups for this site.', 'error');
             return;
@@ -8098,7 +8320,7 @@ Return your response as valid JSON with this exact structure:
                     {showScript ? '📋 Hide Playbook' : '📋 Show Playbook'}
                   </button>
 
-                  {/* Fexle Call Script */}
+                  {/* Call Script */}
                   {showScript && vertical && (
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6 max-h-[600px] overflow-y-auto scrollbar-thin">
 
@@ -8818,7 +9040,7 @@ Return your response as valid JSON with this exact structure:
                       <div className="bg-white rounded-xl p-16 shadow-sm border border-gray-100 text-center">
                         <div className="text-6xl mb-4">📞</div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Lead to Call</h3>
-                        <p className="text-gray-500">Choose a lead from the list to view the Fexle call playbook</p>
+                        <p className="text-gray-500">Choose a lead from the list to view the {COMPANY_INFO.name} call playbook</p>
                       </div>
                     </div>
                   );
@@ -9897,22 +10119,16 @@ Return your response as valid JSON with this exact structure:
               </div>
             )}
 
-            {/* Fexle Value Prop */}
+            {/* Company Value Prop */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
-              <h2 className="text-xl font-bold mb-2">Fexle Services - Key Differentiators</h2>
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-2xl font-bold">300+</div>
-                  <div className="text-sm text-blue-100">Salesforce Professionals</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-2xl font-bold">30-40%</div>
-                  <div className="text-sm text-blue-100">Lower Cost</div>
-                </div>
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-2xl font-bold">700+</div>
-                  <div className="text-sm text-blue-100">Implementations</div>
-                </div>
+              <h2 className="text-xl font-bold mb-2">{COMPANY_INFO.name} - Key Differentiators</h2>
+              <div className={`grid grid-cols-${COMPANY_INFO.stats.length} gap-4 mt-4`}>
+                {COMPANY_INFO.stats.map((stat, i) => (
+                  <div key={i} className="bg-white/10 rounded-lg p-4">
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-sm text-blue-100">{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -10665,7 +10881,7 @@ Return your response as valid JSON with this exact structure:
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'fexle_leads_template.csv';
+        link.download = 'leads_template.csv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -11432,7 +11648,7 @@ Return your response as valid JSON with this exact structure:
                       type="email"
                       value={userEmail}
                       onChange={(e) => setUserEmail(e.target.value)}
-                      placeholder="e.g., kylie@fexle.com"
+                      placeholder="e.g., name@company.com"
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
@@ -11568,7 +11784,7 @@ Return your response as valid JSON with this exact structure:
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
                           />
                         </div>
-                        <p className="text-xs text-gray-500">More settings available in config/company.json</p>
+                        <p className="text-xs text-gray-500">More settings available in config/app-config.js</p>
                       </div>
                     </details>
                   )}
@@ -12659,57 +12875,116 @@ Return your response as valid JSON with this exact structure:
                 </div>
               </details>
 
-              {/* API Key */}
-              <div className="pt-4 border-t border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Anthropic API Key
-                  <span className="text-xs text-gray-500 font-normal ml-2">(for AI Research)</span>
-                </label>
-                <input 
-                  type="password" 
-                  value={anthropicApiKey} 
-                  onChange={(e) => setAnthropicApiKey(e.target.value)} 
-                  placeholder="sk-ant-api03-..."
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" 
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Get your API key from{' '}
-                  <a href="https://console.anthropic.com/settings/keys" target="_blank" className="text-blue-600 hover:underline">
-                    console.anthropic.com
-                  </a>
-                </p>
-                {anthropicApiKey && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    ✓ API key saved (stored locally in your browser)
-                  </p>
-                )}
-              </div>
+              {/* API Keys */}
+              {isSupabaseMode && isAdmin ? (
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                    <span>🔑</span> API Keys
+                    <span className="text-xs font-normal text-green-600">(stored securely on server)</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-3">Keys are stored in your organization config, never exposed to the browser.</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Anthropic API Key (AI Research)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          defaultValue={dataContext?.config?.apiKeys?.anthropic ? '••••••••••••' : ''}
+                          placeholder="sk-ant-api03-..."
+                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                          onBlur={(e) => {
+                            const val = e.target.value;
+                            if (val && val !== '••••••••••••' && updateOrgConfig) {
+                              updateOrgConfig({ apiKeys: { ...(dataContext?.config?.apiKeys || {}), anthropic: val } });
+                              e.target.value = '••••••••••••';
+                              showNotification('Anthropic API key saved securely');
+                            }
+                          }}
+                        />
+                      </div>
+                      {dataContext?.config?.apiKeys?.anthropic && (
+                        <p className="text-xs text-green-600 mt-1">✓ Configured (server-side)</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Apollo.io API Key (Lead Search)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          defaultValue={dataContext?.config?.apiKeys?.apollo ? '••••••••••••' : ''}
+                          placeholder="Your Apollo API key..."
+                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                          onBlur={(e) => {
+                            const val = e.target.value;
+                            if (val && val !== '••••••••••••' && updateOrgConfig) {
+                              updateOrgConfig({ apiKeys: { ...(dataContext?.config?.apiKeys || {}), apollo: val } });
+                              e.target.value = '••••••••••••';
+                              showNotification('Apollo API key saved securely');
+                            }
+                          }}
+                        />
+                      </div>
+                      {dataContext?.config?.apiKeys?.apollo && (
+                        <p className="text-xs text-green-600 mt-1">✓ Configured (server-side)</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* API Key (Local Mode) */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Anthropic API Key
+                      <span className="text-xs text-gray-500 font-normal ml-2">(for AI Research)</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={anthropicApiKey}
+                      onChange={(e) => setAnthropicApiKey(e.target.value)}
+                      placeholder="sk-ant-api03-..."
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Get your API key from{' '}
+                      <a href="https://console.anthropic.com/settings/keys" target="_blank" className="text-blue-600 hover:underline">
+                        console.anthropic.com
+                      </a>
+                    </p>
+                    {anthropicApiKey && (
+                      <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                        ✓ API key saved (stored locally in your browser)
+                      </p>
+                    )}
+                  </div>
 
-              {/* Apollo API Key */}
-              <div className="pt-4 border-t border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apollo.io API Key
-                  <span className="text-xs text-gray-500 font-normal ml-2">(for Lead Search)</span>
-                </label>
-                <input 
-                  type="password" 
-                  value={apolloApiKey} 
-                  onChange={(e) => setApolloApiKey(e.target.value)} 
-                  placeholder="Your Apollo API key..."
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm" 
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Get your API key from{' '}
-                  <a href="https://app.apollo.io/#/settings/integrations/api" target="_blank" className="text-purple-600 hover:underline">
-                    app.apollo.io → Settings → Integrations
-                  </a>
-                </p>
-                {apolloApiKey && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    ✓ Apollo API key saved
-                  </p>
-                )}
-              </div>
+                  {/* Apollo API Key (Local Mode) */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Apollo.io API Key
+                      <span className="text-xs text-gray-500 font-normal ml-2">(for Lead Search)</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={apolloApiKey}
+                      onChange={(e) => setApolloApiKey(e.target.value)}
+                      placeholder="Your Apollo API key..."
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Get your API key from{' '}
+                      <a href="https://app.apollo.io/#/settings/integrations/api" target="_blank" className="text-purple-600 hover:underline">
+                        app.apollo.io → Settings → Integrations
+                      </a>
+                    </p>
+                    {apolloApiKey && (
+                      <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                        ✓ Apollo API key saved
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Google Apps Script Proxy */}
               <div className="pt-4 border-t border-gray-100">
@@ -12768,6 +13043,143 @@ Return your response as valid JSON with this exact structure:
                     </a>
                   </div>
                 </details>
+              )}
+
+              {/* Email Config (Supabase Admin) */}
+              {isSupabaseMode && isAdmin && (
+                <details className="pt-4 border-t border-gray-100">
+                  <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                    <span>✉️</span> Email Sending
+                    <span className="text-xs font-normal text-gray-500">(Resend integration)</span>
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">From Email Address</label>
+                      <input
+                        type="email"
+                        defaultValue={dataContext?.config?.email?.fromAddress || ''}
+                        placeholder="noreply@yourdomain.com"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        onBlur={(e) => {
+                          if (updateOrgConfig && e.target.value) {
+                            updateOrgConfig({ email: { ...(dataContext?.config?.email || {}), fromAddress: e.target.value } });
+                            showNotification('From email updated');
+                          }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">From Name</label>
+                      <input
+                        type="text"
+                        defaultValue={dataContext?.config?.email?.fromName || ''}
+                        placeholder="Sales Team"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        onBlur={(e) => {
+                          if (updateOrgConfig && e.target.value) {
+                            updateOrgConfig({ email: { ...(dataContext?.config?.email || {}), fromName: e.target.value } });
+                            showNotification('From name updated');
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-amber-600 p-2 bg-amber-50 rounded-lg">
+                      Your from-email domain must be verified in Resend. Contact support if emails aren't delivering.
+                    </p>
+                  </div>
+                </details>
+              )}
+
+              {/* Billing (Supabase Admin/Owner) */}
+              {isSupabaseMode && (isAdmin || isOwner) && (
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span>💳</span> Billing
+                  </h3>
+                  <div className="p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">Current Plan:</span>
+                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                          isPro() ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {isPro() ? 'Pro' : 'Free'}
+                        </span>
+                      </div>
+                      {isPro() && (
+                        <span className="text-xs text-green-600">Active</span>
+                      )}
+                    </div>
+
+                    {!isPro() ? (
+                      <div>
+                        <div className="text-xs text-gray-600 mb-3 space-y-1">
+                          <p className="font-medium text-gray-900">Pro Plan - $49/month</p>
+                          <ul className="space-y-1 ml-2">
+                            <li>✓ AI-powered lead research (Claude)</li>
+                            <li>✓ Apollo.io lead search</li>
+                            <li>✓ Email sending via Resend</li>
+                            <li>✓ Email sequences & automation</li>
+                            <li>✓ Webhook integrations</li>
+                            <li>✓ Priority support</li>
+                          </ul>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const session = await supabase.auth.getSession();
+                              const token = session?.data?.session?.access_token;
+                              const res = await fetch(`${supabase.supabaseUrl}/functions/v1/stripe-checkout`, {
+                                method: 'POST',
+                                headers: {
+                                  'Authorization': `Bearer ${token}`,
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                  successUrl: window.location.href + '?billing=success',
+                                  cancelUrl: window.location.href + '?billing=cancelled'
+                                })
+                              });
+                              const result = await res.json();
+                              if (!res.ok) throw new Error(result.error || 'Failed to create checkout');
+                              window.open(result.url, '_blank');
+                            } catch (err) {
+                              showNotification(err.message || 'Failed to start checkout', 'error');
+                            }
+                          }}
+                          className="w-full py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-colors"
+                        >
+                          Upgrade to Pro - $49/mo
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const session = await supabase.auth.getSession();
+                            const token = session?.data?.session?.access_token;
+                            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/stripe-portal`, {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({ returnUrl: window.location.href })
+                            });
+                            const result = await res.json();
+                            if (!res.ok) throw new Error(result.error || 'Failed to open portal');
+                            window.open(result.url, '_blank');
+                          } catch (err) {
+                            showNotification(err.message || 'Failed to open billing portal', 'error');
+                          }
+                        }}
+                        className="w-full py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                      >
+                        Manage Subscription
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Test Data Toggle */}
@@ -13089,6 +13501,38 @@ Return your response as valid JSON with this exact structure:
                         📧 Open in Email Client
                       </a>
                     </div>
+                    {isSupabaseMode && selectedLead?.email && isPro() && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const session = await supabase.auth.getSession();
+                            const token = session?.data?.session?.access_token;
+                            const res = await fetch(`${supabase.supabaseUrl}/functions/v1/email-send`, {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({
+                                leadId: selectedLead.id,
+                                to: selectedLead.email,
+                                subject: generatedEmail.subject,
+                                body: generatedEmail.body,
+                                templateKey: generatedEmail.templateKey || 'custom'
+                              })
+                            });
+                            const result = await res.json();
+                            if (!res.ok) throw new Error(result.error || 'Failed to send');
+                            showNotification('Email sent successfully via Resend!');
+                          } catch (err) {
+                            showNotification(err.message || 'Failed to send email', 'error');
+                          }
+                        }}
+                        className="w-full py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                      >
+                        ✉️ Send via Resend
+                      </button>
+                    )}
                     <p className="text-xs text-gray-500 text-center">
                       Edit the template above, then copy or open in your email client. Placeholders in [BRACKETS] need to be filled in.
                     </p>
@@ -15214,7 +15658,7 @@ Return your response as valid JSON with this exact structure:
     };
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<RootApp />);
+    root.render(<ErrorBoundary><RootApp /></ErrorBoundary>);
   </script>
 </body>
 </html>

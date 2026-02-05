@@ -10,10 +10,12 @@ AI-powered cold calling and lead generation platform for Australian B2B sales te
 | Styling | Tailwind CSS | Utility-first, loaded via CDN |
 | Backend | Supabase | Auth, PostgreSQL, real-time sync, Edge Functions |
 | Voice/SMS | Twilio | Browser-based calling, SMS, webhooks |
-| AI | Claude API | Lead research and insights |
-| Lead Data | Apollo.io | Lead search and enrichment |
+| AI | Claude API | Lead research and insights (proxied via Edge Function in Supabase mode) |
+| Lead Data | Apollo.io | Lead search and enrichment (proxied via Edge Function in Supabase mode) |
+| Email | Resend | Transactional email sending (Pro plan) |
+| Billing | Stripe | Free + Pro ($49/mo) subscription via Checkout |
 | Runtime | Node.js (ES Modules) | For utilities and testing |
-| Testing | Vitest | 480 tests with coverage |
+| Testing | Vitest | 522 tests with coverage |
 
 ## Project Structure
 
@@ -36,6 +38,8 @@ fexle-sales-engine/
 │       ├── transform.js       # Data transformation
 │       └── analytics.js       # Tracking utilities
 ├── config/
+│   ├── app-config.js          # Runtime white-label config (sets window.APP_CONFIG)
+│   ├── supabase.js            # Supabase credentials for multi-user mode
 │   ├── company.json           # Branding, CEO info, contact details
 │   ├── onboarding.json        # 8-step tour configuration
 │   ├── scoring.json           # Scoring weights and thresholds
@@ -45,17 +49,31 @@ fexle-sales-engine/
 │   ├── collateral.json        # Marketing materials config
 │   └── localization.json      # AU/US/UK phone and currency
 ├── supabase/
-│   ├── migrations/            # Database schema (3 migrations)
+│   ├── migrations/            # Database schema (6 migrations)
+│   │   ├── 005_twilio_schema_fix.sql  # Missing twilio_credentials columns
+│   │   └── 006_marketable.sql         # email_sends table + Stripe billing columns
 │   └── functions/             # Edge Functions
 │       ├── twilio-voice/      # Voice call handling
 │       ├── sms-send/          # SMS dispatch
 │       ├── webhook-dispatch/  # Webhook routing
-│       └── send-daily-report/ # Automated reporting
+│       ├── send-daily-report/ # Automated reporting
+│       ├── ai-research/       # Anthropic Claude API proxy (Pro)
+│       ├── apollo-search/     # Apollo.io search API proxy (Pro)
+│       ├── email-send/        # Resend email sending (Pro)
+│       ├── stripe-checkout/   # Stripe Checkout session creation
+│       ├── stripe-webhook/    # Stripe subscription event handler
+│       └── stripe-portal/     # Stripe Billing Portal session
 ├── scripts/
 │   └── google-apps-script.js  # Google Sheets automation
 ├── tests/
 │   ├── utils/                 # Unit tests (phone, scoring, etc.)
 │   └── integration/           # Workflow tests
+├── examples/
+│   └── fexle-config/          # Complete Fexle example config
+│       ├── app-config.js      # Reference app-config.js with Fexle data
+│       ├── company.json       # Company info example
+│       ├── scripts.json       # Call scripts example
+│       └── verticals.json     # Verticals example
 └── docs/
     └── USER_GUIDE.md          # Feature documentation
 ```
@@ -63,7 +81,7 @@ fexle-sales-engine/
 ## Commands
 
 ```bash
-npm test              # Run all tests (328 tests)
+npm test              # Run all tests (522 tests)
 npm run test:watch    # Watch mode
 npm run test:ui       # Vitest UI
 npm run test:coverage # Coverage report
@@ -190,16 +208,88 @@ detectPhoneCountry(phone)           // → 'AU' | 'US' | 'CA' | 'UK' | null
 - Onboarding: Search for `OnboardingTour`
 
 ### Configuration System
+- Runtime config via `config/app-config.js` (sets `window.APP_CONFIG`)
+- All hardcoded values have configurable overrides with Fexle defaults
+- Deep merge: partial overrides work (set only what you change)
 - Business rules in JSON config files (not code)
-- White-label via `config/company.json`
 - 19 industry verticals with unique scripts
 - Configurable target actions (CEO Meeting, Demo, etc.)
 
+### White-Label Runtime Config (config/app-config.js)
+Follows same pattern as `config/supabase.js` — loaded via `<script>` tag.
+
+**Configurable sections:**
+- `company`: Name, tagline, stats, proof points, services grid
+- `scripts`: Call scripts (openings, pivots, closes, objections)
+- `verticals`: Industry verticals (merged over 19 defaults)
+- `scoring`: Lead scoring weights
+- `targetActions`: Default target action (CEO Meeting → anything)
+- `emailTemplates`: Email template overrides
+
+**Layering order:**
+```
+config/app-config.js (APP_CONFIG)  ← base config layer
+  ↓ mergeConfig
+Hardcoded defaults (in index.html)  ← fallback
+  ↓ mergeVerticals
+Custom AI-generated verticals       ← user additions
+  ↓ getMergedVertical
+Vertical overrides (per-item edits)  ← admin customizations
+  ↓ orgConfig (Supabase)
+Organization-level overrides         ← multi-user config
+```
+
+**Key variables:**
+```javascript
+COMPANY_INFO      // mergeConfig(DEFAULT_COMPANY_INFO, APP_CONFIG.company)
+CALL_SCRIPTS      // mergeConfig(DEFAULT_SCRIPTS, APP_CONFIG.scripts)
+verticalData      // DEFAULT_VERTICALS merged with APP_CONFIG.verticals
+SCORING_WEIGHTS   // mergeConfig(DEFAULT_SCORING_WEIGHTS, APP_CONFIG.scoring)
+DEFAULT_TARGET_ACTION  // mergeConfig(hardcoded, APP_CONFIG.targetActions.default)
+emailTemplates    // mergeConfig(defaultEmailTemplates, APP_CONFIG.emailTemplates)
+// Backward-compat aliases:
+FEXLE_INFO = COMPANY_INFO
+FEXLE_SCRIPTS = CALL_SCRIPTS
+```
+
 ### Communication Infrastructure
 - Twilio Edge Functions for voice/SMS
+- Resend Edge Function for email sending (Pro plan)
 - Status callbacks for call tracking
 - Token-based authentication
 - Webhook dispatch for integrations
+
+### Security
+- CSP meta tag in `<head>` (allows CDN scripts, Supabase, Stripe, Twilio)
+- `unsafe-eval` required for Babel in-browser transpilation
+- React ErrorBoundary wraps root app with reload-page fallback
+- innerHTML in playbook popup escaped with `esc()` helper
+- API keys proxied server-side in Supabase mode (never in browser)
+
+### Billing (Stripe)
+- Free plan: lead management, dashboard, playbooks, analytics, CSV import/export
+- Pro plan ($49/mo): AI research, Apollo search, email sending, sequences, webhooks
+- `isPro()` helper: returns true in local mode, checks `org.plan` in Supabase mode
+- Stripe Checkout for upgrades, Billing Portal for management
+- Webhook handles: checkout.session.completed, subscription.updated/deleted, invoice.payment_failed
+- organizations table has: stripe_customer_id, stripe_subscription_id, stripe_subscription_status
+- plan column: 'free' (default), 'pro', 'trial', 'past_due'
+
+### API Key Proxy
+- In Supabase mode, Anthropic and Apollo calls route through edge functions
+- Edge functions look up org-level API key first (`config.apiKeys.anthropic`/`.apollo`), then fall back to platform env secret
+- In local mode, direct API calls with `anthropic-dangerous-direct-browser-access` header (Anthropic) or direct Apollo call
+- Settings UI: Supabase mode saves keys to org config (server-side), local mode saves to localStorage
+
+### Supabase Secrets Required
+| Secret | Purpose | Edge Function |
+|--------|---------|---------------|
+| `RESEND_API_KEY` | Email sending | email-send, send-daily-report |
+| `STRIPE_SECRET_KEY` | Stripe API | stripe-checkout, stripe-webhook, stripe-portal |
+| `STRIPE_WEBHOOK_SECRET` | Webhook verification | stripe-webhook |
+| `STRIPE_PRO_PRICE_ID` | Pro plan price ID | stripe-checkout |
+| `ANTHROPIC_API_KEY` | Platform fallback | ai-research |
+| `APOLLO_API_KEY` | Platform fallback | apollo-search |
 
 ### UX Improvements (v2.1)
 Key UX changes to reduce overwhelm for new users:
