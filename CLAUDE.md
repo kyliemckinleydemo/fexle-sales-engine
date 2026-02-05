@@ -49,9 +49,10 @@ fexle-sales-engine/
 │   ├── collateral.json        # Marketing materials config
 │   └── localization.json      # AU/US/UK phone and currency
 ├── supabase/
-│   ├── migrations/            # Database schema (6 migrations)
+│   ├── migrations/            # Database schema (7 migrations)
 │   │   ├── 005_twilio_schema_fix.sql  # Missing twilio_credentials columns
-│   │   └── 006_marketable.sql         # email_sends table + Stripe billing columns
+│   │   ├── 006_marketable.sql         # email_sends table + Stripe billing columns
+│   │   └── 007_twilio_nullable.sql    # Make auth_token_encrypted nullable (we use API keys now)
 │   └── functions/             # Edge Functions
 │       ├── twilio-voice/      # Voice call handling
 │       ├── sms-send/          # SMS dispatch

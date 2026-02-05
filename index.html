@@ -4588,11 +4588,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           };
 
           // Use functional setState to avoid stale closure issues
-          console.log('Booking meeting via slot picker:', meeting);
-          setBookedMeetings(prev => {
-            console.log('Previous meetings:', prev.length, 'Adding new meeting');
-            return [...prev, meeting];
-          });
+          setBookedMeetings(prev => [...prev, meeting]);
 
           // Remove from availability if it was an available slot
           if (!isScheduleChallenge) {
@@ -4657,7 +4653,7 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           );
 
           if (leadsWithoutActualMeeting.length > 0) {
-            console.log(`Data integrity: Found leads with ${targetStatus} status but no meeting:`, leadsWithoutActualMeeting.map(l => l.company));
+            console.warn(`Data integrity: Found leads with ${targetStatus} status but no meeting:`, leadsWithoutActualMeeting.map(l => l.company));
             setLeads(leads.map(lead =>
               leadsWithoutActualMeeting.some(l => l.id === lead.id)
                 ? { ...lead, status: 'Follow Up' }
@@ -5232,8 +5228,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           });
 
           if (!response.ok) {
-            const error = await response.json();
-            console.log('Twilio not configured:', error.error);
             setTwilioConfigured(false);
             setTwilioStatus('offline');
             return false;
@@ -5279,7 +5273,6 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
             setTwilioDevice(device);
             return true;
           } else {
-            console.log('Twilio SDK not loaded');
             setTwilioStatus('offline');
             return false;
           }
@@ -5966,9 +5959,6 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
             timestamp: new Date().toISOString(),
             aiGenerated: true
           };
-
-          // Debug: log what AI returned for vertical classification
-          console.log('AI recommended vertical:', parsed.recommendedVertical, '| Valid:', !!verticalData[parsed.recommendedVertical]);
 
           setResearchResult(research);
 
@@ -9114,7 +9104,7 @@ Return your response as valid JSON with this exact structure:
                 return;
               }
             } catch (err) {
-              console.log('Analytics RPC not available, using local calculation');
+              // RPC not available, fall through to local calculation
             }
           }
 
@@ -12129,7 +12119,7 @@ Return your response as valid JSON with this exact structure:
                                   });
                                 }
                               } catch (e) {
-                                console.log('No existing report subscription');
+                                // No existing subscription - use defaults
                               } finally {
                                 setReportLoading(false);
                               }
@@ -12314,7 +12304,7 @@ Return your response as valid JSON with this exact structure:
                                   setTwilioConfigured(!!data.account_sid);
                                 }
                               } catch (e) {
-                                console.log('No existing Twilio credentials');
+                                // No existing credentials - use defaults
                               } finally {
                                 setTwilioLoading(false);
                               }
@@ -12328,18 +12318,23 @@ Return your response as valid JSON with this exact structure:
                               showNotification('Account SID, API Key SID, and Caller ID are required', 'error');
                               return;
                             }
+                            if (!twilioSettings.apiKeySecret && !twilioConfigured) {
+                              showNotification('API Key Secret is required for first-time setup', 'error');
+                              return;
+                            }
                             setTwilioSaving(true);
                             try {
                               const updateData = {
                                 organization_id: dataContext.organization.id,
                                 account_sid: twilioSettings.accountSid,
                                 api_key_sid: twilioSettings.apiKeySid,
-                                twiml_app_sid: twilioSettings.twimlAppSid,
+                                twiml_app_sid: twilioSettings.twimlAppSid || null,
                                 caller_id: twilioSettings.callerId,
+                                phone_number: twilioSettings.callerId, // Backwards compat
                                 recording_enabled: twilioSettings.recordingEnabled,
                                 is_active: true
                               };
-                              // Only update secret if provided
+                              // Only update secret if provided (allows editing other fields without re-entering)
                               if (twilioSettings.apiKeySecret) {
                                 updateData.api_key_secret = twilioSettings.apiKeySecret;
                               }
@@ -12348,6 +12343,7 @@ Return your response as valid JSON with this exact structure:
                                 .upsert(updateData, { onConflict: 'organization_id' });
                               if (error) throw error;
                               setTwilioConfigured(true);
+                              setTwilioSettings(prev => ({ ...prev, apiKeySecret: '' })); // Clear secret from state
                               showNotification('Twilio settings saved! Refresh to enable browser calling.');
                             } catch (e) {
                               showNotification('Failed to save Twilio settings: ' + e.message, 'error');
@@ -12362,14 +12358,25 @@ Return your response as valid JSON with this exact structure:
 
                           return (
                             <div className="space-y-4">
-                              <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
-                                <strong>Setup Instructions:</strong>
-                                <ol className="mt-1 ml-4 list-decimal space-y-1">
-                                  <li>Create a <a href="https://console.twilio.com" target="_blank" className="underline">Twilio account</a></li>
-                                  <li>Get or buy a phone number (for Caller ID)</li>
-                                  <li>Create an API Key (not Auth Token)</li>
-                                  <li>Create a TwiML App with Voice URL pointing to your Edge Function</li>
-                                </ol>
+                              <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700 space-y-2">
+                                <div>
+                                  <strong>Setup Instructions:</strong>
+                                  <ol className="mt-1 ml-4 list-decimal space-y-1">
+                                    <li>Create a <a href="https://console.twilio.com" target="_blank" className="underline">Twilio account</a></li>
+                                    <li>Buy a phone number with Voice capability</li>
+                                    <li>Go to <strong>Account → API Keys</strong> and create a new Standard API Key</li>
+                                    <li>Go to <strong>Voice → TwiML Apps</strong> and create a new app</li>
+                                    <li>Set the Voice Request URL to your Edge Function (see below)</li>
+                                  </ol>
+                                </div>
+                                <div className="p-2 bg-blue-100 rounded font-mono text-xs break-all">
+                                  <strong>Voice URL:</strong><br/>
+                                  {supabase?.supabaseUrl || 'https://YOUR-PROJECT.supabase.co'}/functions/v1/twilio-voice
+                                </div>
+                                <div className="text-blue-600">
+                                  <strong>Status Callback URL (optional):</strong><br/>
+                                  <span className="font-mono">{supabase?.supabaseUrl || 'https://YOUR-PROJECT.supabase.co'}/functions/v1/twilio-status-callback</span>
+                                </div>
                               </div>
 
                               <div className="space-y-3">
@@ -13182,6 +13189,42 @@ Return your response as valid JSON with this exact structure:
                 </div>
               )}
 
+              {/* Platform Setup (Owner only - for self-hosted) */}
+              {isSupabaseMode && isOwner && (
+                <details className="pt-4 border-t border-gray-100">
+                  <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
+                    <span>🔧</span> Platform Setup
+                    <span className="text-xs font-normal text-gray-500">(owner only)</span>
+                  </summary>
+                  <div className="mt-3 space-y-3 text-xs">
+                    <div className="p-3 bg-amber-50 rounded-lg text-amber-800">
+                      <strong>For self-hosted deployments only.</strong> These webhook URLs must be configured in external services.
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                      <div className="font-semibold text-gray-700">Stripe Webhook</div>
+                      <p className="text-gray-600">In <a href="https://dashboard.stripe.com/webhooks" target="_blank" className="text-purple-600 underline">Stripe Dashboard → Webhooks</a>, add endpoint:</p>
+                      <div className="font-mono bg-white p-2 rounded border text-xs break-all">
+                        {supabase?.supabaseUrl || 'https://YOUR-PROJECT.supabase.co'}/functions/v1/stripe-webhook
+                      </div>
+                      <p className="text-gray-500">Events to listen for: <code>checkout.session.completed</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>, <code>invoice.payment_failed</code></p>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                      <div className="font-semibold text-gray-700">Supabase Secrets Required</div>
+                      <ul className="text-gray-600 space-y-1 ml-2">
+                        <li><code>STRIPE_SECRET_KEY</code> - from Stripe API keys</li>
+                        <li><code>STRIPE_WEBHOOK_SECRET</code> - from webhook endpoint signing secret</li>
+                        <li><code>STRIPE_PRO_PRICE_ID</code> - Price ID for Pro plan (e.g., price_xxx)</li>
+                        <li><code>RESEND_API_KEY</code> - from Resend dashboard</li>
+                        <li><code>ANTHROPIC_API_KEY</code> - platform fallback for AI (optional)</li>
+                        <li><code>APOLLO_API_KEY</code> - platform fallback for Apollo (optional)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </details>
+              )}
+
               {/* Test Data Toggle */}
               <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
@@ -13860,11 +13903,7 @@ Return your response as valid JSON with this exact structure:
           };
           
           // Use functional setState to avoid stale closure issues
-          console.log('Booking meeting via calendar:', meeting);
-          setBookedMeetings(prev => {
-            console.log('Previous meetings:', prev.length, 'Adding new meeting');
-            return [...prev, meeting];
-          });
+          setBookedMeetings(prev => [...prev, meeting]);
 
           // Only remove from availability if it was an available slot
           if (!isScheduleChallenge) {
