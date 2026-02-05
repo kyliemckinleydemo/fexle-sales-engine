@@ -6,11 +6,16 @@
  * - Verify browser version exposes same API as ES module version
  * - Test global namespace registration
  * - Ensure parity between both versions
+ * - Test override functions in browser module
+ *
+ * EXPORTS:
+ * - Test suites for browser ScriptBuilder module (~55 tests)
  *
  * CLAUDE NOTES:
  * - Loads browser version which attaches to global/window
  * - Tests the same functionality as scriptBuilder.test.js
  * - Verifies window.ScriptBuilder is correctly populated
+ * - Override function parity tests added for white-label feature
  */
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
@@ -58,10 +63,20 @@ describe('ScriptBuilder Browser Module', () => {
       expect(typeof ScriptBuilder.saveCustomScriptsToStorage).toBe('function');
       expect(typeof ScriptBuilder.loadCustomScriptsFromStorage).toBe('function');
       expect(typeof ScriptBuilder.deleteScript).toBe('function');
+      expect(typeof ScriptBuilder.getMergedVertical).toBe('function');
+      expect(typeof ScriptBuilder.hasOverride).toBe('function');
+      expect(typeof ScriptBuilder.setOverride).toBe('function');
+      expect(typeof ScriptBuilder.removeOverride).toBe('function');
+      expect(typeof ScriptBuilder.saveVerticalOverridesToStorage).toBe('function');
+      expect(typeof ScriptBuilder.loadVerticalOverridesFromStorage).toBe('function');
     });
 
     it('exports CUSTOM_SCRIPTS_KEY constant', () => {
       expect(ScriptBuilder.CUSTOM_SCRIPTS_KEY).toBe('customScripts');
+    });
+
+    it('exports VERTICAL_OVERRIDES_KEY constant', () => {
+      expect(ScriptBuilder.VERTICAL_OVERRIDES_KEY).toBe('verticalOverrides');
     });
   });
 
@@ -302,5 +317,108 @@ describe('ES Module vs Browser Module Parity', () => {
     const browserResult = browserModule.deleteScript(scripts, 'a');
 
     expect(JSON.stringify(esResult)).toBe(JSON.stringify(browserResult));
+  });
+
+  it('both versions have same VERTICAL_OVERRIDES_KEY', () => {
+    expect(esModule.VERTICAL_OVERRIDES_KEY).toBe(browserModule.VERTICAL_OVERRIDES_KEY);
+  });
+
+  it('getMergedVertical produces same results', () => {
+    const base = {
+      name: 'Healthcare',
+      openings: [
+        { name: 'Direct', script: 'Original 1' },
+        { name: 'Curiosity', script: 'Original 2' }
+      ],
+      objections: { 'Not interested': 'Response 1' },
+      painPoints: ['Pain 1', 'Pain 2']
+    };
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom opening' }],
+        objections: { 'Not interested': 'Custom response' },
+        painPoints: [{ index: 1, text: 'Custom pain' }]
+      }
+    };
+
+    const esResult = esModule.getMergedVertical('healthcare', base, overrides);
+    const browserResult = browserModule.getMergedVertical('healthcare', base, overrides);
+
+    expect(JSON.stringify(esResult)).toBe(JSON.stringify(browserResult));
+  });
+
+  it('getMergedVertical returns same result with no overrides', () => {
+    const base = { name: 'Test', openings: [{ script: 'Hello' }] };
+
+    const esResult = esModule.getMergedVertical('test', base, {});
+    const browserResult = browserModule.getMergedVertical('test', base, {});
+
+    expect(JSON.stringify(esResult)).toBe(JSON.stringify(browserResult));
+  });
+
+  it('hasOverride produces same results', () => {
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom' }],
+        objections: { 'Not interested': 'Custom' }
+      }
+    };
+
+    // Test array type
+    expect(esModule.hasOverride(overrides, 'healthcare', 'openings', 0))
+      .toBe(browserModule.hasOverride(overrides, 'healthcare', 'openings', 0));
+    expect(esModule.hasOverride(overrides, 'healthcare', 'openings', 1))
+      .toBe(browserModule.hasOverride(overrides, 'healthcare', 'openings', 1));
+
+    // Test object type
+    expect(esModule.hasOverride(overrides, 'healthcare', 'objections', 'Not interested'))
+      .toBe(browserModule.hasOverride(overrides, 'healthcare', 'objections', 'Not interested'));
+
+    // Test missing
+    expect(esModule.hasOverride(null, 'healthcare', 'openings', 0))
+      .toBe(browserModule.hasOverride(null, 'healthcare', 'openings', 0));
+  });
+
+  it('setOverride produces same results', () => {
+    const testCases = [
+      // Opening script
+      [{},'healthcare', 'openings', 0, 'Custom script'],
+      // Objection
+      [{}, 'healthcare', 'objections', 'Not interested', 'Custom response'],
+      // Pain point
+      [{}, 'healthcare', 'painPoints', 0, 'Custom pain'],
+      // Update existing
+      [{ healthcare: { openings: [{ index: 0, script: 'Old' }] } }, 'healthcare', 'openings', 0, 'New'],
+    ];
+
+    testCases.forEach(([overrides, key, type, id, value]) => {
+      const esResult = esModule.setOverride(overrides, key, type, id, value);
+      const browserResult = browserModule.setOverride(overrides, key, type, id, value);
+      expect(JSON.stringify(esResult)).toBe(JSON.stringify(browserResult));
+    });
+  });
+
+  it('removeOverride produces same results', () => {
+    const overrides = {
+      healthcare: {
+        openings: [{ index: 0, script: 'Custom' }, { index: 1, script: 'Custom2' }],
+        objections: { 'Not interested': 'Response' }
+      }
+    };
+
+    // Remove array item
+    const esResult1 = esModule.removeOverride(overrides, 'healthcare', 'openings', 0);
+    const browserResult1 = browserModule.removeOverride(overrides, 'healthcare', 'openings', 0);
+    expect(JSON.stringify(esResult1)).toBe(JSON.stringify(browserResult1));
+
+    // Remove object item
+    const esResult2 = esModule.removeOverride(overrides, 'healthcare', 'objections', 'Not interested');
+    const browserResult2 = browserModule.removeOverride(overrides, 'healthcare', 'objections', 'Not interested');
+    expect(JSON.stringify(esResult2)).toBe(JSON.stringify(browserResult2));
+
+    // Remove non-existing
+    const esResult3 = esModule.removeOverride(overrides, 'fintech', 'openings', 0);
+    const browserResult3 = browserModule.removeOverride(overrides, 'fintech', 'openings', 0);
+    expect(JSON.stringify(esResult3)).toBe(JSON.stringify(browserResult3));
   });
 });

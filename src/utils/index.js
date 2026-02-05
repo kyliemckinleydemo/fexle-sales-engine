@@ -13,6 +13,7 @@
  * - storage: saveToStorage, loadFromStorage, STORAGE_KEY
  * - transform: transformLead, toDbLead, transformApolloLead, getCompanySizeBucket, getRevenueBucket, detectVertical
  * - analytics: calculateLocalAnalytics, calculateCallMetrics, calculateConversionFunnel, calculateLeadSourceStats, calculateRepStats, DATE_RANGES, getDateRange, formatDuration, calculateTrend
+ * - scriptBuilder: getMergedVertical, hasOverride, setOverride, removeOverride, saveVerticalOverridesToStorage, loadVerticalOverridesFromStorage, VERTICAL_OVERRIDES_KEY
  */
 
 export { calculateLeadScore } from './scoring.js';
@@ -80,5 +81,12 @@ export {
   saveCustomScriptsToStorage,
   loadCustomScriptsFromStorage,
   deleteScript,
-  CUSTOM_SCRIPTS_KEY
+  CUSTOM_SCRIPTS_KEY,
+  getMergedVertical,
+  hasOverride,
+  saveVerticalOverridesToStorage,
+  loadVerticalOverridesFromStorage,
+  setOverride,
+  removeOverride,
+  VERTICAL_OVERRIDES_KEY
 } from './scriptBuilder.js';
