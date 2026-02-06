@@ -1,4 +1,4 @@
-# Sales Engine
+# Outbound Sales Engine
 
 AI-powered cold calling and lead generation platform for B2B sales teams. Features multi-user support, white-label capabilities, and Twilio/Supabase integrations.
 
@@ -20,7 +20,7 @@ AI-powered cold calling and lead generation platform for B2B sales teams. Featur
 ## Project Structure
 
 ```
-sales-engine/
+outbound-sales-engine/
 ├── index.html                 # Main SPA (~750KB, entire React app)
 ├── src/
 │   ├── index.js               # Library entry point
