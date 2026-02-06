@@ -12309,7 +12309,7 @@ Return your response as valid JSON with this exact structure:
                                   .from('twilio_credentials')
                                   .select('*')
                                   .eq('organization_id', dataContext.organization.id)
-                                  .single();
+                                  .maybeSingle();
                                 if (data) {
                                   setTwilioSettings({
                                     accountSid: data.account_sid || '',
