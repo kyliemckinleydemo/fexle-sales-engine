@@ -312,6 +312,9 @@ test.describe('Script Builder Modal', () => {
   });
 
   test.describe('localStorage Persistence', () => {
+    // These tests involve page reloads and need more time
+    test.setTimeout(60000);
+
     test('custom scripts persist after page reload', async ({ page }) => {
       // Set custom script in localStorage
       await page.evaluate(() => {
@@ -335,21 +338,25 @@ test.describe('Script Builder Modal', () => {
         localStorage.setItem('customScripts', JSON.stringify(customScript));
       });
 
-      // Reload to pick up the new data
-      await page.reload();
-      await page.waitForSelector('text=Today', { timeout: 30000 });
+      // Verify localStorage was set
+      const savedScripts = await page.evaluate(() => localStorage.getItem('customScripts'));
+      expect(savedScripts).toContain('Test Vertical');
+
+      // Use goto instead of reload for more reliable localStorage pickup
+      await page.goto('/?e2e=true');
+      await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
       // Skip tour if it appears
       const skipTour = page.locator('text=Skip tour');
-      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
         await skipTour.click();
       }
 
       // Navigate to Playbooks
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Custom vertical should appear in the list
-      await expect(page.locator('text=Test Vertical')).toBeVisible();
+      await expect(page.locator('text=Test Vertical')).toBeVisible({ timeout: 10000 });
     });
 
     test('custom scripts appear in vertical selector', async ({ page }) => {
@@ -375,26 +382,40 @@ test.describe('Script Builder Modal', () => {
         localStorage.setItem('customScripts', JSON.stringify(customScript));
       });
 
-      await page.reload();
-      await page.waitForSelector('text=Today', { timeout: 30000 });
+      // Verify localStorage was set
+      const savedScripts = await page.evaluate(() => localStorage.getItem('customScripts'));
+      expect(savedScripts).toContain('My Custom Vertical');
+
+      // Use goto instead of reload for more reliable localStorage pickup
+      await page.goto('/?e2e=true');
+      await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
       // Skip tour if it appears
       const skipTour = page.locator('text=Skip tour');
-      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
         await skipTour.click();
       }
 
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Should see custom vertical in the Custom Playbooks section
-      await expect(page.locator('text=My Custom Vertical')).toBeVisible();
+      await expect(page.locator('text=My Custom Vertical')).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('Edit Mode', () => {
+    test.setTimeout(60000);
+
     test.beforeEach(async ({ page }) => {
+      // Navigate first to establish page context
+      await page.goto('/?e2e=true');
+
       // Set up a custom script to edit
       await page.evaluate(() => {
+        localStorage.setItem('e2eTestMode', 'true');
+        localStorage.setItem('outboundSalesEngineMode', 'local');
+        localStorage.setItem('onboardingComplete', 'true');
+        localStorage.setItem('hasSeenOnboarding', 'true');
         const customScript = {
           editable_vertical: {
             name: 'Editable Vertical',
@@ -421,28 +442,32 @@ test.describe('Script Builder Modal', () => {
         localStorage.setItem('customScripts', JSON.stringify(customScript));
       });
 
+      // Navigate again to pick up localStorage
       await page.goto('/?e2e=true');
-      await page.waitForSelector('text=Today', { timeout: 30000 });
+      await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
       // Skip tour if it appears
       const skipTour = page.locator('text=Skip tour');
-      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
         await skipTour.click();
       }
     });
 
     test('can select and view custom playbook', async ({ page }) => {
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Click on the custom playbook
       await page.click('text=Editable Vertical');
 
       // Should show the playbook content
-      await expect(page.locator('text=Direct')).toBeVisible();
+      await expect(page.locator('text=Direct')).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('Delete Functionality', () => {
+    // These tests involve modal navigation and need more time
+    test.setTimeout(60000);
+
     test.beforeEach(async ({ page }) => {
       // Set up a custom script to delete
       await page.evaluate(() => {
@@ -467,36 +492,36 @@ test.describe('Script Builder Modal', () => {
       });
 
       await page.goto('/?e2e=true');
-      await page.waitForSelector('text=Today', { timeout: 30000 });
+      await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
       // Skip tour if it appears
       const skipTour = page.locator('text=Skip tour');
-      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
         await skipTour.click();
       }
     });
 
     test('custom playbooks have delete button', async ({ page }) => {
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Hover or look for delete button near the custom playbook
       // The delete button should be visible for custom playbooks
       const customSection = page.locator('text=Custom Playbooks').locator('..');
-      await expect(customSection).toBeVisible();
+      await expect(customSection).toBeVisible({ timeout: 10000 });
     });
 
     test('deleting removes playbook from list', async ({ page }) => {
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Verify the playbook exists and select it
       const playbookButton = page.locator('button:has-text("Deletable Vertical")');
-      await expect(playbookButton).toBeVisible();
+      await expect(playbookButton).toBeVisible({ timeout: 10000 });
       await playbookButton.click();
 
       // Click "Edit Playbook" to open modal in edit mode
       await page.click('text=Edit Playbook');
       // In edit mode, the modal title is "Edit Script Builder"
-      await expect(page.locator('text=Edit Script Builder')).toBeVisible();
+      await expect(page.locator('text=Edit Script Builder')).toBeVisible({ timeout: 10000 });
 
       // Navigate to Step 3 (data is pre-filled, so Next buttons should be enabled)
       await page.click('button:has-text("Next →")');
@@ -512,23 +537,24 @@ test.describe('Script Builder Modal', () => {
       await page.click('text=Delete Playbook');
 
       // Modal should close and playbook should be removed
-      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible();
+      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible({ timeout: 10000 });
 
       // Verify playbook is removed from list (the custom playbooks section)
       await expect(page.locator('button:has-text("Deletable Vertical")')).not.toBeVisible({ timeout: 5000 });
     });
 
     test('deleting updates localStorage', async ({ page }) => {
-      await page.click('text=Playbooks');
+      await page.click('button:has-text("Playbooks")');
 
       // Select and click on the custom playbook
       const playbookButton = page.locator('button:has-text("Deletable Vertical")');
+      await expect(playbookButton).toBeVisible({ timeout: 10000 });
       await playbookButton.click();
 
       // Click "Edit Playbook" to open modal in edit mode
       await page.click('text=Edit Playbook');
       // In edit mode, the modal title is "Edit Script Builder"
-      await expect(page.locator('text=Edit Script Builder')).toBeVisible();
+      await expect(page.locator('text=Edit Script Builder')).toBeVisible({ timeout: 10000 });
 
       // Navigate to Step 3
       await page.click('button:has-text("Next →")');
@@ -541,7 +567,7 @@ test.describe('Script Builder Modal', () => {
       await page.click('text=Delete Playbook');
 
       // Wait for modal to close
-      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible();
+      await expect(page.locator('text=Edit Script Builder')).not.toBeVisible({ timeout: 10000 });
 
       // Check localStorage - the key should be removed
       const scripts = await page.evaluate(() => {

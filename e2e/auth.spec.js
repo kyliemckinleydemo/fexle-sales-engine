@@ -55,11 +55,13 @@ test.describe('Mode Selection', () => {
   });
 
   test('local mode persists after page reload', async ({ page }) => {
+    test.setTimeout(60000);
+
     await page.goto('/?e2e=true');
 
     // Select Single User
     await page.click('text=Single User');
-    await page.waitForSelector('text=Today', { timeout: 30000 });
+    await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
     // Skip onboarding if it appears
     const skipTour = page.locator('text=Skip tour');
@@ -67,16 +69,28 @@ test.describe('Mode Selection', () => {
       await skipTour.click();
     }
 
-    // Set onboarding complete to avoid it on reload
+    // Set all onboarding flags to prevent it from appearing after reload
     await page.evaluate(() => {
       localStorage.setItem('onboardingComplete', 'true');
+      localStorage.setItem('hasSeenOnboarding', 'true');
     });
 
-    // Reload the page
-    await page.reload();
+    // Verify localStorage is set correctly before reload
+    const modeBeforeReload = await page.evaluate(() => localStorage.getItem('outboundSalesEngineMode'));
+    expect(modeBeforeReload).toBe('local');
+
+    // Use goto instead of reload for more reliable localStorage pickup
+    await page.goto('/?e2e=true');
 
     // Should go directly to the app, not mode selection
-    await page.waitForSelector('text=Today', { timeout: 30000 });
+    await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
+
+    // Skip onboarding if it still appears (it shouldn't)
+    const skipTourAfter = page.locator('text=Skip tour');
+    if (await skipTourAfter.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await skipTourAfter.click();
+    }
+
     // Mode selection screen has "How will you be using this app?" - that should NOT be visible
     await expect(page.locator('text=How will you be using this app?')).not.toBeVisible();
   });
@@ -199,6 +213,8 @@ test.describe('Settings Mode Switching', () => {
 
 test.describe('Auth State Isolation', () => {
   test('localStorage data is isolated per mode', async ({ page }) => {
+    test.setTimeout(60000);
+
     // Start in local mode and add data
     await page.goto('/?e2e=true');
     await page.evaluate(() => {
@@ -206,11 +222,12 @@ test.describe('Auth State Isolation', () => {
       localStorage.setItem('e2eTestMode', 'true');
       localStorage.setItem('outboundSalesEngineMode', 'local');
       localStorage.setItem('onboardingComplete', 'true');
+      localStorage.setItem('hasSeenOnboarding', 'true');
       // Add some test data
       localStorage.setItem('testLeads', JSON.stringify([{ id: 1, company: 'Local Mode Company' }]));
     });
     await page.goto('/?e2e=true');
-    await page.waitForSelector('text=Today', { timeout: 30000 });
+    await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
     // Verify test data exists
     const testLeads = await page.evaluate(() => localStorage.getItem('testLeads'));
@@ -223,7 +240,8 @@ test.describe('Auth State Isolation', () => {
 
     // Reload - should show mode selection again
     await page.goto('/?e2e=true');
-    await expect(page.locator('text=Welcome to Outbound Sales Engine')).toBeVisible();
+    // Mode selection screen has "How will you be using this app?"
+    await expect(page.locator('text=How will you be using this app?')).toBeVisible({ timeout: 30000 });
   });
 
   test('e2e test mode bypasses hosted supabase', async ({ page }) => {

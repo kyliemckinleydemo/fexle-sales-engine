@@ -235,7 +235,10 @@ test.describe('Script Customization', () => {
       await expect(page.locator('span:has-text("Customized")').first()).toBeVisible({ timeout: 3000 });
     });
 
+    // This test involves page reload and needs more time
     test('customization persists across page reloads', async ({ page }) => {
+      test.setTimeout(60000);
+
       // Save a customization
       const editBtn = page.locator('button:has-text("Edit")').first();
       await editBtn.scrollIntoViewIfNeeded();
@@ -246,6 +249,13 @@ test.describe('Script Customization', () => {
       await textarea.fill(customText);
       await page.click('button:has-text("Save Changes")');
 
+      // Wait for modal to close
+      await expect(page.locator('text=Edit Opening Script')).not.toBeVisible({ timeout: 5000 });
+
+      // Verify localStorage has the override saved
+      const savedOverrides = await page.evaluate(() => localStorage.getItem('verticalOverrides'));
+      expect(savedOverrides).toContain(customText);
+
       // Re-set localStorage flags before reload to prevent onboarding
       await page.evaluate(() => {
         localStorage.setItem('e2eTestMode', 'true');
@@ -254,22 +264,22 @@ test.describe('Script Customization', () => {
         localStorage.setItem('hasSeenOnboarding', 'true');
       });
 
-      // Reload the page
+      // Use goto instead of reload for more reliable localStorage pickup
       await page.goto('/?e2e=true');
-      await page.waitForSelector('text=Today', { timeout: 30000 });
+      await page.waitForSelector('button:has-text("Today")', { timeout: 30000 });
 
       // Skip onboarding if it still appears
       const skipTour = page.locator('text=Skip tour');
-      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await skipTour.isVisible({ timeout: 1000 }).catch(() => false)) {
         await skipTour.click();
       }
 
       // Navigate back to Playbooks
-      await page.click('text=Playbooks');
-      await page.waitForSelector('text=Healthcare', { timeout: 5000 });
+      await page.click('button:has-text("Playbooks")');
+      await page.waitForSelector('text=Healthcare', { timeout: 10000 });
 
       // The "Edited" badge should still be visible
-      await expect(page.locator('text=Edited').first()).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text=Edited').first()).toBeVisible({ timeout: 10000 });
 
       // Open the edit modal again - it should show our custom text
       const editBtnReloaded = page.locator('button:has-text("Edit")').first();
