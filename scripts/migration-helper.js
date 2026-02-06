@@ -37,7 +37,7 @@
   console.log('================================\n');
 
   // Gather all localStorage data
-  const mainData = JSON.parse(localStorage.getItem('fexleSalesEngine') || '{}');
+  const mainData = JSON.parse(localStorage.getItem('salesEngineData') || '{}');
   const customScripts = JSON.parse(localStorage.getItem('customScripts') || '{}');
 
   // Create export object

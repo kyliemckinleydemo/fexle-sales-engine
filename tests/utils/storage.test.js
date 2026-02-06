@@ -12,7 +12,7 @@ import {
 
 describe('STORAGE_KEY', () => {
   it('has the expected value', () => {
-    expect(STORAGE_KEY).toBe('fexle_sales_engine_data');
+    expect(STORAGE_KEY).toBe('sales_engine_data');
   });
 });
 

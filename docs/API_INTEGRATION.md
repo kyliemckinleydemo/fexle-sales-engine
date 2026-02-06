@@ -238,7 +238,7 @@ API keys can be stored in two places:
 
 **Browser localStorage (direct mode):**
 ```javascript
-localStorage.getItem('fexle_sales_engine_data')
+localStorage.getItem('sales_engine_data')
 // Contains: { anthropicApiKey: '...', apolloApiKey: '...' }
 ```
 

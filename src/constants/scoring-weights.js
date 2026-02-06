@@ -27,7 +27,7 @@ export const SCORING_WEIGHTS = {
   companySize: {
     '1-50': 5,
     '51-200': 15,
-    '201-500': 20,  // Sweet spot for Fexle
+    '201-500': 20,  // Sweet spot for mid-market
     '501-1000': 15,
     '1000+': 10
   },

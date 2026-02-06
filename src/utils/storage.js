@@ -21,7 +21,7 @@
  * - Returns null for corrupted JSON
  */
 
-export const STORAGE_KEY = 'fexle_sales_engine_data';
+export const STORAGE_KEY = 'sales_engine_data';
 
 /**
  * Save data to localStorage

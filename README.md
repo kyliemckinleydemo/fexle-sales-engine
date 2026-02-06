@@ -1,4 +1,4 @@
-# Fexle Sales Engine
+# Sales Engine
 
 <div align="center">
 
@@ -9,7 +9,7 @@
 
 **AI-Powered Cold Calling & Lead Generation Platform**
 
-*Built for Fexle Services - Australia's Most Cost-Effective Salesforce Implementation Partner*
+*White-label sales productivity platform for B2B teams*
 
 [Features](#features) | [Quick Start](#quick-start) | [Multi-User Mode](#multi-user-mode) | [Testing](#testing) | [Documentation](#documentation)
 
@@ -19,7 +19,7 @@
 
 ## Overview
 
-The Fexle Sales Engine is a purpose-built sales productivity platform designed for B2B cold calling campaigns. It combines AI-powered research, intelligent lead scoring, Apollo.io integration, and proven call scripts to maximize sales team effectiveness.
+Sales Engine is a purpose-built sales productivity platform designed for B2B cold calling campaigns. It combines AI-powered research, intelligent lead scoring, Apollo.io integration, and proven call scripts to maximize sales team effectiveness.
 
 ### Two Operating Modes
 
@@ -65,8 +65,8 @@ The Fexle Sales Engine is a purpose-built sales productivity platform designed f
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/fexle-sales-engine.git
-cd fexle-sales-engine
+git clone https://github.com/YOUR_USERNAME/sales-engine.git
+cd sales-engine
 
 # Open in browser
 open index.html
@@ -210,7 +210,7 @@ The app automatically detects and formats phone numbers for:
 ## Repository Structure
 
 ```
-fexle-sales-engine/
+sales-engine/
 ├── index.html              # Main application (single HTML file)
 ├── package.json            # npm dependencies and scripts
 ├── vitest.config.js        # Test configuration
@@ -297,17 +297,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- Built for [Fexle Services](https://fexle.com) - Salesforce Platinum Partner
 - Powered by [Anthropic Claude](https://anthropic.com) for AI research
 - Lead data from [Apollo.io](https://apollo.io)
 - Database by [Supabase](https://supabase.com)
+- Voice/SMS by [Twilio](https://twilio.com)
+- Email by [Resend](https://resend.com)
+- Payments by [Stripe](https://stripe.com)
 
 ---
 
 <div align="center">
 
-**Built for Australian Sales Teams**
+**Built for B2B Sales Teams**
 
-[Report Bug](https://github.com/YOUR_USERNAME/fexle-sales-engine/issues) | [Request Feature](https://github.com/YOUR_USERNAME/fexle-sales-engine/issues)
+[Report Bug](https://github.com/YOUR_USERNAME/sales-engine/issues) | [Request Feature](https://github.com/YOUR_USERNAME/sales-engine/issues)
 
 </div>

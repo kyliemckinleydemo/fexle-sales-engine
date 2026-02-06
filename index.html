@@ -987,7 +987,7 @@
 
     // DataProvider for Local mode - uses localStorage
     const LocalDataProvider = ({ children }) => {
-      const STORAGE_KEY = 'fexle_sales_engine_data';
+      const STORAGE_KEY = 'sales_engine_data';
       const [leads, setLeads] = useState([]);
       const [tasks, setTasks] = useState([]);
       const [meetings, setMeetings] = useState([]);
@@ -1921,54 +1921,51 @@
 
     // ==================== COMPANY DATA ====================
     // Configurable via APP_CONFIG.company — see config/app-config.js
+    // See examples/fexle-config/ for a complete example configuration
     const DEFAULT_COMPANY_INFO = {
-      name: "Fexle Services",
-      tagline: "Australia's Most Cost-Effective Salesforce Implementation Partner",
-      size: "300+ Salesforce Professionals",
-      locations: ["Sydney", "Melbourne", "Gold Coast"],
-      model: "Hybrid onshore-offshore - Australian leadership, global development capacity",
-      costAdvantage: "30-40% lower cost than traditional consultancies",
-      status: "Salesforce Platinum Partner",
-      parentCompany: "Xoriant (since 2024)",
-      website: "www.fexle.com",
-      contactEmail: "contact@fexle.com",
-      keyProducts: ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"],
+      name: "Your Company",
+      tagline: "Your company tagline goes here",
+      size: "50+ employees",
+      locations: ["City 1", "City 2"],
+      model: "Your business model description",
+      costAdvantage: "Your key differentiator",
+      status: "Industry Leader",
+      parentCompany: null,
+      website: "www.yourcompany.com",
+      contactEmail: "contact@yourcompany.com",
+      keyProducts: ["Product 1", "Product 2", "Service 1"],
       proofPoints: [
-        "One client cut support ticket volume by 40% in 8 weeks",
-        "213% ROI achieved by Wiley Publishing",
-        "70% autonomous resolution during peak tax season (1-800-Accountant)",
-        "84% faster resolution times",
-        "700+ successful implementations"
+        "Key achievement or case study #1",
+        "Key achievement or case study #2",
+        "Key achievement or case study #3"
       ],
-      aiDeck: "AI Implementation Deck - practical guide on implementing Salesforce AI with real business impact",
+      aiDeck: "Sales deck or presentation for prospects",
       stats: [
-        { value: "300+", label: "Salesforce Professionals" },
-        { value: "30-40%", label: "Lower Cost" },
-        { value: "700+", label: "Implementations" }
+        { value: "50+", label: "Team Members" },
+        { value: "100+", label: "Clients" },
+        { value: "5+", label: "Years" }
       ],
       services: [
-        { icon: "☁️", name: "Salesforce", detail: "Platinum Partner", bg: "#dbeafe", nameColor: "#1e40af", detailColor: "#3b82f6" },
-        { icon: "🛒", name: "E-Commerce", detail: "B2B & B2C", bg: "#dcfce7", nameColor: "#166534", detailColor: "#22c55e" },
-        { icon: "📱", name: "Mobile Apps", detail: "iOS & Android", bg: "#fef3c7", nameColor: "#92400e", detailColor: "#d97706" },
-        { icon: "💻", name: "Web Dev", detail: "Full-Stack", bg: "#f3e8ff", nameColor: "#7c3aed", detailColor: "#a855f7" }
+        { icon: "💼", name: "Service 1", detail: "Description", bg: "#dbeafe", nameColor: "#1e40af", detailColor: "#3b82f6" },
+        { icon: "🔧", name: "Service 2", detail: "Description", bg: "#dcfce7", nameColor: "#166534", detailColor: "#22c55e" },
+        { icon: "📊", name: "Service 3", detail: "Description", bg: "#fef3c7", nameColor: "#92400e", detailColor: "#d97706" },
+        { icon: "🚀", name: "Service 4", detail: "Description", bg: "#f3e8ff", nameColor: "#7c3aed", detailColor: "#a855f7" }
       ],
-      whyUsTitle: "Fexle Services \u2014 Full-Stack System Integrator",
-      whyUsSubtitle: "Salesforce • E-Commerce • Web & Mobile • Custom Development",
+      whyUsTitle: "Your Company \u2014 Key Differentiators",
+      whyUsSubtitle: "Service 1 • Service 2 • Service 3",
       whyUsStats: [
-        { value: "700+", label: "Projects" },
-        { value: "500+", label: "Clients" },
+        { value: "100+", label: "Projects" },
+        { value: "50+", label: "Clients" },
         { value: "5.0★", label: "Rating" }
       ],
       collateral: {
-        salesforcePdf: "Your-Customers-Wont-Wait-Neither-Should-You.pdf",
-        generalPdf: "How-to-Succeed-with-AI-Implementation.pdf",
-        salesforceGuideName: "Agentforce Guide",
-        generalGuideName: "AI Success Guide"
+        salesforcePdf: "sales-deck.pdf",
+        generalPdf: "company-overview.pdf",
+        salesforceGuideName: "Sales Deck",
+        generalGuideName: "Company Overview"
       }
     };
     const COMPANY_INFO = mergeConfig(DEFAULT_COMPANY_INFO, APP_CONFIG.company);
-    // Backward-compatible alias
-    const FEXLE_INFO = COMPANY_INFO;
 
     // Update page title from config
     if (APP_CONFIG.company?.name) {
@@ -2126,8 +2123,6 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       }
     };
     const CALL_SCRIPTS = resolveCompanyTokens(mergeConfig(DEFAULT_SCRIPTS, APP_CONFIG.scripts));
-    // Backward-compatible alias
-    const FEXLE_SCRIPTS = CALL_SCRIPTS;
 
     // ==================== VERTICAL DATA ====================
     // Configurable via APP_CONFIG.verticals — see config/app-config.js
@@ -2905,7 +2900,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
     })();
 
     // ==================== STORAGE FUNCTIONS ====================
-    const STORAGE_KEY = 'fexle_sales_engine_data';
+    const STORAGE_KEY = 'sales_engine_data';
 
     const saveToStorage = (data) => {
       try {
@@ -4771,9 +4766,9 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
                   : `⚠️ Last backup was ${daysSinceBackup} days ago. Consider exporting your data.`,
                 'warning',
                 () => {
-                  const current = JSON.parse(localStorage.getItem('fexleSalesEngine') || '{}');
+                  const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
                   current.lastBackupDate = new Date().toISOString();
-                  localStorage.setItem('fexleSalesEngine', JSON.stringify(current));
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
                 },
                 'Got it',
                 5000
@@ -6026,7 +6021,7 @@ Format your response as JSON with these keys: recommendedVertical (REQUIRED - on
           talkingPoints: [
             `Lead with ${vertical.name} specific pain points`,
             `Mention Agentforce use case: ${vertical.agentforceUseCase}`,
-            `Reference proof point: ${FEXLE_INFO.proofPoints[0]}`
+            `Reference proof point: ${COMPANY_INFO.proofPoints[0]}`
           ],
           priorityLevel: lead.score >= 80 ? "HIGH" : lead.score >= 60 ? "MEDIUM" : "NURTURE",
           priorityReason: "Based on lead score. Add API key for AI-powered insights.",
@@ -7107,7 +7102,7 @@ Return your response as valid JSON with this exact structure:
           };
 
           // Generate BOTH SF and Non-SF content for the popup
-          const sfOpeningsHtml = Object.entries(FEXLE_SCRIPTS.openings)
+          const sfOpeningsHtml = Object.entries(CALL_SCRIPTS.openings)
             .map(([key, o]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
                 <div style="background: #dbeafe; padding: 8px 16px; font-weight: 500;">${escapeHtml(o.name)}</div>
@@ -7118,7 +7113,7 @@ Return your response as valid JSON with this exact structure:
               </div>
             `).join('');
 
-          const nonSfOpeningsHtml = Object.entries(FEXLE_SCRIPTS.openingsNonSF)
+          const nonSfOpeningsHtml = Object.entries(CALL_SCRIPTS.openingsNonSF)
             .map(([key, o]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
                 <div style="background: #dcfce7; padding: 8px 16px; font-weight: 500;">${escapeHtml(o.name)}</div>
@@ -7132,22 +7127,22 @@ Return your response as valid JSON with this exact structure:
           const sfPivotsHtml = `
             <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e; margin-bottom: 12px;">
               <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">PRIMARY PIVOT</div>
-              <p style="font-style: italic; color: #166534;">${escapeHtml(FEXLE_SCRIPTS.pivots.primary)}</p>
+              <p style="font-style: italic; color: #166534;">${escapeHtml(CALL_SCRIPTS.pivots.primary)}</p>
             </div>
             <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #86efac;">
               <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">IF THEY MENTIONED AI INTEREST</div>
-              <p style="font-style: italic; color: #166534;">${escapeHtml(FEXLE_SCRIPTS.pivots.aiInterest)}</p>
+              <p style="font-style: italic; color: #166534;">${escapeHtml(CALL_SCRIPTS.pivots.aiInterest)}</p>
             </div>
           `;
 
-          const nonSfPivotsHtml = Object.entries(FEXLE_SCRIPTS.pivotsNonSF).map(([key, script]) => `
+          const nonSfPivotsHtml = Object.entries(CALL_SCRIPTS.pivotsNonSF).map(([key, script]) => `
             <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e; margin-bottom: 12px;">
               <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-bottom: 4px;">${escapeHtml(key.replace(/([A-Z])/g, ' $1').toUpperCase())}</div>
               <p style="font-style: italic; color: #166534;">${escapeHtml(script)}</p>
             </div>
           `).join('');
 
-          const sfObjectionsHtml = Object.entries(FEXLE_SCRIPTS.objections).slice(0, 8)
+          const sfObjectionsHtml = Object.entries(CALL_SCRIPTS.objections).slice(0, 8)
             .map(([obj, resp]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
                 <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "${escapeHtml(obj)}"</div>
@@ -7155,7 +7150,7 @@ Return your response as valid JSON with this exact structure:
               </div>
             `).join('');
 
-          const nonSfObjectionsHtml = Object.entries(FEXLE_SCRIPTS.objectionsNonSF).slice(0, 8)
+          const nonSfObjectionsHtml = Object.entries(CALL_SCRIPTS.objectionsNonSF).slice(0, 8)
             .map(([obj, resp]) => `
               <div style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
                 <div style="background: #fee2e2; padding: 8px 16px; font-weight: 500; color: #991b1b;">🚫 "${escapeHtml(obj)}"</div>
@@ -7167,11 +7162,11 @@ Return your response as valid JSON with this exact structure:
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div style="background: #f3e8ff; padding: 16px; border-radius: 8px; border: 1px solid #d8b4fe;">
                 <div style="font-weight: 600; color: #7c3aed; margin-bottom: 8px;">Path A: Ready → CEO Meeting</div>
-                <p style="font-size: 13px; color: #6b21a8; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closes.ceoMeeting)}</p>
+                <p style="font-size: 13px; color: #6b21a8; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closes.ceoMeeting)}</p>
               </div>
               <div style="background: #fce7f3; padding: 16px; border-radius: 8px; border: 1px solid #f9a8d4;">
                 <div style="font-weight: 600; color: #be185d; margin-bottom: 8px;">Path B: Not Ready → AI Deck</div>
-                <p style="font-size: 13px; color: #9d174d; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closes.aiDeck)}</p>
+                <p style="font-size: 13px; color: #9d174d; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closes.aiDeck)}</p>
               </div>
             </div>
           `;
@@ -7180,19 +7175,19 @@ Return your response as valid JSON with this exact structure:
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
               <div style="background: #f3e8ff; padding: 16px; border-radius: 8px; border: 1px solid #d8b4fe;">
                 <div style="font-weight: 600; color: #7c3aed; margin-bottom: 8px;">Discovery Call</div>
-                <p style="font-size: 13px; color: #6b21a8; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closesNonSF.discovery)}</p>
+                <p style="font-size: 13px; color: #6b21a8; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closesNonSF.discovery)}</p>
               </div>
               <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border: 1px solid #a5b4fc;">
                 <div style="font-weight: 600; color: #4338ca; margin-bottom: 8px;">Tailored Demo</div>
-                <p style="font-size: 13px; color: #3730a3; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closesNonSF.demo)}</p>
+                <p style="font-size: 13px; color: #3730a3; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closesNonSF.demo)}</p>
               </div>
               <div style="background: #fce7f3; padding: 16px; border-radius: 8px; border: 1px solid #f9a8d4;">
                 <div style="font-weight: 600; color: #be185d; margin-bottom: 8px;">ROI Conversation</div>
-                <p style="font-size: 13px; color: #9d174d; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closesNonSF.roiConversation)}</p>
+                <p style="font-size: 13px; color: #9d174d; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closesNonSF.roiConversation)}</p>
               </div>
               <div style="background: #ede9fe; padding: 16px; border-radius: 8px; border: 1px solid #c4b5fd;">
                 <div style="font-weight: 600; color: #6d28d9; margin-bottom: 8px;">Competitor Comparison</div>
-                <p style="font-size: 13px; color: #5b21b6; font-style: italic;">${escapeHtml(FEXLE_SCRIPTS.closesNonSF.competitorComparison)}</p>
+                <p style="font-size: 13px; color: #5b21b6; font-style: italic;">${escapeHtml(CALL_SCRIPTS.closesNonSF.competitorComparison)}</p>
               </div>
             </div>
           `;
@@ -7213,10 +7208,10 @@ Return your response as valid JSON with this exact structure:
                 .toggle-btn.sf.active { background: #3b82f6; color: white; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); }
                 .toggle-btn.nonsf { background: #e5e7eb; color: #6b7280; }
                 .toggle-btn.nonsf.active { background: #22c55e; color: white; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.3); }
-                .toggle-btn.whyfexle { background: #e5e7eb; color: #6b7280; }
-                .toggle-btn.whyfexle.active { background: #8b5cf6; color: white; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3); }
-                .sf-content, .nonsf-content, .whyfexle-content { display: none; }
-                .sf-content.active, .nonsf-content.active, .whyfexle-content.active { display: block; }
+                .toggle-btn.whyus { background: #e5e7eb; color: #6b7280; }
+                .toggle-btn.whyus.active { background: #8b5cf6; color: white; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3); }
+                .sf-content, .nonsf-content, .whyus-content { display: none; }
+                .sf-content.active, .nonsf-content.active, .whyus-content.active { display: block; }
                 .industry-box { background: #fef3c7; padding: 16px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 24px; }
                 .key-messages { background: #dbeafe; padding: 16px; border-radius: 8px; border: 1px solid #93c5fd; }
                 .key-messages ul { margin: 0; padding-left: 20px; }
@@ -7269,7 +7264,7 @@ Return your response as valid JSON with this exact structure:
                 <button class="toggle-btn nonsf ${scriptMode === 'nonSalesforce' ? 'active' : ''}" onclick="switchMode('nonsf')">
                   Non-SF Prospect
                 </button>
-                <button class="toggle-btn whyfexle" onclick="switchMode('whyfexle')">
+                <button class="toggle-btn whyus" onclick="switchMode('whyus')">
                   Generic Pitch
                 </button>
               </div>
@@ -7321,7 +7316,7 @@ Return your response as valid JSON with this exact structure:
               </div>
 
               <!-- Why Us Content -->
-              <div class="whyfexle-content">
+              <div class="whyus-content">
                 <div style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 16px; border-radius: 12px; margin-bottom: 20px;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
@@ -7526,7 +7521,7 @@ Return your response as valid JSON with this exact structure:
               <h2>📝 Key Messages</h2>
               <div class="key-messages">
                 <ul>
-                  ${FEXLE_SCRIPTS.keyMessages.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+                  ${CALL_SCRIPTS.keyMessages.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
                 </ul>
               </div>
 
@@ -7561,16 +7556,16 @@ Return your response as valid JSON with this exact structure:
           const popupScript = `
             function switchMode(mode) {
               document.querySelectorAll('.toggle-btn').forEach(function(btn) { btn.classList.remove('active'); });
-              document.querySelectorAll('.sf-content, .nonsf-content, .whyfexle-content').forEach(function(el) { el.classList.remove('active'); });
+              document.querySelectorAll('.sf-content, .nonsf-content, .whyus-content').forEach(function(el) { el.classList.remove('active'); });
               if (mode === 'sf') {
                 document.querySelector('.toggle-btn.sf').classList.add('active');
                 document.querySelector('.sf-content').classList.add('active');
               } else if (mode === 'nonsf') {
                 document.querySelector('.toggle-btn.nonsf').classList.add('active');
                 document.querySelector('.nonsf-content').classList.add('active');
-              } else if (mode === 'whyfexle') {
-                document.querySelector('.toggle-btn.whyfexle').classList.add('active');
-                document.querySelector('.whyfexle-content').classList.add('active');
+              } else if (mode === 'whyus') {
+                document.querySelector('.toggle-btn.whyus').classList.add('active');
+                document.querySelector('.whyus-content').classList.add('active');
               }
             }
 
@@ -8367,7 +8362,7 @@ Return your response as valid JSON with this exact structure:
                           Opening Scripts (Pick One)
                         </h3>
                         <div className="space-y-3">
-                          {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.openings : FEXLE_SCRIPTS.openingsNonSF).map(([key, opening]) => (
+                          {Object.entries(scriptMode === 'salesforce' ? CALL_SCRIPTS.openings : CALL_SCRIPTS.openingsNonSF).map(([key, opening]) => (
                             <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
                               <div className={`px-4 py-2 text-sm font-medium ${scriptMode === 'salesforce' ? 'bg-blue-50 text-blue-800' : 'bg-green-50 text-green-800'}`}>{opening.name}</div>
                               <div className="px-4 py-3 text-sm bg-white">
@@ -8412,30 +8407,30 @@ Return your response as valid JSON with this exact structure:
                           <div className="space-y-3">
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                               <div className="text-xs text-green-600 font-medium mb-1">PRIMARY PIVOT</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.primary}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivots.primary}</p>
                             </div>
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
                               <div className="text-xs text-green-600 font-medium mb-1">IF THEY MENTIONED AI INTEREST</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivots.aiInterest}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivots.aiInterest}</p>
                             </div>
                           </div>
                         ) : (
                           <div className="space-y-3">
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
                               <div className="text-xs text-green-600 font-medium mb-1">IF USING SPREADSHEETS / NOTHING</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromSpreadsheets}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivotsNonSF.fromSpreadsheets}</p>
                             </div>
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                               <div className="text-xs text-green-600 font-medium mb-1">IF USING HUBSPOT</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromHubSpot}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivotsNonSF.fromHubSpot}</p>
                             </div>
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
                               <div className="text-xs text-green-600 font-medium mb-1">IF USING DYNAMICS 365</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.fromDynamics}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivotsNonSF.fromDynamics}</p>
                             </div>
                             <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-200">
                               <div className="text-xs text-green-600 font-medium mb-1">AI ANGLE (UNIVERSAL)</div>
-                              <p className="text-sm text-green-900 italic">{FEXLE_SCRIPTS.pivotsNonSF.aiAngle}</p>
+                              <p className="text-sm text-green-900 italic">{CALL_SCRIPTS.pivotsNonSF.aiAngle}</p>
                             </div>
                           </div>
                         )}
@@ -8451,30 +8446,30 @@ Return your response as valid JSON with this exact structure:
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                               <div className="text-sm font-semibold text-purple-800 mb-2">Path A: Ready → CEO Meeting</div>
-                              <p className="text-xs text-purple-900 italic">{FEXLE_SCRIPTS.closes.ceoMeeting}</p>
+                              <p className="text-xs text-purple-900 italic">{CALL_SCRIPTS.closes.ceoMeeting}</p>
                             </div>
                             <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                               <div className="text-sm font-semibold text-pink-800 mb-2">Path B: Not Ready → AI Deck</div>
-                              <p className="text-xs text-pink-900 italic">{FEXLE_SCRIPTS.closes.aiDeck}</p>
+                              <p className="text-xs text-pink-900 italic">{CALL_SCRIPTS.closes.aiDeck}</p>
                             </div>
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                               <div className="text-sm font-semibold text-purple-800 mb-2">Discovery Call</div>
-                              <p className="text-xs text-purple-900 italic">{FEXLE_SCRIPTS.closesNonSF.discovery}</p>
+                              <p className="text-xs text-purple-900 italic">{CALL_SCRIPTS.closesNonSF.discovery}</p>
                             </div>
                             <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
                               <div className="text-sm font-semibold text-indigo-800 mb-2">Tailored Demo</div>
-                              <p className="text-xs text-indigo-900 italic">{FEXLE_SCRIPTS.closesNonSF.demo}</p>
+                              <p className="text-xs text-indigo-900 italic">{CALL_SCRIPTS.closesNonSF.demo}</p>
                             </div>
                             <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                               <div className="text-sm font-semibold text-pink-800 mb-2">ROI Conversation</div>
-                              <p className="text-xs text-pink-900 italic">{FEXLE_SCRIPTS.closesNonSF.roiConversation}</p>
+                              <p className="text-xs text-pink-900 italic">{CALL_SCRIPTS.closesNonSF.roiConversation}</p>
                             </div>
                             <div className="bg-violet-50 p-4 rounded-lg border border-violet-200">
                               <div className="text-sm font-semibold text-violet-800 mb-2">Competitor Comparison</div>
-                              <p className="text-xs text-violet-900 italic">{FEXLE_SCRIPTS.closesNonSF.competitorComparison}</p>
+                              <p className="text-xs text-violet-900 italic">{CALL_SCRIPTS.closesNonSF.competitorComparison}</p>
                             </div>
                           </div>
                         )}
@@ -8487,7 +8482,7 @@ Return your response as valid JSON with this exact structure:
                           Objection Handling
                         </h3>
                         <div className="space-y-3">
-                          {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.objections : FEXLE_SCRIPTS.objectionsNonSF).slice(0, 6).map(([objection, response], i) => (
+                          {Object.entries(scriptMode === 'salesforce' ? CALL_SCRIPTS.objections : CALL_SCRIPTS.objectionsNonSF).slice(0, 6).map(([objection, response], i) => (
                             <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
                               <div className="bg-red-50 px-4 py-2 text-sm font-medium text-red-800">🚫 "{objection}"</div>
                               <div className="px-4 py-3 text-sm bg-green-50 text-green-900">✅ {response}</div>
@@ -8500,7 +8495,7 @@ Return your response as valid JSON with this exact structure:
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h4 className="font-semibold text-blue-800 mb-2">📝 Key Messages Cheat Sheet</h4>
                         <ul className="space-y-1">
-                          {FEXLE_SCRIPTS.keyMessages.map((msg, i) => (
+                          {CALL_SCRIPTS.keyMessages.map((msg, i) => (
                             <li key={i} className="text-sm text-blue-900 flex items-start gap-2">
                               <span className="text-blue-500">•</span>
                               <span>{msg}</span>
@@ -10332,7 +10327,7 @@ Return your response as valid JSON with this exact structure:
                 <div>
                   <h4 className="font-medium text-green-800 mb-2">Opening Scripts</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {Object.entries(FEXLE_SCRIPTS.openingsNonSF).map(([key, opening]) => (
+                    {Object.entries(CALL_SCRIPTS.openingsNonSF).map(([key, opening]) => (
                       <div key={key} className="bg-white rounded-lg p-3 border border-green-100">
                         <div className="font-medium text-green-700 text-sm mb-1">{opening.name}</div>
                         <p className="text-xs text-gray-600 italic">{opening.script.replace('[NAME]', 'John').replace('[YOUR_NAME]', callerName || 'Your Name')}</p>
@@ -10346,19 +10341,19 @@ Return your response as valid JSON with this exact structure:
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white rounded-lg p-3 border border-green-100">
                       <div className="font-medium text-green-700 text-sm mb-1">From Spreadsheets</div>
-                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromSpreadsheets.substring(0, 200)}...</p>
+                      <p className="text-xs text-gray-600">{CALL_SCRIPTS.pivotsNonSF.fromSpreadsheets.substring(0, 200)}...</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-green-100">
                       <div className="font-medium text-green-700 text-sm mb-1">From HubSpot</div>
-                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromHubSpot.substring(0, 200)}...</p>
+                      <p className="text-xs text-gray-600">{CALL_SCRIPTS.pivotsNonSF.fromHubSpot.substring(0, 200)}...</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-green-100">
                       <div className="font-medium text-green-700 text-sm mb-1">From Dynamics 365</div>
-                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.fromDynamics.substring(0, 200)}...</p>
+                      <p className="text-xs text-gray-600">{CALL_SCRIPTS.pivotsNonSF.fromDynamics.substring(0, 200)}...</p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-green-100">
                       <div className="font-medium text-green-700 text-sm mb-1">AI Angle (Universal)</div>
-                      <p className="text-xs text-gray-600">{FEXLE_SCRIPTS.pivotsNonSF.aiAngle.substring(0, 200)}...</p>
+                      <p className="text-xs text-gray-600">{CALL_SCRIPTS.pivotsNonSF.aiAngle.substring(0, 200)}...</p>
                     </div>
                   </div>
                 </div>
@@ -10393,7 +10388,7 @@ Return your response as valid JSON with this exact structure:
                 </div>
               </div>
               <div className="space-y-4">
-                {Object.entries(scriptMode === 'salesforce' ? FEXLE_SCRIPTS.objections : FEXLE_SCRIPTS.objectionsNonSF).map(([objection, response], i) => (
+                {Object.entries(scriptMode === 'salesforce' ? CALL_SCRIPTS.objections : CALL_SCRIPTS.objectionsNonSF).map(([objection, response], i) => (
                   <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
                     <div className="bg-red-50 px-5 py-3 font-medium text-red-800">🚫 "{objection}"</div>
                     <div className="px-5 py-4 text-sm bg-green-50 text-green-900">✅ {response}</div>

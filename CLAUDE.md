@@ -1,6 +1,6 @@
-# Fexle Sales Engine
+# Sales Engine
 
-AI-powered cold calling and lead generation platform for Australian B2B sales teams. Features multi-user support, white-label capabilities, and Twilio/Supabase integrations.
+AI-powered cold calling and lead generation platform for B2B sales teams. Features multi-user support, white-label capabilities, and Twilio/Supabase integrations.
 
 ## Tech Stack
 
@@ -20,7 +20,7 @@ AI-powered cold calling and lead generation platform for Australian B2B sales te
 ## Project Structure
 
 ```
-fexle-sales-engine/
+sales-engine/
 ├── index.html                 # Main SPA (~750KB, entire React app)
 ├── src/
 │   ├── index.js               # Library entry point
@@ -70,8 +70,8 @@ fexle-sales-engine/
 │   ├── utils/                 # Unit tests (phone, scoring, etc.)
 │   └── integration/           # Workflow tests
 ├── examples/
-│   └── fexle-config/          # Complete Fexle example config
-│       ├── app-config.js      # Reference app-config.js with Fexle data
+│   └── fexle-config/          # Example white-label config (Fexle branding)
+│       ├── app-config.js      # Reference app-config.js with sample data
 │       ├── company.json       # Company info example
 │       ├── scripts.json       # Call scripts example
 │       └── verticals.json     # Verticals example
@@ -210,7 +210,7 @@ detectPhoneCountry(phone)           // → 'AU' | 'US' | 'CA' | 'UK' | null
 
 ### Configuration System
 - Runtime config via `config/app-config.js` (sets `window.APP_CONFIG`)
-- All hardcoded values have configurable overrides with Fexle defaults
+- All hardcoded values have configurable overrides via APP_CONFIG
 - Deep merge: partial overrides work (set only what you change)
 - Business rules in JSON config files (not code)
 - 19 industry verticals with unique scripts
@@ -248,9 +248,6 @@ verticalData      // DEFAULT_VERTICALS merged with APP_CONFIG.verticals
 SCORING_WEIGHTS   // mergeConfig(DEFAULT_SCORING_WEIGHTS, APP_CONFIG.scoring)
 DEFAULT_TARGET_ACTION  // mergeConfig(hardcoded, APP_CONFIG.targetActions.default)
 emailTemplates    // mergeConfig(defaultEmailTemplates, APP_CONFIG.emailTemplates)
-// Backward-compat aliases:
-FEXLE_INFO = COMPANY_INFO
-FEXLE_SCRIPTS = CALL_SCRIPTS
 ```
 
 ### Communication Infrastructure
