@@ -35,8 +35,8 @@
  */
 window.SUPABASE_CONFIG = {
   // Your Supabase project URL (e.g., 'https://your-project.supabase.co')
-  url: '',
+  url: 'https://mswvvtufnrxrxxelrjnq.supabase.co',
 
   // Your Supabase anon/public key (safe to expose in client code)
-  anonKey: ''
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zd3Z2dHVmbnJ4cnh4ZWxyam5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMTY0NDAsImV4cCI6MjA4NTc5MjQ0MH0.DOSxqSWBIA8PvlYDq3HROrUrYI8suAY83jnGAjWY9QE'
 };

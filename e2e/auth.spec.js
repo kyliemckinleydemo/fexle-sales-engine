@@ -95,16 +95,16 @@ test.describe('Mode Selection', () => {
     await expect(page.locator('text=How will you be using this app?')).not.toBeVisible();
   });
 
-  test('selecting Multi-User mode falls back to local when no Supabase configured', async ({ page }) => {
+  test('selecting Multi-User mode shows database setup in e2e mode', async ({ page }) => {
     await page.goto('/?e2e=true');
 
     // Click Multi-User option
     await page.click('text=Multi-User / Team');
 
-    // Without Supabase credentials, falls back to local mode (app loads)
-    await page.waitForSelector('text=Today', { timeout: 30000 });
+    // In e2e mode, should show Database Setup screen (to enter Supabase credentials)
+    await page.waitForSelector('text=Database Setup', { timeout: 30000 });
 
-    // Verify mode is set to cloud (even though it fell back)
+    // Verify mode is set to cloud
     const mode = await page.evaluate(() => localStorage.getItem('outboundSalesEngineMode'));
     expect(mode).toBe('cloud');
   });
