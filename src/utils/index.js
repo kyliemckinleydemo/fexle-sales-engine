@@ -13,6 +13,7 @@
  * - storage: saveToStorage, loadFromStorage, STORAGE_KEY
  * - transform: transformLead, toDbLead, transformApolloLead, getCompanySizeBucket, getRevenueBucket, detectVertical
  * - analytics: calculateLocalAnalytics, calculateCallMetrics, calculateConversionFunnel, calculateLeadSourceStats, calculateRepStats, DATE_RANGES, getDateRange, formatDuration, calculateTrend
+ * - sequences: TRIGGER_TYPES, TRIGGER_LABELS, DEFAULT_NEW_SEQUENCE, DEFAULT_STEP_BODY, validateSequenceName, validateSequence, validateStepFields, buildSequencePayload, buildStepPayload, sortSteps, getNextStepNumber, formatStepDelay, addSequenceToList, removeSequenceFromList, toggleSequenceInList, addStepToSequence, removeStepFromSequence, updateStepInSequences
  * - scriptBuilder: getMergedVertical, hasOverride, setOverride, removeOverride, saveVerticalOverridesToStorage, loadVerticalOverridesFromStorage, VERTICAL_OVERRIDES_KEY
  */
 
@@ -70,6 +71,30 @@ export {
   formatDuration,
   calculateTrend
 } from './analytics.js';
+
+export {
+  TRIGGER_TYPES,
+  TRIGGER_LABELS,
+  STATUS_TRIGGER_VALUES,
+  MILESTONE_TRIGGER_VALUES,
+  DEFAULT_NEW_SEQUENCE,
+  DEFAULT_STEP_BODY,
+  TEMPLATE_TOKENS,
+  validateSequenceName,
+  validateSequence,
+  validateStepFields,
+  buildSequencePayload,
+  buildStepPayload,
+  sortSteps,
+  getNextStepNumber,
+  formatStepDelay,
+  addSequenceToList,
+  removeSequenceFromList,
+  toggleSequenceInList,
+  addStepToSequence,
+  removeStepFromSequence,
+  updateStepInSequences
+} from './sequences.js';
 
 export {
   validateStep1,
