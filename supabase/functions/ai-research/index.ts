@@ -5,6 +5,7 @@
  * PURPOSE:
  * - Proxy AI research requests so API keys never reach the browser
  * - Look up org-level Anthropic key first, fall back to platform secret
+ * - Track usage per org per month with soft caps (500/month on platform key)
  * - Forward prompt to Claude API and return response
  *
  * TRIGGERS:
@@ -14,6 +15,11 @@
  * - prompt: The prompt to send to Claude
  * - maxTokens: Max tokens for response (default 1500)
  * - model: Claude model to use (default claude-sonnet-4-20250514)
+ * - type: 'research' | 'script' (for usage tracking, default 'research')
+ *
+ * USAGE LIMITS:
+ * - 500 researches/month included with Pro plan (using platform key)
+ * - Unlimited if org provides their own Anthropic API key
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -23,16 +29,34 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PLATFORM_ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
+// Default monthly limits (can be overridden in org config)
+const DEFAULT_MONTHLY_RESEARCH_LIMIT = 500;
+const DEFAULT_MONTHLY_SCRIPT_LIMIT = 50;
+
 interface AIResearchRequest {
   prompt: string;
   maxTokens?: number;
   model?: string;
+  type?: 'research' | 'script';
+}
+
+interface UsageInfo {
+  research_count: number;
+  script_count: number;
+  research_limit: number;
+  script_limit: number;
+  using_platform_key: boolean;
 }
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+function getCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -76,11 +100,13 @@ serve(async (req) => {
       );
     }
 
+    const orgId = profile.organization_id;
+
     // Check org plan - AI research is a Pro feature
     const { data: org } = await supabase
       .from("organizations")
       .select("plan, config")
-      .eq("id", profile.organization_id)
+      .eq("id", orgId)
       .single();
 
     if (org?.plan !== 'pro' && org?.plan !== 'trial') {
@@ -92,7 +118,7 @@ serve(async (req) => {
 
     // Parse request body
     const body: AIResearchRequest = await req.json();
-    const { prompt, maxTokens = 1500, model = "claude-sonnet-4-20250514" } = body;
+    const { prompt, maxTokens = 1500, model = "claude-sonnet-4-20250514", type = "research" } = body;
 
     if (!prompt) {
       return new Response(
@@ -103,6 +129,7 @@ serve(async (req) => {
 
     // Resolve API key: org config → platform secret
     const orgAnthropicKey = org?.config?.apiKeys?.anthropic;
+    const usingPlatformKey = !orgAnthropicKey;
     const apiKey = orgAnthropicKey || PLATFORM_ANTHROPIC_KEY;
 
     if (!apiKey) {
@@ -110,6 +137,58 @@ serve(async (req) => {
         JSON.stringify({ error: "No Anthropic API key configured. Ask your admin to add one in Settings, or contact support." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Get current month and usage
+    const currentMonth = getCurrentMonth();
+    const { data: usageRecord } = await supabase
+      .from("ai_usage")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("month", currentMonth)
+      .single();
+
+    const currentResearchCount = usageRecord?.research_count || 0;
+    const currentScriptCount = usageRecord?.script_count || 0;
+
+    // Get limits (from org config or defaults)
+    const researchLimit = org?.config?.aiLimits?.research || DEFAULT_MONTHLY_RESEARCH_LIMIT;
+    const scriptLimit = org?.config?.aiLimits?.script || DEFAULT_MONTHLY_SCRIPT_LIMIT;
+
+    // Check limits (only enforced when using platform key)
+    if (usingPlatformKey) {
+      if (type === 'research' && currentResearchCount >= researchLimit) {
+        return new Response(
+          JSON.stringify({
+            error: `Monthly AI research limit reached (${researchLimit}/month). Add your own Anthropic API key in Settings to continue.`,
+            code: "USAGE_LIMIT_REACHED",
+            usage: {
+              research_count: currentResearchCount,
+              script_count: currentScriptCount,
+              research_limit: researchLimit,
+              script_limit: scriptLimit,
+              using_platform_key: true,
+            }
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (type === 'script' && currentScriptCount >= scriptLimit) {
+        return new Response(
+          JSON.stringify({
+            error: `Monthly AI script generation limit reached (${scriptLimit}/month). Add your own Anthropic API key in Settings to continue.`,
+            code: "USAGE_LIMIT_REACHED",
+            usage: {
+              research_count: currentResearchCount,
+              script_count: currentScriptCount,
+              research_limit: researchLimit,
+              script_limit: scriptLimit,
+              using_platform_key: true,
+            }
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Forward to Anthropic API
@@ -137,24 +216,73 @@ serve(async (req) => {
       );
     }
 
+    // Increment usage counter (only when using platform key)
+    let newUsage: UsageInfo;
+    if (usingPlatformKey) {
+      const incrementField = type === 'script' ? 'script_count' : 'research_count';
+      const newCount = type === 'script' ? currentScriptCount + 1 : currentResearchCount + 1;
+
+      if (usageRecord) {
+        // Update existing record
+        await supabase
+          .from("ai_usage")
+          .update({
+            [incrementField]: newCount,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", usageRecord.id);
+      } else {
+        // Create new record for this month
+        await supabase
+          .from("ai_usage")
+          .insert({
+            organization_id: orgId,
+            month: currentMonth,
+            research_count: type === 'research' ? 1 : 0,
+            script_count: type === 'script' ? 1 : 0,
+          });
+      }
+
+      newUsage = {
+        research_count: type === 'research' ? currentResearchCount + 1 : currentResearchCount,
+        script_count: type === 'script' ? currentScriptCount + 1 : currentScriptCount,
+        research_limit: researchLimit,
+        script_limit: scriptLimit,
+        using_platform_key: true,
+      };
+    } else {
+      newUsage = {
+        research_count: currentResearchCount,
+        script_count: currentScriptCount,
+        research_limit: researchLimit,
+        script_limit: scriptLimit,
+        using_platform_key: false,
+      };
+    }
+
     // Log activity
     await supabase.from("activity_log").insert({
-      organization_id: profile.organization_id,
+      organization_id: orgId,
       entity_type: "system",
-      entity_id: profile.organization_id,
-      action: "ai_research",
+      entity_id: orgId,
+      action: type === 'script' ? "ai_script_generation" : "ai_research",
       actor_id: user.id,
-      description: `AI research request (${model}, ${maxTokens} max tokens)`,
+      description: `AI ${type} request (${model}, ${maxTokens} max tokens)`,
       metadata: {
         model,
         maxTokens,
         inputLength: prompt.length,
         outputLength: anthropicResult.content?.[0]?.text?.length || 0,
+        usingPlatformKey,
       },
     });
 
+    // Return response with usage info
     return new Response(
-      JSON.stringify(anthropicResult),
+      JSON.stringify({
+        ...anthropicResult,
+        usage: newUsage,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
