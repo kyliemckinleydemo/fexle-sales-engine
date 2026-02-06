@@ -1,5 +1,5 @@
 {
-  "name": "Fexle Services",
+  "name": "Sample Company",
   "tagline": "Australia's Most Cost-Effective Salesforce Implementation Partner",
   "size": "300+ Salesforce Professionals",
   "locations": ["Sydney", "Melbourne", "Gold Coast"],
@@ -15,7 +15,7 @@
     "84% faster resolution times",
     "700+ successful implementations"
   ],
-  "website": "https://www.fexle.com",
+  "website": "https://www.samplecompany.com",
   "logo": null,
   "colors": {
     "primary": "#3b82f6",

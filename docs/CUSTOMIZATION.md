@@ -269,11 +269,11 @@ Configure when to suggest specific materials:
 
 ## Importing Existing Configuration
 
-### From Fexle Config
+### From Sample Config
 
-The `examples/fexle-config/` directory contains Fexle's complete configuration as a reference. To use it as a starting point:
+The `examples/sample-config/` directory contains sample complete configuration as a reference. To use it as a starting point:
 
-1. Open each file in the `examples/fexle-config/` folder
+1. Open each file in the `examples/sample-config/` folder
 2. Modify the content for your company
 3. Import via the Settings panel
 

@@ -1,4 +1,4 @@
-# FEXLE SERVICES
+# SALES PLAYBOOK
 ## B2B Cold Calling Playbook
 ### Australia's Most Cost-Effective Salesforce Implementation Partner
 **Research-Backed Scripts & Best Practices for 2026**
@@ -7,7 +7,7 @@
 
 ## Our Competitive Advantage (Memorize This)
 
-Fexle is a 300-person system integrator with an innovative hybrid onshore/offshore development model that makes us the most cost-effective Salesforce implementation partner in Australia.
+Sample Company is a 300-person system integrator with an innovative hybrid onshore/offshore development model that makes us the most cost-effective Salesforce implementation partner in Australia.
 
 **What we deliver:**
 - **Improved sales team performance** — faster deal cycles, better pipeline visibility, higher win rates
@@ -71,25 +71,25 @@ Use these when prospect already has Salesforce.
 
 #### Option A: The AI Pressure Question (Recommended)
 
-> "Hi [Name], this is [Your Name] from Fexle. I'll be honest — this is a cold call, so I'll be quick. Are you seeing pressure to do more with AI in your Salesforce environment, or is that not really on your radar yet?"
+> "Hi [Name], this is [Your Name] from Sample Company. I'll be honest — this is a cold call, so I'll be quick. Are you seeing pressure to do more with AI in your Salesforce environment, or is that not really on your radar yet?"
 
 **Why it works:** Opens with THEIR situation. Acknowledges the interruption. The question is easy to answer and gets them talking.
 
 #### Option B: The Support Cost Question
 
-> "Hi [Name], this is [Your Name] from Fexle. Quick question — is reducing customer support costs something that's on your priority list this year, or is that not where the pressure is right now?"
+> "Hi [Name], this is [Your Name] from Sample Company. Quick question — is reducing customer support costs something that's on your priority list this year, or is that not where the pressure is right now?"
 
 **Why it works:** Goes straight to a pain point. If they say yes, you have an opening. If they say no, you can pivot to sales performance.
 
 #### Option C: The Sales Performance Question
 
-> "Hi [Name], this is [Your Name] from Fexle. I'm curious — are you getting everything you need out of Salesforce right now, or is there a gap between what it could do for your sales team and what it's actually doing?"
+> "Hi [Name], this is [Your Name] from Sample Company. I'm curious — are you getting everything you need out of Salesforce right now, or is there a gap between what it could do for your sales team and what it's actually doing?"
 
 **Why it works:** Invites them to share frustrations. Most Salesforce users feel they're not getting full value.
 
 #### Option D: Permission + Problem Hybrid
 
-> "Hi [Name], this is [Your Name] from Fexle. I'll be honest — this is a cold call, so I'll be quick. A lot of companies we talk to are sitting on AI features in Salesforce they're not using yet — stuff that could genuinely cut support costs or speed up their sales cycle. Is that something you'd want to explore, or is this a bad time?"
+> "Hi [Name], this is [Your Name] from Sample Company. I'll be honest — this is a cold call, so I'll be quick. A lot of companies we talk to are sitting on AI features in Salesforce they're not using yet — stuff that could genuinely cut support costs or speed up their sales cycle. Is that something you'd want to explore, or is this a bad time?"
 
 **Why it works:** Acknowledges the cold call, hints at value, gives them an easy out (which paradoxically makes them more likely to engage).
 
@@ -97,11 +97,11 @@ Use these when prospect already has Salesforce.
 
 ### Pivot Scripts for SF Users (When They Engage)
 
-If they respond with interest ("Yeah, we've been thinking about that" or "What do you mean?"), NOW introduce Fexle's value:
+If they respond with interest ("Yeah, we've been thinking about that" or "What do you mean?"), NOW introduce Sample Company's value:
 
 #### Primary Pivot:
 
-> "So here's why I called you specifically. Fexle is Australia's most cost-effective Salesforce implementation partner — we're 300 people with a hybrid onshore-offshore model that delivers implementations at 30-40% less than traditional consultancies. But what's really relevant right now is that Salesforce just released Agentforce — AI agents that can handle customer inquiries autonomously. One of our clients cut their support ticket volume by 40% in 8 weeks. Is that the kind of thing that would be useful to explore?"
+> "So here's why I called you specifically. Sample Company is Australia's most cost-effective Salesforce implementation partner — we're 300 people with a hybrid onshore-offshore model that delivers implementations at 30-40% less than traditional consultancies. But what's really relevant right now is that Salesforce just released Agentforce — AI agents that can handle customer inquiries autonomously. One of our clients cut their support ticket volume by 40% in 8 weeks. Is that the kind of thing that would be useful to explore?"
 
 #### If They Mentioned AI Interest:
 
@@ -109,11 +109,11 @@ If they respond with interest ("Yeah, we've been thinking about that" or "What d
 
 #### If They Mentioned Cost Pressure:
 
-> "That's exactly what we help with. Fexle is Australia's most cost-effective Salesforce implementation partner — our hybrid onshore-offshore model delivers implementations at 30-40% less than Big Four consultancies. Same quality, smarter delivery model. And the new Salesforce AI features — Agentforce, Einstein — can dramatically reduce support costs in months, not years. We helped one client cut support ticket volume by 40% in 8 weeks. Would it be worth exploring what's possible for your situation?"
+> "That's exactly what we help with. Sample Company is Australia's most cost-effective Salesforce implementation partner — our hybrid onshore-offshore model delivers implementations at 30-40% less than Big Four consultancies. Same quality, smarter delivery model. And the new Salesforce AI features — Agentforce, Einstein — can dramatically reduce support costs in months, not years. We helped one client cut support ticket volume by 40% in 8 weeks. Would it be worth exploring what's possible for your situation?"
 
 #### If They Mentioned Sales Performance Gaps:
 
-> "You're not alone — most companies feel that way about Salesforce. Here's the thing: Salesforce's new AI tools — Einstein Copilot for reps, AI-powered forecasting, automated lead scoring — can genuinely close that gap. We're Fexle, Australia's most cost-effective Salesforce partner. Our hybrid model means you get enterprise-quality implementations at 30-40% less than traditional consultancies. We've helped companies improve deal velocity and win rates using these new tools. Would it be useful to see what might work for your team?"
+> "You're not alone — most companies feel that way about Salesforce. Here's the thing: Salesforce's new AI tools — Einstein Copilot for reps, AI-powered forecasting, automated lead scoring — can genuinely close that gap. We're Sample Company, Australia's most cost-effective Salesforce partner. Our hybrid model means you get enterprise-quality implementations at 30-40% less than traditional consultancies. We've helped companies improve deal velocity and win rates using these new tools. Would it be useful to see what might work for your team?"
 
 ---
 
@@ -169,31 +169,31 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 #### Option A: CRM Pain Question (Recommended)
 
-> "Hi [Name], this is [Your Name] from Fexle. I'll be quick — I'm calling because we help mid-sized Australian companies get better visibility into their sales pipeline and customer relationships. Quick question: are you happy with how you're currently tracking customer interactions and sales opportunities, or is that an area where you're looking to improve?"
+> "Hi [Name], this is [Your Name] from Sample Company. I'll be quick — I'm calling because we help mid-sized Australian companies get better visibility into their sales pipeline and customer relationships. Quick question: are you happy with how you're currently tracking customer interactions and sales opportunities, or is that an area where you're looking to improve?"
 
 **Why it works:** Opens with business value, not product. Gets them talking about their current situation without assuming any tool.
 
 #### Option B: Growth Challenge Question
 
-> "Hi [Name], this is [Your Name] from Fexle. Quick question for you — as your business has grown, has keeping track of customer relationships and sales opportunities become harder, or do you have that pretty well sorted?"
+> "Hi [Name], this is [Your Name] from Sample Company. Quick question for you — as your business has grown, has keeping track of customer relationships and sales opportunities become harder, or do you have that pretty well sorted?"
 
 **Why it works:** Connects to a universal growth pain point. Works whether they use spreadsheets, basic tools, or nothing at all.
 
 #### Option C: Tech Stack Curiosity
 
-> "Hi [Name], this is [Your Name] from Fexle. We're a Salesforce implementation partner, and I'm curious — what are you using to manage customer relationships and sales tracking today? Spreadsheets, another CRM, or something else?"
+> "Hi [Name], this is [Your Name] from Sample Company. We're a Salesforce implementation partner, and I'm curious — what are you using to manage customer relationships and sales tracking today? Spreadsheets, another CRM, or something else?"
 
 **Why it works:** Direct and honest. Gets intel on their current setup immediately so you can tailor the conversation.
 
 #### Option D: AI Opportunity Question
 
-> "Hi [Name], this is [Your Name] from Fexle. I'll be honest — this is a cold call, so I'll keep it short. We're seeing a lot of companies looking at AI to automate customer service and boost sales productivity. Is that something on your radar, or is that not where your priorities are right now?"
+> "Hi [Name], this is [Your Name] from Sample Company. I'll be honest — this is a cold call, so I'll keep it short. We're seeing a lot of companies looking at AI to automate customer service and boost sales productivity. Is that something on your radar, or is that not where your priorities are right now?"
 
 **Why it works:** Leads with AI value prop which is relevant regardless of current CRM. Opens door to discuss Salesforce as the AI-ready platform.
 
 #### Option E: Current System Frustration
 
-> "Hi [Name], this is [Your Name] from Fexle. We specialise in helping companies move to Salesforce from other systems — or from spreadsheets and manual processes. Quick question: are you getting everything you need from your current setup, or are there gaps that are starting to slow the business down?"
+> "Hi [Name], this is [Your Name] from Sample Company. We specialise in helping companies move to Salesforce from other systems — or from spreadsheets and manual processes. Quick question: are you getting everything you need from your current setup, or are there gaps that are starting to slow the business down?"
 
 **Why it works:** Positions migration expertise upfront. Invites them to share frustrations with their current approach.
 
@@ -203,7 +203,7 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 #### If They Use Spreadsheets or Nothing:
 
-> "I hear that a lot — spreadsheets work until they don't. The challenge is when you need to see your full pipeline at a glance, or when multiple people need to update the same data, or when a key person leaves and takes all the relationship knowledge with them. That's exactly when companies look at Salesforce. The good news is, Salesforce has gotten much more accessible, and with Fexle's hybrid model, we can implement it at 30-40% less than the big consultancies. Would it be worth a quick conversation to see what's actually involved?"
+> "I hear that a lot — spreadsheets work until they don't. The challenge is when you need to see your full pipeline at a glance, or when multiple people need to update the same data, or when a key person leaves and takes all the relationship knowledge with them. That's exactly when companies look at Salesforce. The good news is, Salesforce has gotten much more accessible, and with Sample Company's hybrid model, we can implement it at 30-40% less than the big consultancies. Would it be worth a quick conversation to see what's actually involved?"
 
 #### If They Use HubSpot:
 
@@ -219,7 +219,7 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 #### AI Angle (Works for Any Situation):
 
-> "Here's what's changed: AI is no longer future stuff — it's working right now. Salesforce's Agentforce can handle customer inquiries 24/7, Einstein Copilot helps sales reps work faster, and automated workflows can replace hours of manual work. But you need a platform that supports it. Salesforce is purpose-built for AI in a way that other CRMs and definitely spreadsheets aren't. And with Fexle, you get Salesforce implementation at 30-40% less than traditional consultancies. Would it be worth exploring what AI could do for your business?"
+> "Here's what's changed: AI is no longer future stuff — it's working right now. Salesforce's Agentforce can handle customer inquiries 24/7, Einstein Copilot helps sales reps work faster, and automated workflows can replace hours of manual work. But you need a platform that supports it. Salesforce is purpose-built for AI in a way that other CRMs and definitely spreadsheets aren't. And with Sample Company, you get Salesforce implementation at 30-40% less than traditional consultancies. Would it be worth exploring what AI could do for your business?"
 
 ---
 
@@ -235,7 +235,7 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 #### "We just use spreadsheets."
 
-> "Honestly, a lot of companies do — and it works until it doesn't. The tipping point is usually when you can't see your full pipeline, when deals slip through the cracks, or when someone leaves and takes all the relationship knowledge with them. The good news is Salesforce is more accessible than people think, especially with Fexle's 30-40% lower cost model. Would it be useful to see what getting started actually looks like?"
+> "Honestly, a lot of companies do — and it works until it doesn't. The tipping point is usually when you can't see your full pipeline, when deals slip through the cracks, or when someone leaves and takes all the relationship knowledge with them. The good news is Salesforce is more accessible than people think, especially with Sample Company's 30-40% lower cost model. Would it be useful to see what getting started actually looks like?"
 
 #### "CRM seems like overkill for us."
 
@@ -243,15 +243,15 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 #### "We tried CRM before and it didn't stick."
 
-> "That's really common, actually — and usually it's not the tool, it's the implementation. Either it wasn't set up for how your team actually works, or there wasn't proper training and adoption support. That's exactly what we focus on at Fexle. We don't just implement and leave — we make sure it actually gets used. Would it be worth hearing how we approach that differently?"
+> "That's really common, actually — and usually it's not the tool, it's the implementation. Either it wasn't set up for how your team actually works, or there wasn't proper training and adoption support. That's exactly what we focus on at Sample Company. We don't just implement and leave — we make sure it actually gets used. Would it be worth hearing how we approach that differently?"
 
 #### "Salesforce is too expensive."
 
-> "That's what a lot of people think — and it used to be more true. Two things have changed: first, Salesforce has more flexible pricing now, including Starter editions. Second, Fexle's hybrid model means implementation costs are 30-40% lower than traditional consultancies. When you factor in the productivity gains and the AI capabilities, the ROI is usually clear within 6-12 months. Would it be useful to see what it might actually cost for your situation?"
+> "That's what a lot of people think — and it used to be more true. Two things have changed: first, Salesforce has more flexible pricing now, including Starter editions. Second, Sample Company's hybrid model means implementation costs are 30-40% lower than traditional consultancies. When you factor in the productivity gains and the AI capabilities, the ROI is usually clear within 6-12 months. Would it be useful to see what it might actually cost for your situation?"
 
 #### "We don't have the bandwidth to implement a CRM."
 
-> "That's exactly why our model works. Fexle handles the heavy lifting — we configure it for how your team works, migrate your data, and train your people. Your team's involvement is minimal. And because of our hybrid model, it costs less than you might expect. Would it be worth a conversation about what a realistic timeline and commitment looks like?"
+> "That's exactly why our model works. Sample Company handles the heavy lifting — we configure it for how your team works, migrate your data, and train your people. Your team's involvement is minimal. And because of our hybrid model, it costs less than you might expect. Would it be worth a conversation about what a realistic timeline and commitment looks like?"
 
 #### "Our industry is different / We have specific needs."
 
@@ -301,7 +301,7 @@ Only after they've shown interest do you offer the CEO call. This makes it feel 
 
 ### If They Agree to the CEO Call:
 
-> "Excellent. Let me lock that in before we both get pulled away. You'll be speaking with [CEO Name]. I'll send an invite with a brief agenda: Salesforce's latest AI innovations, how they can streamline your processes, and how Fexle could help you make a material impact this year. Thanks for your time today, [Name]."
+> "Excellent. Let me lock that in before we both get pulled away. You'll be speaking with [CEO Name]. I'll send an invite with a brief agenda: Salesforce's latest AI innovations, how they can streamline your processes, and how Sample Company could help you make a material impact this year. Thanks for your time today, [Name]."
 
 ---
 
@@ -328,7 +328,7 @@ Memorize these — weave them naturally when relevant:
 
 | Topic | Message |
 |-------|---------|
-| **Who we are** | "Fexle — 300-person Salesforce specialist based in Sydney" |
+| **Who we are** | "Sample Company — 300-person Salesforce specialist based in Sydney" |
 | **Cost positioning** | "Australia's most cost-effective Salesforce implementation partner" |
 | **Our model** | "Hybrid onshore-offshore — Australian leadership, global development capacity, 30-40% lower cost" |
 | **AI innovations** | "Agentforce, Einstein Copilot, automated workflows — stuff that actually works now" |
@@ -424,7 +424,7 @@ Does prospect use Salesforce?
 
 ---
 
-**Fexle | Sydney, Australia | 300+ Salesforce Professionals**
+**Sample Company | Sydney, Australia | 300+ Salesforce Professionals**
 
 *Australia's Most Cost-Effective Salesforce Implementation Partner*
 

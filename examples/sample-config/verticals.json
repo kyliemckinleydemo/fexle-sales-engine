@@ -1,5 +1,5 @@
 {
-  "description": "Fexle Services - Salesforce industry verticals with pain points and scripts",
+  "description": "Sample Company - Salesforce industry verticals with pain points and scripts",
   "verticals": {
     "healthcare": {
       "name": "Healthcare & Aged Care",
@@ -246,7 +246,7 @@
         "We're too small": "Now is actually the perfect time — before bad habits and scattered data become problems. The system scales with you, so you won't outgrow it.",
         "We don't have time to implement": "That's the irony — you're too busy because you don't have systems. Implementation takes weeks, not months. Then you get time back every day.",
         "Technology isn't our strength": "It doesn't need to be. Salesforce is designed for business users. We handle the setup, train your team, and you use it like any other business tool.",
-        "We've tried CRM before": "Most failed CRM implementations fail because of poor setup or training, not the software. Fexle specialises in making it work — we've done 700+ implementations."
+        "We've tried CRM before": "Most failed CRM implementations fail because of poor setup or training, not the software. Sample Company specialises in making it work — we've done 700+ implementations."
       }
     }
   }

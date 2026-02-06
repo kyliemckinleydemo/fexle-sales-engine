@@ -37,7 +37,7 @@ The Apps Script serves dual purposes:
 ### 1. Create the Google Sheet
 
 1. Go to [sheets.new](https://sheets.new) to create a new spreadsheet
-2. Name it something like "Fexle Sales Engine - Team Data"
+2. Name it something like "Outbound Sales Engine - Team Data"
 3. At the bottom, you'll see a tab called "Sheet1"
 4. Right-click the tab → Rename → Type `Leads`
 5. Click the **+** button to add another sheet
@@ -60,7 +60,7 @@ Copy and paste the following code into the Apps Script editor:
 
 ```javascript
 // ============================================================
-// Fexle Sales Engine - Google Sheets Backend
+// Outbound Sales Engine - Google Sheets Backend
 // ============================================================
 // This script provides the API backend for syncing leads and
 // tasks between the browser app and Google Sheets.
@@ -323,7 +323,7 @@ function removeDuplicates() {
 ### 4. Save the Script
 
 1. Click **File → Save** (or Ctrl+S / Cmd+S)
-2. Name the project "Fexle Sales Engine Backend"
+2. Name the project "Outbound Sales Engine Backend"
 
 ### 4b. Add API Keys to Script Properties (for proxy)
 
@@ -348,7 +348,7 @@ This keeps API keys on Google's servers rather than in the browser — more secu
 3. Click the gear icon ⚙️ next to "Select type"
 4. Choose **Web app**
 5. Fill in the form:
-   - **Description**: `Fexle Sales Engine Backend v1`
+   - **Description**: `Outbound Sales Engine Backend v1`
    - **Execute as**: `Me (your-email@gmail.com)`
    - **Who has access**: `Anyone`
 6. Click **Deploy**
@@ -359,7 +359,7 @@ This keeps API keys on Google's servers rather than in the browser — more secu
 2. Choose your Google account
 3. You'll see a warning: "Google hasn't verified this app"
 4. Click **Advanced**
-5. Click **Go to Fexle Sales Engine Backend (unsafe)**
+5. Click **Go to Outbound Sales Engine Backend (unsafe)**
 6. Click **Allow**
 
 ### 7. Copy the Web App URL
@@ -372,7 +372,7 @@ After authorization, you'll see a success screen with:
 
 ### 8. Connect in Sales Engine
 
-1. Open the Fexle Sales Engine
+1. Open the Outbound Sales Engine
 2. Click **Settings** (⚙️ gear icon)
 3. Paste the Web App URL into **Google Apps Script URL**
 4. You should see: "✓ Proxy URL saved — Apollo searches will route through server"

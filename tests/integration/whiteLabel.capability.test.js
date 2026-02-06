@@ -1,9 +1,9 @@
 /**
  * @module tests/integration/whiteLabel.capability.test
- * @description Validates white-label system capabilities using Fexle example configs as test data
+ * @description Validates white-label system capabilities using sample configs as test data
  *
  * PURPOSE:
- * - Verify override system can reproduce Fexle vertical customizations
+ * - Verify override system can reproduce sample vertical customizations
  * - Test that example config JSON structures are compatible with the app
  * - Document what the white-label system CAN and CANNOT handle
  * - Prove end-to-end override flow: set → persist → load → merge → verify
@@ -12,7 +12,7 @@
  * - Test suites for white-label capability validation
  *
  * CLAUDE NOTES:
- * - Uses real Fexle example config files from examples/fexle-config/
+ * - Uses real sample config files from examples/sample-config/
  * - Tests match the actual hardcoded vertical structure in index.html
  * - Gap tests are intentionally designed to PASS, documenting known limitations
  */
@@ -34,14 +34,14 @@ import {
   validateStep2
 } from '../../src/utils/scriptBuilder.js';
 
-// Load the actual Fexle example config files
-let fexleCompany, fexleScripts, fexleVerticals;
+// Load the actual sample config files
+let sampleCompany, sampleScripts, sampleVerticals;
 
 beforeAll(() => {
-  const configDir = resolve(__dirname, '../../examples/fexle-config');
-  fexleCompany = JSON.parse(readFileSync(resolve(configDir, 'company.json'), 'utf-8'));
-  fexleScripts = JSON.parse(readFileSync(resolve(configDir, 'scripts.json'), 'utf-8'));
-  fexleVerticals = JSON.parse(readFileSync(resolve(configDir, 'verticals.json'), 'utf-8'));
+  const configDir = resolve(__dirname, '../../examples/sample-config');
+  sampleCompany = JSON.parse(readFileSync(resolve(configDir, 'company.json'), 'utf-8'));
+  sampleScripts = JSON.parse(readFileSync(resolve(configDir, 'scripts.json'), 'utf-8'));
+  sampleVerticals = JSON.parse(readFileSync(resolve(configDir, 'verticals.json'), 'utf-8'));
 });
 
 // Simulate the hardcoded verticalData structure from index.html (healthcare as example)
@@ -91,40 +91,40 @@ describe('White-Label Capability Validation', () => {
 
   describe('1. Example Config Files - Structure Validation', () => {
     it('company.json has all required branding fields', () => {
-      expect(fexleCompany.name).toBe('Fexle Services');
-      expect(fexleCompany.tagline).toBeDefined();
-      expect(fexleCompany.size).toBeDefined();
-      expect(fexleCompany.locations).toBeInstanceOf(Array);
-      expect(fexleCompany.model).toBeDefined();
-      expect(fexleCompany.costAdvantage).toBeDefined();
-      expect(fexleCompany.proofPoints).toBeInstanceOf(Array);
-      expect(fexleCompany.colors).toBeDefined();
-      expect(fexleCompany.colors.primary).toBeDefined();
-      expect(fexleCompany.colors.secondary).toBeDefined();
+      expect(sampleCompany.name).toBe('Sample Company');
+      expect(sampleCompany.tagline).toBeDefined();
+      expect(sampleCompany.size).toBeDefined();
+      expect(sampleCompany.locations).toBeInstanceOf(Array);
+      expect(sampleCompany.model).toBeDefined();
+      expect(sampleCompany.costAdvantage).toBeDefined();
+      expect(sampleCompany.proofPoints).toBeInstanceOf(Array);
+      expect(sampleCompany.colors).toBeDefined();
+      expect(sampleCompany.colors.primary).toBeDefined();
+      expect(sampleCompany.colors.secondary).toBeDefined();
     });
 
     it('scripts.json has all script categories', () => {
-      expect(fexleScripts.openings).toBeDefined();
-      expect(fexleScripts.pivots).toBeDefined();
-      expect(fexleScripts.closes).toBeDefined();
-      expect(fexleScripts.objections).toBeDefined();
-      expect(fexleScripts.followUp).toBeDefined();
-      expect(fexleScripts.keyMessages).toBeInstanceOf(Array);
-      expect(fexleScripts.openingsNonSF).toBeDefined();
-      expect(fexleScripts.pivotsNonSF).toBeDefined();
-      expect(fexleScripts.objectionsNonSF).toBeDefined();
-      expect(fexleScripts.closesNonSF).toBeDefined();
+      expect(sampleScripts.openings).toBeDefined();
+      expect(sampleScripts.pivots).toBeDefined();
+      expect(sampleScripts.closes).toBeDefined();
+      expect(sampleScripts.objections).toBeDefined();
+      expect(sampleScripts.followUp).toBeDefined();
+      expect(sampleScripts.keyMessages).toBeInstanceOf(Array);
+      expect(sampleScripts.openingsNonSF).toBeDefined();
+      expect(sampleScripts.pivotsNonSF).toBeDefined();
+      expect(sampleScripts.objectionsNonSF).toBeDefined();
+      expect(sampleScripts.closesNonSF).toBeDefined();
     });
 
     it('scripts.json has token definitions', () => {
-      expect(fexleScripts.tokens).toBeDefined();
-      expect(fexleScripts.tokens['{COMPANY}']).toBe('Fexle');
-      expect(fexleScripts.tokens['{PRODUCT}']).toBe('Salesforce');
+      expect(sampleScripts.tokens).toBeDefined();
+      expect(sampleScripts.tokens['{COMPANY}']).toBe('Sample Company');
+      expect(sampleScripts.tokens['{PRODUCT}']).toBe('Salesforce');
     });
 
     it('verticals.json has structured vertical definitions', () => {
-      expect(fexleVerticals.verticals).toBeDefined();
-      const verticalKeys = Object.keys(fexleVerticals.verticals);
+      expect(sampleVerticals.verticals).toBeDefined();
+      const verticalKeys = Object.keys(sampleVerticals.verticals);
       expect(verticalKeys.length).toBeGreaterThanOrEqual(6);
       expect(verticalKeys).toContain('healthcare');
       expect(verticalKeys).toContain('professionalServices');
@@ -135,7 +135,7 @@ describe('White-Label Capability Validation', () => {
     });
 
     it('each vertical in verticals.json has complete structure', () => {
-      Object.entries(fexleVerticals.verticals).forEach(([key, vertical]) => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, vertical]) => {
         expect(vertical.name, `${key}.name`).toBeDefined();
         expect(vertical.icon, `${key}.icon`).toBeDefined();
         expect(vertical.enabled, `${key}.enabled`).toBe(true);
@@ -149,7 +149,7 @@ describe('White-Label Capability Validation', () => {
     });
 
     it('vertical openings have name, script, and why fields', () => {
-      Object.entries(fexleVerticals.verticals).forEach(([key, vertical]) => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, vertical]) => {
         vertical.openings.forEach((opening, i) => {
           expect(opening.name, `${key}.openings[${i}].name`).toBeDefined();
           expect(opening.script, `${key}.openings[${i}].script`).toBeDefined();
@@ -161,68 +161,68 @@ describe('White-Label Capability Validation', () => {
 
   describe('2. Override System - Vertical Script Customization', () => {
     it('can override all opening scripts in a vertical', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
       let overrides = {};
 
-      // Apply each Fexle opening as an override
-      fexleHealthcare.openings.forEach((opening, index) => {
+      // Apply each sample opening as an override
+      sampleHealthcare.openings.forEach((opening, index) => {
         overrides = setOverride(overrides, 'healthcare', 'openings', index, opening.script);
       });
 
       // Verify all overrides are set
-      fexleHealthcare.openings.forEach((opening, index) => {
+      sampleHealthcare.openings.forEach((opening, index) => {
         expect(hasOverride(overrides, 'healthcare', 'openings', index)).toBe(true);
       });
 
       // Merge and verify the output
       const merged = getMergedVertical('healthcare', HARDCODED_HEALTHCARE, overrides);
-      fexleHealthcare.openings.forEach((opening, index) => {
+      sampleHealthcare.openings.forEach((opening, index) => {
         expect(merged.openings[index].script).toBe(opening.script);
       });
     });
 
     it('can override all objection responses in a vertical', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
       let overrides = {};
 
-      // Apply each Fexle objection as an override
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      // Apply each sample objection as an override
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         overrides = setOverride(overrides, 'healthcare', 'objections', trigger, response);
       });
 
       // Verify all overrides are set
-      Object.keys(fexleHealthcare.objections).forEach(trigger => {
+      Object.keys(sampleHealthcare.objections).forEach(trigger => {
         expect(hasOverride(overrides, 'healthcare', 'objections', trigger)).toBe(true);
       });
 
       // Merge and verify
       const merged = getMergedVertical('healthcare', HARDCODED_HEALTHCARE, overrides);
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         expect(merged.objections[trigger]).toBe(response);
       });
     });
 
     it('can override all pain points in a vertical', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
       let overrides = {};
 
-      // Apply each Fexle pain point as an override
-      fexleHealthcare.painPoints.forEach((painPoint, index) => {
+      // Apply each sample pain point as an override
+      sampleHealthcare.painPoints.forEach((painPoint, index) => {
         overrides = setOverride(overrides, 'healthcare', 'painPoints', index, painPoint);
       });
 
       // Merge and verify
       const merged = getMergedVertical('healthcare', HARDCODED_HEALTHCARE, overrides);
-      fexleHealthcare.painPoints.forEach((painPoint, index) => {
+      sampleHealthcare.painPoints.forEach((painPoint, index) => {
         expect(merged.painPoints[index]).toBe(painPoint);
       });
     });
 
-    it('can override scripts across ALL 6 Fexle verticals simultaneously', () => {
+    it('can override scripts across ALL 6 sample verticals simultaneously', () => {
       let overrides = {};
 
       // Apply overrides for all verticals
-      Object.entries(fexleVerticals.verticals).forEach(([key, vertical]) => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, vertical]) => {
         // Override first opening
         if (vertical.openings.length > 0) {
           overrides = setOverride(overrides, key, 'openings', 0, vertical.openings[0].script);
@@ -235,7 +235,7 @@ describe('White-Label Capability Validation', () => {
       });
 
       // Verify all 6 verticals have overrides
-      Object.keys(fexleVerticals.verticals).forEach(key => {
+      Object.keys(sampleVerticals.verticals).forEach(key => {
         expect(hasOverride(overrides, key, 'openings', 0)).toBe(true);
       });
     });
@@ -285,23 +285,23 @@ describe('White-Label Capability Validation', () => {
     });
   });
 
-  describe('3. Override System - Full Fexle Vertical Reproduction', () => {
-    it('can fully reproduce Fexle healthcare vertical via overrides', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+  describe('3. Override System - Full Sample Vertical Reproduction', () => {
+    it('can fully reproduce sample healthcare vertical via overrides', () => {
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
       let overrides = {};
 
       // Apply ALL openings
-      fexleHealthcare.openings.forEach((opening, i) => {
+      sampleHealthcare.openings.forEach((opening, i) => {
         overrides = setOverride(overrides, 'healthcare', 'openings', i, opening.script);
       });
 
       // Apply ALL objections
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         overrides = setOverride(overrides, 'healthcare', 'objections', trigger, response);
       });
 
       // Apply ALL pain points
-      fexleHealthcare.painPoints.forEach((pain, i) => {
+      sampleHealthcare.painPoints.forEach((pain, i) => {
         overrides = setOverride(overrides, 'healthcare', 'painPoints', i, pain);
       });
 
@@ -309,63 +309,63 @@ describe('White-Label Capability Validation', () => {
       const merged = getMergedVertical('healthcare', HARDCODED_HEALTHCARE, overrides);
 
       // Openings match
-      fexleHealthcare.openings.forEach((opening, i) => {
+      sampleHealthcare.openings.forEach((opening, i) => {
         expect(merged.openings[i].script).toBe(opening.script);
         // Note: name and why come from base, only script is overridden
         expect(merged.openings[i].name).toBe(HARDCODED_HEALTHCARE.openings[i].name);
       });
 
       // Objections match (overrides replace matching keys and merge)
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         expect(merged.objections[trigger]).toBe(response);
       });
 
       // Pain points match
-      fexleHealthcare.painPoints.forEach((pain, i) => {
+      sampleHealthcare.painPoints.forEach((pain, i) => {
         expect(merged.painPoints[i]).toBe(pain);
       });
     });
 
-    it('can reproduce ALL 6 Fexle verticals via overrides', () => {
-      Object.entries(fexleVerticals.verticals).forEach(([key, fexleVertical]) => {
+    it('can reproduce ALL 6 sample verticals via overrides', () => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, sampleVertical]) => {
         // Build a base that matches the hardcoded structure
         const base = {
-          name: fexleVertical.name,
-          icon: fexleVertical.icon,
-          openings: fexleVertical.openings.map(o => ({
+          name: sampleVertical.name,
+          icon: sampleVertical.icon,
+          openings: sampleVertical.openings.map(o => ({
             name: o.name,
             script: 'placeholder',
             why: o.why
           })),
           objections: Object.fromEntries(
-            Object.keys(fexleVertical.objections).map(k => [k, 'placeholder'])
+            Object.keys(sampleVertical.objections).map(k => [k, 'placeholder'])
           ),
-          painPoints: fexleVertical.painPoints.map(() => 'placeholder')
+          painPoints: sampleVertical.painPoints.map(() => 'placeholder')
         };
 
         let overrides = {};
 
         // Apply all overrides
-        fexleVertical.openings.forEach((opening, i) => {
+        sampleVertical.openings.forEach((opening, i) => {
           overrides = setOverride(overrides, key, 'openings', i, opening.script);
         });
-        Object.entries(fexleVertical.objections).forEach(([trigger, response]) => {
+        Object.entries(sampleVertical.objections).forEach(([trigger, response]) => {
           overrides = setOverride(overrides, key, 'objections', trigger, response);
         });
-        fexleVertical.painPoints.forEach((pain, i) => {
+        sampleVertical.painPoints.forEach((pain, i) => {
           overrides = setOverride(overrides, key, 'painPoints', i, pain);
         });
 
         // Merge and verify
         const merged = getMergedVertical(key, base, overrides);
 
-        fexleVertical.openings.forEach((opening, i) => {
+        sampleVertical.openings.forEach((opening, i) => {
           expect(merged.openings[i].script, `${key} opening ${i}`).toBe(opening.script);
         });
-        Object.entries(fexleVertical.objections).forEach(([trigger, response]) => {
+        Object.entries(sampleVertical.objections).forEach(([trigger, response]) => {
           expect(merged.objections[trigger], `${key} objection "${trigger}"`).toBe(response);
         });
-        fexleVertical.painPoints.forEach((pain, i) => {
+        sampleVertical.painPoints.forEach((pain, i) => {
           expect(merged.painPoints[i], `${key} painPoint ${i}`).toBe(pain);
         });
       });
@@ -375,13 +375,13 @@ describe('White-Label Capability Validation', () => {
   describe('4. Override Persistence - Round-Trip Test', () => {
     it('overrides serialise and deserialise correctly via JSON', () => {
       let overrides = {};
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
 
       // Build complex overrides
-      fexleHealthcare.openings.forEach((opening, i) => {
+      sampleHealthcare.openings.forEach((opening, i) => {
         overrides = setOverride(overrides, 'healthcare', 'openings', i, opening.script);
       });
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         overrides = setOverride(overrides, 'healthcare', 'objections', trigger, response);
       });
 
@@ -399,7 +399,7 @@ describe('White-Label Capability Validation', () => {
     it('overrides for all 6 verticals fit in a single JSON object', () => {
       let overrides = {};
 
-      Object.entries(fexleVerticals.verticals).forEach(([key, vertical]) => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, vertical]) => {
         vertical.openings.forEach((opening, i) => {
           overrides = setOverride(overrides, key, 'openings', i, opening.script);
         });
@@ -419,54 +419,54 @@ describe('White-Label Capability Validation', () => {
     });
   });
 
-  describe('5. Config Compatibility - Fexle Example Matches Hardcoded Structure', () => {
-    it('Fexle company.json fields match FEXLE_INFO hardcoded structure', () => {
-      // The company.json should have all the fields found in FEXLE_INFO in index.html
-      expect(fexleCompany.name).toBeDefined();
-      expect(fexleCompany.tagline).toBeDefined();
-      expect(fexleCompany.size).toBeDefined();
-      expect(fexleCompany.locations).toBeDefined();
-      expect(fexleCompany.model).toBeDefined();
-      expect(fexleCompany.costAdvantage).toBeDefined();
-      expect(fexleCompany.proofPoints).toBeDefined();
-      expect(fexleCompany.keyProducts).toBeDefined();
+  describe('5. Config Compatibility - Sample Config Matches Hardcoded Structure', () => {
+    it('Sample company.json fields match COMPANY_INFO hardcoded structure', () => {
+      // The company.json should have all the fields found in COMPANY_INFO in index.html
+      expect(sampleCompany.name).toBeDefined();
+      expect(sampleCompany.tagline).toBeDefined();
+      expect(sampleCompany.size).toBeDefined();
+      expect(sampleCompany.locations).toBeDefined();
+      expect(sampleCompany.model).toBeDefined();
+      expect(sampleCompany.costAdvantage).toBeDefined();
+      expect(sampleCompany.proofPoints).toBeDefined();
+      expect(sampleCompany.keyProducts).toBeDefined();
     });
 
-    it('Fexle scripts.json structure matches FEXLE_SCRIPTS hardcoded structure', () => {
-      // Verify the JSON config has all the script categories found in FEXLE_SCRIPTS
-      expect(fexleScripts.openings).toBeDefined();
-      expect(Object.keys(fexleScripts.openings).length).toBe(4); // aiPressure, supportCost, salesPerformance, permissionHybrid
-      expect(fexleScripts.openings.aiPressure).toBeDefined();
-      expect(fexleScripts.openings.aiPressure.name).toBeDefined();
-      expect(fexleScripts.openings.aiPressure.script).toBeDefined();
+    it('Sample scripts.json structure matches CALL_SCRIPTS hardcoded structure', () => {
+      // Verify the JSON config has all the script categories found in CALL_SCRIPTS
+      expect(sampleScripts.openings).toBeDefined();
+      expect(Object.keys(sampleScripts.openings).length).toBe(4); // aiPressure, supportCost, salesPerformance, permissionHybrid
+      expect(sampleScripts.openings.aiPressure).toBeDefined();
+      expect(sampleScripts.openings.aiPressure.name).toBeDefined();
+      expect(sampleScripts.openings.aiPressure.script).toBeDefined();
 
-      expect(fexleScripts.pivots).toBeDefined();
-      expect(fexleScripts.closes).toBeDefined();
-      expect(fexleScripts.objections).toBeDefined();
-      expect(fexleScripts.followUp).toBeDefined();
-      expect(fexleScripts.keyMessages).toBeDefined();
-      expect(fexleScripts.keyMessages.length).toBe(7);
+      expect(sampleScripts.pivots).toBeDefined();
+      expect(sampleScripts.closes).toBeDefined();
+      expect(sampleScripts.objections).toBeDefined();
+      expect(sampleScripts.followUp).toBeDefined();
+      expect(sampleScripts.keyMessages).toBeDefined();
+      expect(sampleScripts.keyMessages.length).toBe(7);
     });
 
-    it('Fexle verticals.json opening structure matches hardcoded format', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+    it('sample verticals.json opening structure matches hardcoded format', () => {
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
 
       // Should have same array-of-objects format: { name, script, why }
-      expect(fexleHealthcare.openings).toBeInstanceOf(Array);
-      fexleHealthcare.openings.forEach(opening => {
+      expect(sampleHealthcare.openings).toBeInstanceOf(Array);
+      sampleHealthcare.openings.forEach(opening => {
         expect(opening).toHaveProperty('name');
         expect(opening).toHaveProperty('script');
         expect(opening).toHaveProperty('why');
       });
     });
 
-    it('Fexle verticals.json objection structure matches hardcoded format', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+    it('sample verticals.json objection structure matches hardcoded format', () => {
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
 
       // Should be an object: { "trigger text": "response text" }
-      expect(typeof fexleHealthcare.objections).toBe('object');
-      expect(Array.isArray(fexleHealthcare.objections)).toBe(false);
-      Object.entries(fexleHealthcare.objections).forEach(([trigger, response]) => {
+      expect(typeof sampleHealthcare.objections).toBe('object');
+      expect(Array.isArray(sampleHealthcare.objections)).toBe(false);
+      Object.entries(sampleHealthcare.objections).forEach(([trigger, response]) => {
         expect(typeof trigger).toBe('string');
         expect(typeof response).toBe('string');
         expect(trigger.length).toBeGreaterThan(0);
@@ -478,16 +478,16 @@ describe('White-Label Capability Validation', () => {
   describe('6. Gap Analysis - What Override System Cannot Do', () => {
 
     it('CANNOT override opening name or "why" field (only script text)', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
       let overrides = {};
 
       // Override script text for opening 0
-      overrides = setOverride(overrides, 'healthcare', 'openings', 0, fexleHealthcare.openings[0].script);
+      overrides = setOverride(overrides, 'healthcare', 'openings', 0, sampleHealthcare.openings[0].script);
 
       const merged = getMergedVertical('healthcare', HARDCODED_HEALTHCARE, overrides);
 
       // Script is overridden
-      expect(merged.openings[0].script).toBe(fexleHealthcare.openings[0].script);
+      expect(merged.openings[0].script).toBe(sampleHealthcare.openings[0].script);
 
       // But name still comes from the base — override system only changes script text
       expect(merged.openings[0].name).toBe(HARDCODED_HEALTHCARE.openings[0].name);
@@ -537,30 +537,30 @@ describe('White-Label Capability Validation', () => {
       expect(merged.decisionMakers).toEqual(HARDCODED_HEALTHCARE.decisionMakers);
     });
 
-    it('CANNOT override general call scripts (FEXLE_SCRIPTS - pivots, closes, follow-ups)', () => {
-      // The override system only works on verticalData, not on FEXLE_SCRIPTS
+    it('CANNOT override general call scripts (CALL_SCRIPTS - pivots, closes, follow-ups)', () => {
+      // The override system only works on verticalData, not on CALL_SCRIPTS
       // General scripts (pivots, closes, etc.) are separate from verticals
       const generalScriptCategories = ['openings', 'pivots', 'closes', 'objections', 'followUp', 'keyMessages'];
       generalScriptCategories.forEach(category => {
-        expect(fexleScripts[category]).toBeDefined();
+        expect(sampleScripts[category]).toBeDefined();
       });
       // These exist in configs but have no override mechanism in the current system
       // This documents the gap: vertical-level scripts can be overridden, but
       // company-level general scripts cannot
     });
 
-    it('CANNOT override company branding (FEXLE_INFO)', () => {
+    it('CANNOT override company branding (COMPANY_INFO)', () => {
       // The override system has no mechanism for company-level data
       // company.json exists but is never loaded at runtime
-      expect(fexleCompany.name).toBe('Fexle Services');
-      // In the actual app, "Fexle" is hardcoded in FEXLE_INFO and 30+ script references
+      expect(sampleCompany.name).toBe('Sample Company');
+      // In the actual app, company name is configurable in COMPANY_INFO and 30+ script references
     });
 
     it('CANNOT override email templates', () => {
       // Email templates are hardcoded in index.html and not part of the override system
       // The config files don't include email templates at all
-      expect(fexleScripts.followUp).toBeDefined();
-      expect(fexleScripts.followUp.email).toBeDefined();
+      expect(sampleScripts.followUp).toBeDefined();
+      expect(sampleScripts.followUp.email).toBeDefined();
       // But the in-app email templates (aiDeck, deckFollowUp, etc.) are separate
       // and not configurable
     });
@@ -578,48 +578,48 @@ describe('White-Label Capability Validation', () => {
     });
   });
 
-  describe('7. Custom Vertical Creation - Fexle Data Through Script Builder', () => {
-    it('can create a custom vertical with Fexle vertical structure', () => {
-      const fexleHealthcare = fexleVerticals.verticals.healthcare;
+  describe('7. Custom Vertical Creation - Sample Data Through Script Builder', () => {
+    it('can create a custom vertical with sample vertical structure', () => {
+      const sampleHealthcare = sampleVerticals.verticals.healthcare;
 
-      // Simulate Script Builder form data using Fexle's vertical info
+      // Simulate Script Builder form data using sample company's vertical info
       const formData = {
-        verticalName: fexleHealthcare.name,
-        productService: fexleHealthcare.salesforceSolution,
-        targetTitles: fexleHealthcare.decisionMakers.join(', '),
-        painPoints: fexleHealthcare.painPoints.join('\n'),
+        verticalName: sampleHealthcare.name,
+        productService: sampleHealthcare.salesforceSolution,
+        targetTitles: sampleHealthcare.decisionMakers.join(', '),
+        painPoints: sampleHealthcare.painPoints.join('\n'),
         valueProps: 'Agentforce for healthcare\nHealth Cloud compliance\n24/7 patient support'
       };
 
       expect(validateStep1(formData)).toBe(true);
       expect(validateStep2(formData)).toBe(true);
 
-      const key = generateVerticalKey(fexleHealthcare.name);
+      const key = generateVerticalKey(sampleHealthcare.name);
       expect(key).toBe('healthcare_aged_care');
 
-      // Simulate AI-parsed response with Fexle's scripts
+      // Simulate AI-parsed response with sample company's scripts
       const aiResponse = {
-        openingScripts: fexleHealthcare.openings.map(o => ({
+        openingScripts: sampleHealthcare.openings.map(o => ({
           name: o.name,
           script: o.script
         })),
-        objectionHandlers: fexleHealthcare.objections
+        objectionHandlers: sampleHealthcare.objections
       };
 
       const verticalObj = buildVerticalObject(aiResponse, formData, key);
 
-      expect(verticalObj.name).toBe(fexleHealthcare.name);
+      expect(verticalObj.name).toBe(sampleHealthcare.name);
       expect(verticalObj.isCustom).toBe(true);
-      expect(verticalObj.openingScripts.length).toBe(fexleHealthcare.openings.length);
-      expect(verticalObj.objectionHandlers).toEqual(fexleHealthcare.objections);
-      expect(verticalObj.painPoints).toEqual(fexleHealthcare.painPoints);
+      expect(verticalObj.openingScripts.length).toBe(sampleHealthcare.openings.length);
+      expect(verticalObj.objectionHandlers).toEqual(sampleHealthcare.objections);
+      expect(verticalObj.painPoints).toEqual(sampleHealthcare.painPoints);
     });
 
     it('custom verticals merge correctly with defaults', () => {
       const defaults = { healthcare: HARDCODED_HEALTHCARE };
       const custom = {
-        fexle_custom: {
-          name: 'Fexle Custom',
+        sample_custom: {
+          name: 'Sample Custom',
           isCustom: true,
           openingScripts: [{ name: 'Test', script: 'Hello' }],
           objectionHandlers: { 'No thanks': 'Custom response' }
@@ -628,8 +628,8 @@ describe('White-Label Capability Validation', () => {
 
       const merged = mergeVerticals(defaults, custom);
       expect(merged.healthcare).toBeDefined();
-      expect(merged.fexle_custom).toBeDefined();
-      expect(merged.fexle_custom.isCustom).toBe(true);
+      expect(merged.sample_custom).toBeDefined();
+      expect(merged.sample_custom.isCustom).toBe(true);
     });
   });
 
@@ -655,8 +655,8 @@ describe('White-Label Capability Validation', () => {
 
     it('documents what CANNOT be customised via the white-label system', () => {
       const gaps = {
-        companyBranding: 'FEXLE_INFO hardcoded, company.json not loaded',
-        generalCallScripts: 'FEXLE_SCRIPTS hardcoded, scripts.json not loaded',
+        companyBranding: 'COMPANY_INFO hardcoded, company.json not loaded',
+        generalCallScripts: 'CALL_SCRIPTS hardcoded, scripts.json not loaded',
         emailTemplates: 'Hardcoded in emailTemplates object, no config file',
         openingNameAndWhy: 'Override only changes script text, not name/why',
         verticalMetadata: 'salesforceSolution, idealCompanySize etc. not overridable',
@@ -675,12 +675,12 @@ describe('White-Label Capability Validation', () => {
       });
     });
 
-    it('counts total overridable items across Fexle verticals', () => {
+    it('counts total overridable items across sample verticals', () => {
       let totalOpenings = 0;
       let totalObjections = 0;
       let totalPainPoints = 0;
 
-      Object.values(fexleVerticals.verticals).forEach(vertical => {
+      Object.values(sampleVerticals.verticals).forEach(vertical => {
         totalOpenings += vertical.openings.length;
         totalObjections += Object.keys(vertical.objections).length;
         totalPainPoints += vertical.painPoints.length;
@@ -693,7 +693,7 @@ describe('White-Label Capability Validation', () => {
 
       // All of these can be overridden through the current system
       let overrides = {};
-      Object.entries(fexleVerticals.verticals).forEach(([key, vertical]) => {
+      Object.entries(sampleVerticals.verticals).forEach(([key, vertical]) => {
         vertical.openings.forEach((o, i) => {
           overrides = setOverride(overrides, key, 'openings', i, o.script);
         });

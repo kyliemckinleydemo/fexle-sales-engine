@@ -70,7 +70,7 @@ outbound-sales-engine/
 │   ├── utils/                 # Unit tests (phone, scoring, etc.)
 │   └── integration/           # Workflow tests
 ├── examples/
-│   └── fexle-config/          # Example white-label config (Fexle branding)
+│   └── sample-config/          # Example white-label config (sample branding)
 │       ├── app-config.js      # Reference app-config.js with sample data
 │       ├── company.json       # Company info example
 │       ├── scripts.json       # Call scripts example

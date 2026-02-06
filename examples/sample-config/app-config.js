@@ -1,25 +1,25 @@
 /**
- * @module examples/fexle-config/app-config
- * @description Complete Fexle Services example configuration
+ * @module examples/sample-config/app-config
+ * @description Complete Sample Company example configuration
  *
  * PURPOSE:
  * - Reference implementation showing all configurable fields
  * - Copy this file to config/app-config.js and customize for your company
  *
  * USAGE:
- * 1. Copy this file: cp examples/fexle-config/app-config.js config/app-config.js
+ * 1. Copy this file: cp examples/sample-config/app-config.js config/app-config.js
  * 2. Edit the values to match your company
  * 3. Remove sections you don't need (defaults will apply)
  *
  * CLAUDE NOTES:
  * - All sections are optional — omit or leave empty for defaults
  * - Deep merge is used: nested properties merge, arrays replace
- * - This is the Fexle-specific config as a complete reference
+ * - This is the Sample Company-specific config as a complete reference
  * - Script overrides support tokens: {COMPANY}, {TAGLINE}, {COST_ADVANTAGE}, {STATUS}, {MODEL}, {SIZE}
  */
 window.APP_CONFIG = {
   company: {
-    name: "Fexle Services",
+    name: "Sample Company",
     tagline: "Australia's Most Cost-Effective Salesforce Implementation Partner",
     size: "300+ Salesforce Professionals",
     locations: ["Sydney", "Melbourne", "Gold Coast"],
@@ -27,8 +27,8 @@ window.APP_CONFIG = {
     costAdvantage: "30-40% lower cost than traditional consultancies",
     status: "Salesforce Platinum Partner",
     parentCompany: "Xoriant (since 2024)",
-    website: "www.fexle.com",
-    contactEmail: "contact@fexle.com",
+    website: "www.samplecompany.com",
+    contactEmail: "contact@samplecompany.com",
     keyProducts: ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"],
     proofPoints: [
       "One client cut support ticket volume by 40% in 8 weeks",
@@ -55,7 +55,7 @@ window.APP_CONFIG = {
     ],
 
     // "Why Us" cheat sheet header
-    whyUsTitle: "Fexle Services \u2014 Full-Stack System Integrator",
+    whyUsTitle: "Sample Company \u2014 Full-Stack System Integrator",
     whyUsSubtitle: "Salesforce \u2022 E-Commerce \u2022 Web & Mobile \u2022 Custom Development",
     whyUsStats: [
       { value: "700+", label: "Projects" },

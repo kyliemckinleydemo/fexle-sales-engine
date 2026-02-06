@@ -25,11 +25,11 @@ When migrating to Multi-User mode, this data needs to be exported and imported i
 ### What Gets Migrated
 | Data | localStorage Key | Supabase Table |
 |------|------------------|----------------|
-| Leads | `fexleSalesEngine.leads` | `leads` |
-| Tasks | `fexleSalesEngine.tasks` | `tasks` |
-| Meetings | `fexleSalesEngine.meetings` | `meetings` |
+| Leads | `outboundSalesEngine.leads` | `leads` |
+| Tasks | `outboundSalesEngine.tasks` | `tasks` |
+| Meetings | `outboundSalesEngine.meetings` | `meetings` |
 | Custom Playbooks | `customScripts` | `organizations.config` |
-| Call Logs | `fexleSalesEngine.calls` | `call_logs` |
+| Call Logs | `outboundSalesEngine.calls` | `call_logs` |
 
 ### What Won't Migrate
 - Browser-specific settings (collapsed panels, tour status)
@@ -52,7 +52,7 @@ const exportData = {
   timestamp: new Date().toISOString(),
   version: '2.1.0',
   data: {
-    main: JSON.parse(localStorage.getItem('fexleSalesEngine') || '{}'),
+    main: JSON.parse(localStorage.getItem('outboundSalesEngine') || '{}'),
     customScripts: JSON.parse(localStorage.getItem('customScripts') || '{}'),
     settings: {
       mode: localStorage.getItem('outboundSalesEngineMode'),

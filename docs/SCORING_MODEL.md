@@ -1,10 +1,10 @@
 # Lead Scoring Model
 
-This document explains the lead scoring methodology used by the Fexle Sales Engine.
+This document explains the lead scoring methodology used by the Outbound Sales Engine.
 
 ## Overview
 
-Every lead receives an automated score from **0-100** based on how well they match Fexle's Ideal Customer Profile (ICP). Higher scores indicate better fit and should be prioritized.
+Every lead receives an automated score from **0-100** based on how well they match your company's Ideal Customer Profile (ICP). Higher scores indicate better fit and should be prioritized.
 
 ## Scoring Components
 
@@ -31,7 +31,7 @@ Based on employee count. Mid-market companies (201-500) score highest as they ha
 |----------------|--------|-----------|
 | 1-50 | 5 | Too small, limited budget |
 | 51-200 | 15 | Growing, good fit |
-| **201-500** | **20** | **Sweet spot** - best fit for Fexle |
+| **201-500** | **20** | **Sweet spot** - sweet spot for target ICP |
 | 501-1000 | 15 | Good fit, more process |
 | 1000+ | 10 | Enterprise, longer cycles |
 
@@ -78,7 +78,7 @@ Behavioral signals indicating active buying interest. Multiple signals can stack
 
 ### 5. Vertical Fit (Max 15 Points)
 
-How well the industry matches Fexle's expertise and case studies.
+How well the industry matches your company's expertise and case studies.
 
 | Vertical | Points | Rationale |
 |----------|--------|-----------|

@@ -1,4 +1,4 @@
-# Fexle Sales Engine - User Guide
+# Outbound Sales Engine - User Guide
 
 **Version 2.5** | Last Updated: January 2026
 
@@ -28,7 +28,7 @@
 
 ## Overview
 
-The **Fexle Sales Engine** is a purpose-built cold calling and lead generation platform designed specifically for Fexle Services' Australian market outreach. It combines AI-powered research, intelligent lead scoring, Apollo.io integration, and proven call scripts to maximize sales productivity.
+The **Outbound Sales Engine** is a purpose-built cold calling and lead generation platform designed specifically for Sample Company Services' Australian market outreach. It combines AI-powered research, intelligent lead scoring, Apollo.io integration, and proven call scripts to maximize sales productivity.
 
 ### Key Features
 
@@ -52,14 +52,14 @@ The **Fexle Sales Engine** is a purpose-built cold calling and lead generation p
 ### First-Time Setup
 
 1. **Open the Application**
-   - Open `FexleSalesEngine.html` in any modern browser (Chrome, Firefox, Safari, Edge)
+   - Open `Sample CompanySalesEngine.html` in any modern browser (Chrome, Firefox, Safari, Edge)
    - The app runs entirely in your browser - no server required
 
 2. **Configure Settings** (Click the ⚙️ gear icon)
 
    **Your Profile** (used in scripts & email signatures):
    - **Your Name**: Enter your full name (e.g., "Kylie McKinley")
-   - **Your Email**: Enter your work email (e.g., "kylie@fexle.com")
+   - **Your Email**: Enter your work email (e.g., "kylie@sample.com")
    - **Your Phone**: Enter your phone number (e.g., "+61 4XX XXX XXX")
 
    **API Keys**:
@@ -128,7 +128,7 @@ Each result displays:
 1. Log into [app.apollo.io](https://app.apollo.io)
 2. Go to Settings → Integrations → API
 3. Generate or copy your API key
-4. Paste in Fexle Sales Engine Settings
+4. Paste in Outbound Sales Engine Settings
 
 ---
 
@@ -223,10 +223,10 @@ Click on any lead's score badge to see exactly how points were calculated across
 | **Apollo.io** | 🚀 | Imported from Apollo search |
 | **LinkedIn** | 💼 | Found via LinkedIn or Sales Navigator |
 | **Referral** | 🤝 | Personal referral or word of mouth |
-| **Website** | 🌐 | Inbound from Fexle website |
+| **Website** | 🌐 | Inbound from Sample Company website |
 | **Conference** | 🎪 | Met at conference or event |
 | **Cold Outreach** | 📞 | You found them manually |
-| **Inbound** | 📥 | They reached out to Fexle |
+| **Inbound** | 📥 | They reached out to Sample Company |
 | **Partner Referral** | 🏢 | Referred by a partner company |
 | **Manual Entry** | ✏️ | Default for manual adds |
 
@@ -571,7 +571,7 @@ The playbook popup includes three distinct script sets:
 |-----|-------------|
 | **Existing SF User** | Prospect already uses Salesforce - focus on AI upgrades, Agentforce, optimization |
 | **Non-SF Prospect** | Prospect uses other CRM, spreadsheets, or nothing - focus on migration value |
-| **Generic Pitch** | Pitch Fexle as a full-stack system integrator - Salesforce, E-Commerce, Mobile, Web |
+| **Generic Pitch** | Pitch Sample Company as a full-stack system integrator - Salesforce, E-Commerce, Mobile, Web |
 
 ---
 
@@ -588,7 +588,7 @@ The playbook popup includes three distinct script sets:
 
 | Scenario | Script Focus |
 |----------|--------------|
-| **Primary Pivot** | Introduce Fexle's hybrid model + Agentforce |
+| **Primary Pivot** | Introduce Sample Company's hybrid model + Agentforce |
 | **AI Interest** | Deep dive on Agentforce and Einstein capabilities |
 | **Cost Pressure** | Emphasize 30-40% cost savings |
 | **Sales Gaps** | Focus on Sales Cloud optimization |
@@ -634,8 +634,8 @@ Use these when calling prospects who don't currently use Salesforce — they may
 | "We just use spreadsheets" | Empathize, describe tipping points, emphasize affordability |
 | "CRM seems like overkill" | Reframe as growth preparation, start small |
 | "We tried CRM before and it didn't stick" | Focus on implementation quality and adoption support |
-| "Salesforce is too expensive" | Explain flexible pricing + Fexle's 30-40% savings |
-| "We don't have bandwidth to implement" | Describe Fexle's full-service approach |
+| "Salesforce is too expensive" | Explain flexible pricing + Sample Company's 30-40% savings |
+| "We don't have bandwidth to implement" | Describe Sample Company's full-service approach |
 | "Our industry is different" | Highlight Salesforce's customizability |
 | "We're waiting to see how AI develops" | Emphasize AI is working NOW, competitor advantage |
 | "We've heard Salesforce is hard to use" | Stress importance of good implementation |
@@ -653,14 +653,14 @@ Use these when calling prospects who don't currently use Salesforce — they may
 
 ### Generic Pitch Tab
 
-Use this tab to pitch Fexle as a **full-stack system integrator** — not just Salesforce, but e-commerce, mobile apps, and custom web development.
+Use this tab to pitch Sample Company as a **full-stack system integrator** — not just Salesforce, but e-commerce, mobile apps, and custom web development.
 
 #### When to Use
 
 - When the conversation shifts to broader technology needs
-- When positioning Fexle's overall value proposition
+- When positioning Sample Company's overall value proposition
 - When the prospect needs more than just Salesforce
-- When comparing Fexle to other consultancies/integrators
+- When comparing Sample Company to other consultancies/integrators
 
 #### Capabilities Covered
 
@@ -676,7 +676,7 @@ Use this tab to pitch Fexle as a **full-stack system integrator** — not just S
 1. **Opening Scripts** - Full capability intro, Salesforce-focused intro, existing partner scenario
 2. **Pain Points to Probe** - Current partner issues (too slow, too expensive, junior staff, etc.)
 3. **Pivot to Value** - Hybrid model, speed to value, Platinum expertise, full-stack capabilities
-4. **Path Forward: CEO Meeting** - Primary goal is securing a meeting with Fexle's CEO. Includes scripts for when they hesitate, are interested, want more info first, or timing isn't right
+4. **Path Forward: CEO Meeting** - Primary goal is securing a meeting with Sample Company's CEO. Includes scripts for when they hesitate, are interested, want more info first, or timing isn't right
 5. **Objection Handling** - "Never heard of you", "Prefer Big Four", offshore concerns, etc.
 
 #### Quick Stats to Reference
@@ -989,7 +989,7 @@ Set up your profile information for use in call scripts and email signatures:
 | Field | Purpose | Example |
 |-------|---------|---------|
 | **Your Name** | Used in scripts and email signatures | Kylie McKinley |
-| **Your Email** | Included in email signature block | kylie@fexle.com |
+| **Your Email** | Included in email signature block | kylie@sample.com |
 | **Your Phone** | Included in email signature block | +61 4XX XXX XXX |
 
 ### API Keys
@@ -1092,7 +1092,7 @@ For issues or feature requests:
 
 ---
 
-## Appendix: Fexle Value Proposition
+## Appendix: Sample Company Value Proposition
 
 ### Key Messages
 
@@ -1117,4 +1117,4 @@ For issues or feature requests:
 
 ---
 
-*Built for Fexle Services - Australia's Salesforce Partner*
+*Built for Sample Company Services - Australia's Salesforce Partner*

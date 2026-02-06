@@ -2,7 +2,7 @@
   "completed": true,
   "caller": {
     "name": "Kylie McKinley",
-    "email": "kylie@fexle.com",
+    "email": "kylie@samplecompany.com",
     "phone": "+61 4XX XXX XXX",
     "address": {
       "street": "",
@@ -13,9 +13,9 @@
     }
   },
   "company": {
-    "name": "Fexle Services",
+    "name": "Sample Company",
     "tagline": "Australia's Most Cost-Effective Salesforce Implementation Partner",
-    "website": "https://www.fexle.com",
+    "website": "https://www.samplecompany.com",
     "size": "300+",
     "products": ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"]
   },

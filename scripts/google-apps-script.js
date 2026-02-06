@@ -12,7 +12,7 @@
  * - TODO: Add important context for Claude
  */
 // ============================================================
-// Fexle Sales Engine - Google Sheets Backend
+// Outbound Sales Engine - Google Sheets Backend
 // Version: 3.0.0
 // ============================================================
 // This script provides the API backend for syncing leads and

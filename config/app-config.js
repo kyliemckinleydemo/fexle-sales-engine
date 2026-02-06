@@ -13,7 +13,7 @@
  * PATTERNS:
  * - Edit this file to customize the sales engine for your company
  * - Leave sections empty or omit them to use defaults
- * - See examples/fexle-config/app-config.js for a complete reference
+ * - See examples/sample-config/app-config.js for a complete reference
  * - Partial overrides work: set only what you want to change
  *
  * SECTIONS:
@@ -39,7 +39,7 @@
  * - This file is loaded via script tag before index.html app code
  * - All sections are optional — omit or leave empty for defaults
  * - Deep merge is used: nested properties merge, arrays replace
- * - For a complete Fexle example, see examples/fexle-config/app-config.js
+ * - For a complete example, see examples/sample-config/app-config.js
  */
 window.APP_CONFIG = {
   // company: {

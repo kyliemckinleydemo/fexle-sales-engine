@@ -1,6 +1,6 @@
 # Testing Documentation
 
-This document describes the testing infrastructure for the Fexle Sales Engine.
+This document describes the testing infrastructure for the Outbound Sales Engine.
 
 ## Overview
 
@@ -35,7 +35,7 @@ npm run test:ui
 ## Project Structure
 
 ```
-fexle-sales-engine/
+outbound-sales-engine/
 ├── src/
 │   ├── constants/
 │   │   ├── scoring-weights.js    # Lead scoring configuration
