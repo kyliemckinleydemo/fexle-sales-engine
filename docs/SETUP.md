@@ -27,9 +27,14 @@ For team usage with shared data, user authentication, and real-time sync, you'll
 Go to **SQL Editor** in your Supabase dashboard and run these files in order:
 
 ```
-supabase/migrations/001_initial_schema.sql
-supabase/migrations/002_rls_policies.sql
-supabase/migrations/003_functions.sql
+supabase/migrations/001_initial_schema.sql    # Core tables (profiles, orgs, leads, etc.)
+supabase/migrations/002_rls_policies.sql      # Row-level security policies
+supabase/migrations/003_functions.sql         # Helper functions and triggers
+supabase/migrations/004_features.sql          # Additional feature tables
+supabase/migrations/005_twilio_schema_fix.sql # Twilio credential columns
+supabase/migrations/006_marketable.sql        # Email sends + Stripe columns
+supabase/migrations/007_twilio_nullable.sql   # Make Twilio fields nullable
+supabase/migrations/008_ai_usage.sql          # AI usage tracking for soft caps
 ```
 
 **To run a migration:**
@@ -37,7 +42,7 @@ supabase/migrations/003_functions.sql
 2. Click "New Query"
 3. Copy/paste the entire contents of the migration file
 4. Click "Run"
-5. Repeat for each file in order
+5. Repeat for each file in order (001 through 008)
 
 ### 3. Configure Authentication
 
@@ -53,7 +58,74 @@ supabase/migrations/003_functions.sql
 2. Copy the **Project URL** (looks like `https://xxxxx.supabase.co`)
 3. Copy the **anon/public** key (starts with `eyJ...`)
 
-### 5. Connect the App
+### 5. Deploy Edge Functions
+
+Edge Functions power server-side features (billing, AI, email, etc.). Deploy using Supabase CLI:
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Login and link project
+supabase login
+supabase link --project-ref your-project-ref
+
+# Deploy all functions
+supabase functions deploy ai-research
+supabase functions deploy apollo-search
+supabase functions deploy email-send
+supabase functions deploy sms-send
+supabase functions deploy stripe-checkout
+supabase functions deploy stripe-portal
+supabase functions deploy stripe-webhook
+supabase functions deploy twilio-token
+supabase functions deploy twilio-voice
+supabase functions deploy twilio-status
+supabase functions deploy webhook-dispatch
+supabase functions deploy send-daily-report
+```
+
+### 6. Add Edge Function Secrets
+
+Go to **Project Settings** → **Edge Functions** → **Secrets** and add:
+
+| Secret | Required | Source |
+|--------|----------|--------|
+| `STRIPE_SECRET_KEY` | Yes | [Stripe Dashboard](https://dashboard.stripe.com/apikeys) |
+| `STRIPE_PRO_PRICE_ID` | Yes | Stripe Products → Your price ID |
+| `STRIPE_WEBHOOK_SECRET` | Yes | [Stripe Webhooks](https://dashboard.stripe.com/webhooks) |
+| `ANTHROPIC_API_KEY` | Yes | [Anthropic Console](https://console.anthropic.com) |
+| `APOLLO_API_KEY` | Yes | [Apollo Settings](https://app.apollo.io/#/settings/integrations/api) |
+| `RESEND_API_KEY` | Yes | [Resend API Keys](https://resend.com/api-keys) |
+
+See `.env.example` for detailed instructions on getting each key.
+
+### 7. Configure External Services
+
+#### Stripe (Billing)
+1. Create a product in Stripe Dashboard → Products
+2. Add a $49/month recurring price
+3. Copy the price ID to `STRIPE_PRO_PRICE_ID`
+4. Create webhook endpoint: `https://your-project.supabase.co/functions/v1/stripe-webhook`
+5. Select events: `checkout.session.completed`, `customer.subscription.*`, `invoice.payment_failed`
+
+#### Resend (Email)
+1. Sign up at [resend.com](https://resend.com)
+2. (Optional) Verify your domain for branded emails
+3. Create API key and add to Supabase secrets
+4. Configure org email settings in app Settings
+
+#### Twilio (Voice/SMS) - Optional
+Twilio is configured per-organization in the app:
+1. Create TwiML App with Voice URL: `https://your-project.supabase.co/functions/v1/twilio-voice`
+2. Create API Key (more secure than Auth Token)
+3. In app Settings → Twilio, enter Account SID, API Key, and TwiML App SID
+
+For detailed setup instructions, see `docs/DEPLOYMENT_CHECKLIST.md`.
+
+---
+
+### 8. Connect the App
 
 **Option A: Config File (recommended for deployments)**
 
@@ -103,6 +175,10 @@ localStorage.setItem('supabase_key', 'eyJ...');
 | `activity_log` | Audit trail |
 | `invitations` | Pending team invites |
 | `call_lists` | Daily call queues |
+| `twilio_credentials` | Per-org Twilio configuration |
+| `call_recordings` | Voice call recordings |
+| `email_sends` | Email sending log |
+| `ai_usage` | AI feature usage tracking per org/month |
 
 ### User Roles
 
