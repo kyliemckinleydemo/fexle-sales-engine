@@ -18,6 +18,13 @@ ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE call_lists ENABLE ROW LEVEL SECURITY;
 
+-- ==================== HELPER FUNCTIONS ====================
+-- Security definer function to get user's org IDs without RLS recursion
+CREATE OR REPLACE FUNCTION get_user_org_ids(user_uuid UUID)
+RETURNS SETOF UUID AS $$
+  SELECT organization_id FROM organization_members WHERE user_id = user_uuid;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
 -- ==================== PROFILES ====================
 
 -- Users can view their own profile
@@ -80,13 +87,12 @@ CREATE POLICY "Owners can delete organization"
 -- ==================== ORGANIZATION MEMBERS ====================
 
 -- Members can view their own memberships and other members in their org
+-- Uses helper function to avoid RLS recursion
 CREATE POLICY "Members can view org members"
   ON organization_members FOR SELECT
   USING (
     user_id = auth.uid()
-    OR organization_id IN (
-      SELECT om.organization_id FROM organization_members om WHERE om.user_id = auth.uid()
-    )
+    OR organization_id IN (SELECT get_user_org_ids(auth.uid()))
   );
 
 -- Admins can add members
