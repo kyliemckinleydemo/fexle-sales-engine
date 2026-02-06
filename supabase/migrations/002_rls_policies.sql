@@ -79,17 +79,13 @@ CREATE POLICY "Owners can delete organization"
 
 -- ==================== ORGANIZATION MEMBERS ====================
 
--- Users can always view their own memberships (needed for initial org lookup)
-CREATE POLICY "Users can view own memberships"
-  ON organization_members FOR SELECT
-  USING (user_id = auth.uid());
-
--- Members can view other members in their org
+-- Members can view their own memberships and other members in their org
 CREATE POLICY "Members can view org members"
   ON organization_members FOR SELECT
   USING (
-    organization_id IN (
-      SELECT organization_id FROM organization_members WHERE user_id = auth.uid()
+    user_id = auth.uid()
+    OR organization_id IN (
+      SELECT om.organization_id FROM organization_members om WHERE om.user_id = auth.uid()
     )
   );
 
