@@ -1,0 +1,123 @@
+{
+  "description": "Industry vertical definitions with pain points, solutions, and scripts",
+  "_template": {
+    "name": "Industry Name",
+    "icon": "emoji",
+    "solution": "Primary product/solution for this vertical",
+    "idealCompanySize": "Employee range",
+    "revenueRange": "Revenue range",
+    "decisionMakers": ["Title 1", "Title 2"],
+    "painPoints": ["Pain point 1", "Pain point 2"],
+    "triggers": ["Buying trigger 1", "Buying trigger 2"],
+    "useCase": "How your solution helps this vertical",
+    "competitors": ["Competitor 1", "Competitor 2"],
+    "industryStats": "Proof point specific to this vertical",
+    "openings": [
+      {
+        "name": "Opening Name",
+        "script": "The script with {TOKENS}",
+        "why": "Why this opening works"
+      }
+    ],
+    "objections": {
+      "objection text": "response script"
+    }
+  },
+  "verticals": {
+    "healthcare": {
+      "name": "Healthcare & Aged Care",
+      "icon": "🏥",
+      "enabled": true
+    },
+    "professionalServices": {
+      "name": "Professional Services",
+      "icon": "💼",
+      "enabled": true
+    },
+    "manufacturing": {
+      "name": "Manufacturing",
+      "icon": "🏭",
+      "enabled": true
+    },
+    "financial": {
+      "name": "Financial Services",
+      "icon": "🏦",
+      "enabled": true
+    },
+    "retail": {
+      "name": "Retail & E-Commerce",
+      "icon": "🛍️",
+      "enabled": true
+    },
+    "education": {
+      "name": "Education & Training",
+      "icon": "🎓",
+      "enabled": true
+    },
+    "nonprofit": {
+      "name": "Nonprofit & NFP",
+      "icon": "💚",
+      "enabled": true
+    },
+    "government": {
+      "name": "Government & Public Sector",
+      "icon": "🏛️",
+      "enabled": true
+    },
+    "realestate": {
+      "name": "Real Estate & Property",
+      "icon": "🏠",
+      "enabled": true
+    },
+    "logistics": {
+      "name": "Logistics & Transport",
+      "icon": "🚚",
+      "enabled": true
+    },
+    "hospitality": {
+      "name": "Hospitality & Tourism",
+      "icon": "🏨",
+      "enabled": true
+    },
+    "telecom": {
+      "name": "Telecommunications",
+      "icon": "📡",
+      "enabled": true
+    },
+    "energy": {
+      "name": "Energy & Utilities",
+      "icon": "⚡",
+      "enabled": true
+    },
+    "media": {
+      "name": "Media & Entertainment",
+      "icon": "🎬",
+      "enabled": true
+    },
+    "agriculture": {
+      "name": "Agriculture & Farming",
+      "icon": "🌾",
+      "enabled": true
+    },
+    "construction": {
+      "name": "Construction & Engineering",
+      "icon": "🏗️",
+      "enabled": true
+    },
+    "mining": {
+      "name": "Mining & Resources",
+      "icon": "⛏️",
+      "enabled": true
+    },
+    "automotive": {
+      "name": "Automotive & Dealers",
+      "icon": "🚗",
+      "enabled": true
+    },
+    "general": {
+      "name": "General",
+      "icon": "🏢",
+      "enabled": true
+    }
+  }
+}

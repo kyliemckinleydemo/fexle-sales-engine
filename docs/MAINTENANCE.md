@@ -1,4 +1,4 @@
-# Fexle Sales Engine — Maintenance Guide
+# Outbound Sales Engine — Maintenance Guide
 
 Everything customizable lives in two files: **`index.html`** (frontend app, 8,284 lines) and **`scripts/google-apps-script.js`** (backend proxy + sync). This guide maps where things are, how to change them, and how often to review.
 
@@ -78,13 +78,13 @@ const APOLLO_CONFIG = {
 
 ---
 
-## 4. Company Information (`FEXLE_INFO` — lines 291–309)
+## 4. Company Information (`COMPANY_INFO` — lines 291–309)
 
-Central object for all Fexle branding and proof points used throughout the app:
+Central object for all sample branding and proof points used throughout the app:
 
 ```js
-const FEXLE_INFO = {
-  name: "Fexle Services",
+const COMPANY_INFO = {
+  name: "Outbound Sales Engine",
   tagline: "Australia's Most Cost-Effective Salesforce Implementation Partner",
   // size, locations, products, proof points...
 };
@@ -96,7 +96,7 @@ const FEXLE_INFO = {
 
 ---
 
-## 5. Call Scripts (`FEXLE_SCRIPTS` — lines 312–435)
+## 5. Call Scripts (`CALL_SCRIPTS` — lines 312–435)
 
 All cold-call talk tracks, organized by section:
 
@@ -293,13 +293,13 @@ Keys are stored in **Google Apps Script > Project Settings > Script Properties**
 
 ### Monthly
 
-- [ ] Review call scripts with sales team (`FEXLE_SCRIPTS`, lines 312–435)
+- [ ] Review call scripts with sales team (`CALL_SCRIPTS`, lines 312–435)
 - [ ] Review email templates for messaging updates (`emailTemplates`, lines 1643–1924)
 - [ ] Check pro tips are still relevant (`COLD_CALLING_PRO_TIPS`, lines 26–57)
 
 ### Quarterly
 
-- [ ] Update company info — team size, locations, certifications (`FEXLE_INFO`, lines 291–309)
+- [ ] Update company info — team size, locations, certifications (`COMPANY_INFO`, lines 291–309)
 - [ ] Review lead scoring weights against win/loss data (`SCORING_WEIGHTS`, lines 81–127)
 - [ ] Audit industry verticals — add new ones, retire irrelevant ones (`verticalData`, lines 438–1196)
 - [ ] Refresh pro tips (`COLD_CALLING_PRO_TIPS`, lines 26–57)

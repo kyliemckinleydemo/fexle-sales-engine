@@ -1,0 +1,33 @@
+{
+  "completed": false,
+  "caller": {
+    "name": "",
+    "email": "",
+    "phone": "",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": "AU"
+    }
+  },
+  "company": {
+    "name": "",
+    "tagline": "",
+    "website": "",
+    "size": "",
+    "products": []
+  },
+  "localization": {
+    "country": "AU",
+    "currency": "AUD",
+    "timezone": "Australia/Sydney",
+    "dateFormat": "en-AU"
+  },
+  "apiKeys": {
+    "apollo": "",
+    "anthropic": "",
+    "googleSheetsUrl": ""
+  }
+}

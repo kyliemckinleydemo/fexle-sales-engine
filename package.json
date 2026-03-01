@@ -1,0 +1,33 @@
+{
+  "name": "outbound-sales-engine",
+  "version": "2.1.0",
+  "description": "AI-Powered Cold Calling & Lead Generation Platform with multi-user and white-label support",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "vitest run && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/ui": "^2.0.0",
+    "jsdom": "^24.0.0",
+    "serve": "^14.2.5",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "sales",
+    "crm",
+    "lead-generation",
+    "cold-calling",
+    "salesforce"
+  ],
+  "license": "MIT"
+}

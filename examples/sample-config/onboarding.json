@@ -1,0 +1,33 @@
+{
+  "completed": true,
+  "caller": {
+    "name": "Kylie McKinley",
+    "email": "kylie@samplecompany.com",
+    "phone": "+61 4XX XXX XXX",
+    "address": {
+      "street": "",
+      "city": "Sydney",
+      "state": "NSW",
+      "zip": "",
+      "country": "AU"
+    }
+  },
+  "company": {
+    "name": "Sample Company",
+    "tagline": "Australia's Most Cost-Effective Salesforce Implementation Partner",
+    "website": "https://www.samplecompany.com",
+    "size": "300+",
+    "products": ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"]
+  },
+  "localization": {
+    "country": "AU",
+    "currency": "AUD",
+    "timezone": "Australia/Sydney",
+    "dateFormat": "en-AU"
+  },
+  "apiKeys": {
+    "apollo": "",
+    "anthropic": "",
+    "googleSheetsUrl": ""
+  }
+}

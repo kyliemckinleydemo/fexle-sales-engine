@@ -1,6 +1,6 @@
-# Contributing to Fexle Sales Engine
+# Contributing to Sales Engine
 
-First off, thank you for considering contributing to the Fexle Sales Engine! 🎉
+First off, thank you for considering contributing to the Sales Engine! 🎉
 
 ## Table of Contents
 
@@ -58,8 +58,8 @@ Feature suggestions are welcome! Please include:
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/fexle-sales-engine.git
-cd fexle-sales-engine
+git clone https://github.com/YOUR_USERNAME/sales-engine.git
+cd sales-engine
 
 # Open in browser for testing
 open index.html
@@ -68,7 +68,7 @@ open index.html
 ### Project Structure
 
 ```
-fexle-sales-engine/
+sales-engine/
 ├── index.html          # Main application (single-file React app)
 ├── docs/               # Documentation
 ├── scripts/            # Backend scripts (Apps Script)
@@ -189,4 +189,4 @@ Feel free to open an issue for any questions about contributing!
 
 ---
 
-Thank you for helping make Fexle Sales Engine better! 🚀
+Thank you for helping make Sales Engine better! 🚀

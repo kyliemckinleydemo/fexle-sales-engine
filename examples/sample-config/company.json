@@ -1,0 +1,31 @@
+{
+  "name": "Sample Company",
+  "tagline": "Australia's Most Cost-Effective Salesforce Implementation Partner",
+  "size": "300+ Salesforce Professionals",
+  "locations": ["Sydney", "Melbourne", "Gold Coast"],
+  "model": "Hybrid onshore-offshore - Australian leadership, global development capacity",
+  "costAdvantage": "30-40% lower cost than traditional consultancies",
+  "status": "Salesforce Platinum Partner",
+  "parentCompany": "Xoriant (since 2024)",
+  "keyProducts": ["Agentforce", "Einstein Copilot", "Data Cloud", "Sales Cloud", "Service Cloud"],
+  "proofPoints": [
+    "One client cut support ticket volume by 40% in 8 weeks",
+    "213% ROI achieved by Wiley Publishing",
+    "70% autonomous resolution during peak tax season (1-800-Accountant)",
+    "84% faster resolution times",
+    "700+ successful implementations"
+  ],
+  "website": "https://www.samplecompany.com",
+  "logo": null,
+  "colors": {
+    "primary": "#3b82f6",
+    "secondary": "#8b5cf6"
+  },
+  "ceoName": "",
+  "ceoTitle": "CEO",
+  "meetingDuration": 20,
+  "aiDeck": {
+    "name": "AI Implementation Deck",
+    "description": "Practical guide on implementing Salesforce AI with real business impact"
+  }
+}

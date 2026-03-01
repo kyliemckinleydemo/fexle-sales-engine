@@ -33,9 +33,16 @@ out/
 .env.local
 .env.*.local
 
-# API keys (never commit these!)
+# API keys and credentials (never commit these!)
 **/api-keys.txt
 **/secrets.json
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Note: config/supabase.js is committed with EMPTY values (safe)
+# Edit it locally for your deployment, but don't commit credentials
 
 # Temporary files
 tmp/
@@ -51,3 +58,4 @@ coverage/
 
 # Cache
 .cache/
+.vercel

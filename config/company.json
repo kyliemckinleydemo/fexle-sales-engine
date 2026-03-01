@@ -1,0 +1,44 @@
+{
+  "name": "",
+  "tagline": "",
+  "size": "",
+  "locations": [],
+  "model": "",
+  "costAdvantage": "",
+  "status": "",
+  "parentCompany": "",
+  "keyProducts": [],
+  "proofPoints": [],
+  "website": "",
+  "logo": null,
+  "colors": {
+    "primary": "#3b82f6",
+    "secondary": "#8b5cf6"
+  },
+  "ceoName": "",
+  "ceoTitle": "CEO",
+  "meetingDuration": 20,
+  "targetAction": {
+    "type": "meeting",
+    "label": "CEO Meeting",
+    "shortLabel": "CEO Meeting",
+    "statusLabel": "CEO Meeting Booked",
+    "milestoneLabel": "CEO Meeting Held",
+    "milestoneKey": "ceoMeetingHeld",
+    "buttonText": "Schedule CEO Meeting",
+    "description": "20-minute conversation with our CEO",
+    "duration": 20,
+    "priority": 1,
+    "followUpDays": 1,
+    "icon": "📅",
+    "hostTitle": "CEO",
+    "hostDescription": "our CEO",
+    "emailSubjectPrefix": "Confirmed: Call with",
+    "emailTemplate": "meeting",
+    "color": {
+      "bg": "bg-green-200",
+      "text": "text-green-900",
+      "border": "border-green-400"
+    }
+  }
+}

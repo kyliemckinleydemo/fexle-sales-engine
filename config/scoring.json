@@ -1,0 +1,90 @@
+{
+  "description": "Lead scoring weights - scores sum to create a 0-100 scale",
+  "weights": {
+    "companySize": {
+      "description": "Score based on employee count (max 20 points)",
+      "brackets": {
+        "1-50": 5,
+        "51-200": 15,
+        "201-500": 20,
+        "501-1000": 15,
+        "1000+": 10
+      },
+      "sweetSpot": "201-500",
+      "maxPoints": 20
+    },
+    "revenue": {
+      "description": "Score based on annual revenue (max 20 points)",
+      "brackets": {
+        "Under $5M": 5,
+        "$5M-$20M": 10,
+        "$20M-$50M": 15,
+        "$50M-$200M": 20,
+        "$200M+": 15
+      },
+      "sweetSpot": "$50M-$200M",
+      "maxPoints": 20
+    },
+    "title": {
+      "description": "Score based on contact's job title (max 25 points)",
+      "scores": {
+        "CEO": 25,
+        "Managing Director": 25,
+        "Founder": 25,
+        "COO": 22,
+        "CIO": 22,
+        "CTO": 22,
+        "CFO": 20,
+        "VP": 18,
+        "Vice President": 18,
+        "Director": 15,
+        "Head of": 15,
+        "Manager": 10,
+        "Other": 5
+      },
+      "maxPoints": 25
+    },
+    "intent": {
+      "description": "Score based on buying signals (max 20 points)",
+      "signals": {
+        "hiringSalesforce": { "points": 10, "description": "Hiring Salesforce-related roles" },
+        "researchingCRM": { "points": 8, "description": "Researching CRM solutions" },
+        "recentFunding": { "points": 7, "description": "Recent funding round" },
+        "newExecutive": { "points": 5, "description": "New executive hire" },
+        "expansion": { "points": 5, "description": "Company expansion/hiring" },
+        "techStackMatch": { "points": 5, "description": "Uses complementary technology" }
+      },
+      "maxPoints": 20
+    },
+    "vertical": {
+      "description": "Score based on industry fit (max 15 points)",
+      "scores": {
+        "healthcare": 15,
+        "financial": 15,
+        "manufacturing": 12,
+        "professionalServices": 12,
+        "retail": 10,
+        "education": 10,
+        "nonprofit": 8,
+        "government": 8,
+        "realestate": 10,
+        "logistics": 10,
+        "hospitality": 8,
+        "telecom": 12,
+        "energy": 12,
+        "media": 10,
+        "agriculture": 8,
+        "construction": 10,
+        "mining": 12,
+        "automotive": 10,
+        "general": 8
+      },
+      "maxPoints": 15
+    }
+  },
+  "scoreBrackets": {
+    "hot": { "min": 80, "label": "Hot Lead", "color": "green" },
+    "warm": { "min": 60, "label": "Warm Lead", "color": "yellow" },
+    "cold": { "min": 0, "label": "Cold Lead", "color": "red" }
+  }
+}

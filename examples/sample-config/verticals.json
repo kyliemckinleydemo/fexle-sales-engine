@@ -1,0 +1,253 @@
+{
+  "description": "Sample Company - Salesforce industry verticals with pain points and scripts",
+  "verticals": {
+    "healthcare": {
+      "name": "Healthcare & Aged Care",
+      "icon": "🏥",
+      "enabled": true,
+      "salesforceSolution": "Health Cloud + Agentforce",
+      "idealCompanySize": "50-500 employees",
+      "revenueRange": "$10M-$150M",
+      "decisionMakers": ["CEO", "COO", "CIO", "Director of Operations", "IT Manager", "Clinical Director"],
+      "painPoints": [
+        "Patient data scattered across multiple systems",
+        "Manual intake and referral processes consuming staff time",
+        "Compliance headaches (ACHS, Aged Care Quality Standards, Privacy Act)",
+        "Staff spending too much time on admin vs patient care",
+        "24/7 patient inquiries overwhelming support staff",
+        "Family communication and engagement gaps",
+        "Difficulty coordinating care across providers"
+      ],
+      "triggers": [
+        "Recent ACHS accreditation review",
+        "Expanding to new facilities or beds",
+        "Leadership change (new CEO/COO)",
+        "Hiring for IT or digital transformation roles",
+        "Negative press about care quality",
+        "Government funding changes"
+      ],
+      "agentforceUseCase": "AI agents handling patient inquiries, appointment scheduling, and family updates 24/7 — freeing clinical staff for actual care",
+      "competitors": ["Existing legacy systems", "NetSuite", "MYOB Advanced", "iCare", "AlayaCare"],
+      "industryStats": "Healthcare organisations using Agentforce see 70% case deflection and 84% faster resolution times",
+      "openings": [
+        { "name": "Staff Burnout Angle", "script": "Hi [NAME], quick question — are your clinical staff spending more time on paperwork and patient inquiries than actual patient care? We're helping aged care providers free up 15+ hours per week per staff member with AI that handles the routine stuff.", "why": "Staff burnout is the #1 issue in healthcare right now" },
+        { "name": "Family Communication", "script": "Hi [NAME], I'm curious — how are you currently handling family inquiries about patient status? Most providers we talk to say it's overwhelming their staff. We've helped similar organisations automate 70% of those updates.", "why": "Family communication is a major pain point" },
+        { "name": "Compliance Pressure", "script": "Hi [NAME], with the Aged Care Quality Standards getting stricter, are you finding compliance documentation taking more time than ever? We're helping providers automate reporting while actually improving care quality.", "why": "Regulatory compliance is top of mind" },
+        { "name": "After-Hours Coverage", "script": "Hi [NAME], quick one — what happens when families call after hours with questions about their loved ones? We're helping aged care facilities provide 24/7 responses without adding night staff.", "why": "24/7 coverage is expensive but expected" }
+      ],
+      "objections": {
+        "We have strict privacy requirements": "Absolutely — Health Cloud is built for healthcare compliance. It meets Privacy Act requirements, can be configured for ACHS standards, and keeps all data onshore. We work with providers under similar constraints every day.",
+        "Our staff aren't tech-savvy": "That's actually why AI works so well here — it handles the tech complexity behind the scenes. Staff just talk to it naturally. One aged care CEO told us her 60-year-old nurses picked it up faster than the previous system.",
+        "We're focused on care, not technology": "Exactly our point — technology should free you to focus on care. Right now, how much time do your clinical staff spend on admin? We typically see 15-20 hours per week freed up per person.",
+        "We had a bad CRM implementation before": "I hear that a lot. What made it fail? Usually it's because the system required too much data entry. Agentforce is different — it does the data entry for you based on conversations that are happening anyway.",
+        "Our current systems work fine": "They might be working, but are they giving you time back? When families call, is someone dropping patient care to answer? That's the gap we're filling."
+      }
+    },
+    "professionalServices": {
+      "name": "Professional Services",
+      "icon": "💼",
+      "enabled": true,
+      "salesforceSolution": "Sales Cloud + Einstein Copilot",
+      "idealCompanySize": "30-300 employees",
+      "revenueRange": "$5M-$100M",
+      "decisionMakers": ["Managing Partner", "CEO", "COO", "Head of Business Development", "CIO"],
+      "painPoints": [
+        "Pipeline visibility is poor — deals fall through cracks",
+        "No single view of client relationships across partners",
+        "Proposal and quote process is manual and slow",
+        "Cross-selling between practice areas doesn't happen",
+        "BD activities aren't tracked or measured",
+        "Knowledge about key relationships lives in partners' heads",
+        "Partner departures = lost relationship knowledge"
+      ],
+      "triggers": [
+        "New Managing Partner or CEO",
+        "Merger or acquisition activity",
+        "Opening new practice areas or offices",
+        "Lost a major client",
+        "Partner departures",
+        "Growth targets not being met"
+      ],
+      "agentforceUseCase": "Einstein Copilot helping partners with client research, follow-up drafting, and cross-sell identification — minimal input, maximum output",
+      "competitors": ["Spreadsheets", "LEAP", "Actionstep", "HubSpot", "Dynamics 365", "InterAction"],
+      "industryStats": "Professional services firms see 35% productivity gains with AI-assisted BD and client management",
+      "openings": [
+        { "name": "Partner Productivity", "script": "Hi [NAME], quick question — how much time do your partners spend on BD admin vs actually winning work? Most firms we talk to say it's 60/40 the wrong way. We're helping firms flip that.", "why": "Partners are expensive — admin time is wasted revenue" },
+        { "name": "Client Knowledge Risk", "script": "Hi [NAME], when a senior partner leaves your firm, how much client relationship knowledge walks out the door with them? We're helping firms capture that institutional knowledge so it survives transitions.", "why": "Partner departures are a real fear" },
+        { "name": "Cross-Sell Gap", "script": "Hi [NAME], I'm curious — do your practice areas actually cross-sell to each other's clients? Most firms we talk to say it should happen more but doesn't. We've helped similar firms increase cross-practice revenue 30%.", "why": "Cross-selling is always underperforming" },
+        { "name": "Pipeline Visibility", "script": "Hi [NAME], if I asked you right now what's in your BD pipeline across all partners, could you tell me? Most Managing Partners can't. That's what we fix.", "why": "Lack of visibility is a universal problem" }
+      ],
+      "objections": {
+        "Partners won't use it": "That's the key question, isn't it? Here's what works — Einstein Copilot drafts emails, preps for meetings, and logs activities from their calendar automatically. Partners get value without changing how they work.",
+        "We tried CRM before and it failed": "What happened? Usually it's because partners had to do data entry. Our approach is different — AI captures relationship data from emails and calendars automatically. Partners just review and approve.",
+        "Our relationships are too complex for software": "Actually, that's exactly why you need it. Complex relationships mean more knowledge that can be lost. We help you map who knows who, track interaction history, and identify opportunities partners might miss.",
+        "We're not a tech firm": "Neither are your clients, but they expect responsiveness. When a client calls, can you instantly see their full history across all practice areas? That's what we enable.",
+        "We're too small for Salesforce": "Salesforce scales to any firm size. The AI actually helps you punch above your weight by automating manual work and freeing up your team to focus on clients."
+      }
+    },
+    "manufacturing": {
+      "name": "Manufacturing",
+      "icon": "🏭",
+      "enabled": true,
+      "salesforceSolution": "Manufacturing Cloud + Agentforce",
+      "idealCompanySize": "50-400 employees",
+      "revenueRange": "$20M-$200M",
+      "decisionMakers": ["CEO", "General Manager", "Sales Director", "COO", "CFO", "IT Manager"],
+      "painPoints": [
+        "Sales forecasts don't connect to production planning",
+        "No visibility into account health or at-risk customers",
+        "Quoting is manual and error-prone",
+        "Channel/distributor management is chaotic",
+        "Field sales team disconnected from HQ",
+        "Customer service issues not reaching sales team",
+        "Can't accurately forecast demand"
+      ],
+      "triggers": [
+        "New ERP implementation or upgrade",
+        "Expanding into new markets or channels",
+        "Leadership change",
+        "Supply chain disruptions",
+        "Lost major accounts",
+        "Digital transformation initiatives"
+      ],
+      "agentforceUseCase": "AI agents handling distributor inquiries, order status, and delivery updates — plus Einstein for demand forecasting",
+      "competitors": ["ERP-native CRM (SAP, NetSuite)", "Spreadsheets", "Dynamics 365", "Infor CRM"],
+      "industryStats": "Manufacturing companies achieve 2-3x better forecast accuracy with AI-powered demand sensing",
+      "openings": [
+        { "name": "Forecast Disconnect", "script": "Hi [NAME], quick question — does your sales forecast actually connect to production planning, or are they two separate conversations? Most manufacturers we talk to say the disconnect costs them millions.", "why": "Sales-production disconnect is universal" },
+        { "name": "Distributor Chaos", "script": "Hi [NAME], how do you currently manage your distributor relationships? Most manufacturers tell us it's spreadsheets and emails, and deals fall through the cracks. We're helping companies get real visibility.", "why": "Channel management is always messy" },
+        { "name": "Customer Retention", "script": "Hi [NAME], do you have early warning when a major account is at risk of leaving? Most manufacturers find out too late. We help companies spot the signs 6 months ahead.", "why": "Losing key accounts is devastating" },
+        { "name": "Quoting Speed", "script": "Hi [NAME], how long does it take your team to turn around a complex quote? If it's more than a day, you're probably losing deals to faster competitors. We're helping manufacturers quote in hours, not days.", "why": "Quoting speed wins deals" }
+      ],
+      "objections": {
+        "We have SAP/ERP for this": "SAP is great for production and finance, but it's not built for customer relationships. That's why most manufacturers run CRM alongside ERP. We integrate with SAP to give sales visibility without replacing what works.",
+        "Our sales team lives in Excel": "We hear that a lot. The question is — what happens when that Excel expert leaves? We help you keep the flexibility of spreadsheets while capturing the data in a system that survives turnover.",
+        "We're a manufacturing company, not a tech company": "Exactly — you should be focused on making great products, not fighting with software. That's why AI does the heavy lifting. Your team just sells.",
+        "Our customers don't expect fancy technology": "Maybe not, but they expect fast quotes, accurate delivery dates, and someone who remembers their last conversation. That's what we enable behind the scenes.",
+        "We've been burned by IT projects before": "What went wrong? Usually it's scope creep or trying to boil the ocean. We start with one problem — usually forecasting or quoting — prove value in 90 days, then expand."
+      }
+    },
+    "financial": {
+      "name": "Financial Services",
+      "icon": "🏦",
+      "enabled": true,
+      "salesforceSolution": "Financial Services Cloud + Agentforce",
+      "idealCompanySize": "50-500 employees",
+      "revenueRange": "$20M-$200M",
+      "decisionMakers": ["CEO", "COO", "CIO", "Head of Operations", "Head of Client Services", "Compliance Manager"],
+      "painPoints": [
+        "Client onboarding takes too long",
+        "Compliance reporting is manual and risky",
+        "Advisors spend too much time on admin",
+        "No unified view of client relationships",
+        "After-hours client inquiries go unanswered",
+        "KYC/AML processes are bottlenecks"
+      ],
+      "triggers": [
+        "APRA/ASIC regulatory changes",
+        "Merger or acquisition",
+        "New CEO/CIO",
+        "Compliance audit findings",
+        "Client satisfaction issues",
+        "Growth stalling due to operational capacity"
+      ],
+      "agentforceUseCase": "AI agents handling client inquiries 24/7, automated compliance workflows, and advisor productivity tools",
+      "competitors": ["Legacy core systems", "Temenos", "FIS", "Dynamics 365"],
+      "industryStats": "RBC Wealth Management onboards new clients in 24 minutes. Sequoia Financial achieved 361% ROI with 70% faster onboarding.",
+      "openings": [
+        { "name": "Onboarding Speed", "script": "Hi [NAME], how long does it take to onboard a new client from first contact to fully operational? If it's more than a week, you're probably losing clients to faster competitors. We helped Sequoia Financial get it down to 24 minutes.", "why": "Onboarding speed is a competitive differentiator" },
+        { "name": "Advisor Productivity", "script": "Hi [NAME], what percentage of your advisors' time is spent on actual client advice vs admin and compliance paperwork? Most firms we talk to say it's 40/60 the wrong way. We help flip that.", "why": "Advisor time is your most expensive asset" },
+        { "name": "Compliance Burden", "script": "Hi [NAME], with APRA and ASIC requirements getting tighter, how much time is your team spending on compliance documentation? We're helping firms automate 80% of that while actually improving audit readiness.", "why": "Compliance is top of mind" },
+        { "name": "After-Hours Service", "script": "Hi [NAME], what happens when a high-value client has a question at 9pm? Do they wait until morning? We're helping firms provide 24/7 service without 24/7 staff.", "why": "Wealthy clients expect availability" }
+      ],
+      "objections": {
+        "We have strict regulatory requirements": "Financial Services Cloud is built for exactly that. It's used by RBC, ANZ, and dozens of APRA-regulated institutions. Compliance is baked in, not bolted on.",
+        "Our clients expect personal service, not chatbots": "Absolutely — AI handles the routine inquiries so your advisors can focus on high-value personal interactions. It's not replacing relationships, it's freeing time for more of them.",
+        "We've invested heavily in our current systems": "We integrate with core banking systems, not replace them. Think of it as a client relationship layer on top of your existing infrastructure.",
+        "Security is our top concern": "As it should be. Salesforce meets APRA CPS 234, SOC 2, and ISO 27001. Your data can stay onshore in Australian data centres.",
+        "Our advisors won't use another system": "They don't have to change how they work. Einstein Copilot works from their email and calendar — drafting follow-ups, prepping for meetings, flagging opportunities. It's like having a research assistant."
+      }
+    },
+    "retail": {
+      "name": "Retail & E-Commerce",
+      "icon": "🛍️",
+      "enabled": true,
+      "salesforceSolution": "Commerce Cloud + Marketing Cloud + Agentforce",
+      "idealCompanySize": "50-500 employees",
+      "revenueRange": "$10M-$200M",
+      "decisionMakers": ["CEO", "CMO", "Head of E-Commerce", "CTO", "Head of Customer Experience", "Retail Operations Director"],
+      "painPoints": [
+        "Online and in-store customer data completely siloed",
+        "Can't deliver personalised experiences at scale",
+        "Customer service overwhelmed with order inquiries",
+        "Cart abandonment rates too high",
+        "No unified view of customer across channels",
+        "Marketing campaigns aren't targeted effectively",
+        "Returns and exchanges create service bottlenecks"
+      ],
+      "triggers": [
+        "Launching or relaunching e-commerce platform",
+        "Omnichannel transformation initiative",
+        "Peak season preparation (Christmas, EOFY)",
+        "New CMO or Head of Digital",
+        "Competitor gaining market share online",
+        "Customer satisfaction scores declining"
+      ],
+      "agentforceUseCase": "AI agents handling order status, returns, product recommendations 24/7 — reducing service costs while improving customer satisfaction",
+      "competitors": ["Shopify", "Magento", "BigCommerce", "Custom platforms", "SAP Commerce"],
+      "industryStats": "Retailers using Agentforce see 40% reduction in service costs and 25% increase in customer satisfaction scores",
+      "openings": [
+        { "name": "Order Inquiry Overload", "script": "Hi [NAME], how much of your customer service time is spent on 'where's my order' questions? Most retailers we talk to say it's 40-50%. We're helping brands automate those completely while improving customer satisfaction.", "why": "Order status is the #1 inquiry type" },
+        { "name": "Omnichannel Gap", "script": "Hi [NAME], if a customer buys online and wants to return in-store, can your staff see their full history? Most retailers can't. We help connect those dots.", "why": "Omnichannel is expected but rarely delivered" },
+        { "name": "Peak Season Prep", "script": "Hi [NAME], with peak season coming up, how confident are you that your customer service can handle the volume? We help retailers scale service without scaling headcount.", "why": "Seasonal staffing is a real challenge" },
+        { "name": "Cart Abandonment", "script": "Hi [NAME], what's your cart abandonment rate? Industry average is 70%. We're helping retailers recover 20-30% of those with AI-powered follow-up that actually feels personal.", "why": "Cart abandonment is massive lost revenue" }
+      ],
+      "objections": {
+        "We use Shopify and it works fine": "Shopify is great for transactions. But can it tell you which customers are at risk of churning? Can it personalise marketing based on in-store behaviour? That's where Salesforce adds value on top.",
+        "Our margins are too thin for enterprise software": "That's exactly why automation matters. If AI can handle 40% of customer inquiries that currently require staff, what does that do to your service costs?",
+        "We're not a big enough brand": "Some of our best results come from brands in the $10-50M range. They're big enough to benefit from personalisation but agile enough to move fast.",
+        "Customer service isn't our problem": "What about marketing? If I showed you which customers are most likely to buy in the next 30 days, would that be useful? That's Einstein prediction.",
+        "We just invested in a new e-commerce platform": "Great — we integrate with all major platforms. Think of Salesforce as the customer intelligence layer that makes your e-commerce investment work harder."
+      }
+    },
+    "general": {
+      "name": "General",
+      "icon": "🏢",
+      "enabled": true,
+      "salesforceSolution": "Sales Cloud + Service Cloud + Agentforce",
+      "idealCompanySize": "50-500 employees",
+      "revenueRange": "$10M-$200M",
+      "decisionMakers": ["CEO", "COO", "Head of Sales", "Head of Operations", "IT Director"],
+      "painPoints": [
+        "Customer data scattered across systems",
+        "Sales process inconsistent",
+        "Customer service reactive",
+        "Reporting manual and time-consuming",
+        "Growth limited by manual processes"
+      ],
+      "triggers": [
+        "Growth phase",
+        "New leadership",
+        "Competitive pressure",
+        "Technology upgrade needed",
+        "Customer complaints increasing"
+      ],
+      "agentforceUseCase": "AI agents handling customer inquiries, service requests, and sales support 24/7",
+      "competitors": ["Various legacy systems", "Spreadsheets", "Basic CRM tools"],
+      "industryStats": "Companies implementing Salesforce see average 25% increase in sales productivity",
+      "openings": [
+        { "name": "Growth Ceiling", "script": "Hi [NAME], at what point does growth start breaking your current systems? Most businesses hit a ceiling where spreadsheets and manual processes can't scale. We help companies break through that.", "why": "Growth exposes system weaknesses" },
+        { "name": "Customer Knowledge", "script": "Hi [NAME], if your best salesperson left tomorrow, how much customer knowledge walks out the door? We help businesses capture that intelligence so it belongs to the company, not individuals.", "why": "Knowledge shouldn't be in people's heads" },
+        { "name": "AI Opportunity", "script": "Hi [NAME], have you looked at how AI could help with customer service? Companies are using AI to handle routine inquiries 24/7 — customers get instant answers, team focuses on complex work.", "why": "AI is transforming customer service" },
+        { "name": "Competitive Pressure", "script": "Hi [NAME], how are your competitors managing customer relationships? If they're more responsive and organised, they're probably winning deals you should be getting.", "why": "Competition drives technology adoption" }
+      ],
+      "objections": {
+        "We're doing fine with what we have": "That's great — but 'fine' often means 'used to the pain'. What would happen if you could respond to customers twice as fast, or never miss a follow-up?",
+        "We're too small": "Now is actually the perfect time — before bad habits and scattered data become problems. The system scales with you, so you won't outgrow it.",
+        "We don't have time to implement": "That's the irony — you're too busy because you don't have systems. Implementation takes weeks, not months. Then you get time back every day.",
+        "Technology isn't our strength": "It doesn't need to be. Salesforce is designed for business users. We handle the setup, train your team, and you use it like any other business tool.",
+        "We've tried CRM before": "Most failed CRM implementations fail because of poor setup or training, not the software. Sample Company specialises in making it work — we've done 700+ implementations."
+      }
+    }
+  }
+}

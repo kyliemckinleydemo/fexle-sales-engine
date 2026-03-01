@@ -1,5 +1,18 @@
+/**
+ * @module scripts/google-apps-script
+ * @description TODO: Describe what google-apps-script does
+ *
+ * PURPOSE:
+ * - TODO: Describe the main responsibility of google-apps-script
+ *
+ * PATTERNS:
+ * - TODO: Describe usage patterns
+ *
+ * CLAUDE NOTES:
+ * - TODO: Add important context for Claude
+ */
 // ============================================================
-// Fexle Sales Engine - Google Sheets Backend
+// Outbound Sales Engine - Google Sheets Backend
 // Version: 3.0.0
 // ============================================================
 // This script provides the API backend for syncing leads and

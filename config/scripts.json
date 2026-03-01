@@ -1,0 +1,155 @@
+{
+  "description": "Call scripts with token placeholders. Use {COMPANY}, {CALLER_NAME}, {PROSPECT_NAME}, {PRODUCT}, etc.",
+  "tokens": {
+    "{COMPANY}": "Your company name",
+    "{CALLER_NAME}": "Caller's name from settings",
+    "{PROSPECT_NAME}": "Lead's contact name",
+    "{PROSPECT_COMPANY}": "Lead's company name",
+    "{PRODUCT}": "Primary product/service",
+    "{COST_ADVANTAGE}": "Cost/value proposition",
+    "{PROOF_POINT}": "Key proof point/case study",
+    "{COLLATERAL}": "Marketing material name"
+  },
+  "openings": {
+    "problemQuestion": {
+      "name": "Problem Question (Recommended)",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. I'll be honest — this is a cold call, so I'll be quick. Are you seeing pressure to [SPECIFIC PROBLEM] in your [AREA], or is that not really on your radar yet?\"",
+      "why": "Opens with THEIR situation. Acknowledges the interruption. The question is easy to answer and gets them talking.",
+      "forSalesforceUsers": true,
+      "forNonSalesforceUsers": true
+    },
+    "costQuestion": {
+      "name": "Cost Reduction Question",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. Quick question — is reducing [COST AREA] something that's on your priority list this year, or is that not where the pressure is right now?\"",
+      "why": "Goes straight to a pain point. If they say yes, you have an opening. If they say no, you can pivot.",
+      "forSalesforceUsers": true,
+      "forNonSalesforceUsers": true
+    },
+    "performanceQuestion": {
+      "name": "Performance Gap Question",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. I'm curious — are you getting everything you need out of [THEIR SYSTEM] right now, or is there a gap between what it could do and what it's actually doing?\"",
+      "why": "Invites them to share frustrations. Most users feel they're not getting full value.",
+      "forSalesforceUsers": true,
+      "forNonSalesforceUsers": false
+    },
+    "permissionHybrid": {
+      "name": "Permission + Problem Hybrid",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. I'll be honest — this is a cold call, so I'll be quick. A lot of companies we talk to are [COMMON SITUATION]. Is that something you'd want to explore, or is this a bad time?\"",
+      "why": "Acknowledges the cold call, hints at value, gives them an easy out (which paradoxically makes them more likely to engage).",
+      "forSalesforceUsers": true,
+      "forNonSalesforceUsers": true
+    }
+  },
+  "pivots": {
+    "primary": {
+      "name": "Primary Value Pivot",
+      "script": "\"So here's why I called you specifically. {COMPANY} is [VALUE PROPOSITION]. But what's really relevant right now is [SPECIFIC BENEFIT]. {PROOF_POINT}. Is that the kind of thing that would be useful to explore?\"",
+      "when": "After they show interest or acknowledge the problem"
+    },
+    "interestShown": {
+      "name": "Interest Shown Pivot",
+      "script": "\"Perfect — that's exactly why I'm reaching out. [DESCRIBE SOLUTION]. Most companies haven't dug into it yet because, frankly, their existing partners haven't either. We're different — [DIFFERENTIATOR]. Would it be useful to see what's actually possible?\"",
+      "when": "When they express interest in the topic"
+    },
+    "costPressure": {
+      "name": "Cost Pressure Pivot",
+      "script": "\"That's exactly what we help with. {COMPANY} [COST VALUE PROP]. {PROOF_POINT}. Would it be worth exploring what's possible for your situation?\"",
+      "when": "When they mention budget/cost pressures"
+    }
+  },
+  "closes": {
+    "meetingOffer": {
+      "name": "Meeting Offer Close",
+      "script": "\"Here's what I'd suggest. I'd love to set up a [DURATION]-minute call with [MEETING_WITH] — no pitch, just a conversation. They'll walk you through [WHAT THEY'LL LEARN], and whether any of it makes sense for your plans. If it's not relevant, you'll know in [DURATION] minutes. Would [specific day] at [specific time] work?\"",
+      "when": "When prospect is engaged and interested"
+    },
+    "collateralOffer": {
+      "name": "Collateral Offer Close",
+      "script": "\"I get it — timing isn't always right for a call. Tell you what: we've put together a really practical [COLLATERAL DESCRIPTION] — not theory, actual use cases and results. Would it be useful if I sent that over? It's a good way to see if our approach resonates, and if it does, we can talk further when the timing makes sense.\"",
+      "when": "When prospect is interested but not ready for meeting"
+    },
+    "hybridClose": {
+      "name": "Hybrid Close",
+      "script": "\"Here's an idea: let me send you our [COLLATERAL] — it's practical, not salesy, and shows how companies are getting real results. Take a look, and if it resonates, I'll connect you with [MEETING_WITH] for a [DURATION]-minute conversation to go deeper. That way you can see our thinking first before committing any time. Fair?\"",
+      "when": "When you want to give them an easy on-ramp"
+    }
+  },
+  "objections": {
+    "existingPartner": {
+      "trigger": "We already have a partner/vendor",
+      "response": "\"Makes sense — most companies do. Quick question: are they bringing you insights on [NEW CAPABILITY], or is that not really their focus? [If not] We've put together [COLLATERAL DESCRIPTION]. Might be a useful benchmark even if you stay with your current partner. Worth sending over?\""
+    },
+    "notLooking": {
+      "trigger": "We're not looking for new vendors",
+      "response": "\"Completely fair — I'm not asking you to switch anything today. What I can offer is our [COLLATERAL] — it shows how companies are getting real results. Good for staying current even if you're not making changes. Can I send it over so you have it when the time is right?\""
+    },
+    "sendEmail": {
+      "trigger": "Send me an email instead",
+      "response": "\"Happy to. I'll include our [COLLATERAL] — it's the most useful thing I can share. It covers [KEY VALUE]. Take a look, and if it resonates, we can talk further. What email should I use?\""
+    },
+    "handleInHouse": {
+      "trigger": "We handle this in-house",
+      "response": "\"That's great — strong internal teams are valuable. We've put together [COLLATERAL] that might be useful for your team — practical frameworks and real results, not vendor marketing. Could save them some research time. Worth sending over?\""
+    },
+    "notReady": {
+      "trigger": "We're not ready yet",
+      "response": "\"Honestly, that's what most companies say — and it's fair. What's changed is [RECENT DEVELOPMENT]. We've put together [COLLATERAL] that shows what's actually possible now and how to implement it with real impact. Good for planning even if you're not ready to move yet. Can I send it over?\""
+    },
+    "whatMakesDifferent": {
+      "trigger": "What makes you different?",
+      "response": "\"Three things. First, [DIFFERENTIATOR 1]. Second, [DIFFERENTIATOR 2]. Third, [DIFFERENTIATOR 3]. Want me to send [COLLATERAL] so you can see our thinking?\""
+    },
+    "callBackLater": {
+      "trigger": "Call me back later",
+      "response": "\"Totally fair. Let me send you our [COLLATERAL] in the meantime — it's practical and worth a look when you have 10 minutes. I'll follow up in a couple weeks to see if it sparked any questions. If the timing's better then, we can set up a proper conversation. Sound good?\""
+    },
+    "tooExpensive": {
+      "trigger": "Too expensive",
+      "response": "\"I understand budget is critical. Here's the thing — [COST VALUE PROP]. And [SOLUTION] typically shows ROI in [TIMEFRAME]. {PROOF_POINT}. Would it help to see a business case from a similar company?\""
+    }
+  },
+  "followUp": {
+    "call": {
+      "name": "Follow-up Call Script",
+      "script": "\"Hi {PROSPECT_NAME}, it's {CALLER_NAME} from {COMPANY}. I sent over our [COLLATERAL] last week — did you get a chance to look at it? [If yes] What stood out to you? [If no] No worries — I know things get busy. The key takeaway is [KEY BENEFIT]. Would it be worth a quick call with [MEETING_WITH] to explore whether any of that applies to your situation?\""
+    },
+    "email": {
+      "subject": "Quick question about the [COLLATERAL]",
+      "body": "Hi {PROSPECT_NAME},\n\nI sent over our [COLLATERAL] last week. Curious if anything resonated — particularly the sections on [KEY TOPICS].\n\nIf it's useful, I'd love to connect you with [MEETING_WITH] for a [DURATION]-minute conversation to go deeper. If the timing's not right, no worries — just let me know and I'll check back in a few months.\n\n— {CALLER_NAME}"
+    }
+  },
+  "keyMessages": [],
+  "openingsNonSF": {
+    "_description": "Scripts for prospects NOT currently using your product",
+    "crmPain": {
+      "name": "CRM Pain Question (Recommended)",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. I'll be quick — I'm calling because we help companies get better visibility into their [AREA]. Quick question: are you happy with how you're currently [DOING X], or is that an area where you're looking to improve?\"",
+      "why": "Opens with business value, not product. Gets them talking about their current situation."
+    },
+    "growthChallenge": {
+      "name": "Growth Challenge Question",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. Quick question for you — as your business has grown, has [CHALLENGE] become harder, or do you have that pretty well sorted?\"",
+      "why": "Connects to a universal growth pain point."
+    },
+    "techStack": {
+      "name": "Tech Stack Curiosity",
+      "script": "\"Hi {PROSPECT_NAME}, this is {CALLER_NAME} from {COMPANY}. We're a [TYPE] partner, and I'm curious — what are you using to [DO X] today? Spreadsheets, another system, or something else?\"",
+      "why": "Direct and honest. Gets intel on their current setup immediately."
+    }
+  },
+  "pivotsNonSF": {
+    "_description": "Pivots for non-users of your product",
+    "fromSpreadsheets": {
+      "name": "From Spreadsheets",
+      "script": "\"I hear that a lot — spreadsheets work until they don't. The challenge is [COMMON PROBLEM]. That's exactly when companies look at [SOLUTION]. The good news is [VALUE PROP]. Would it be worth a quick conversation to see what's actually involved?\""
+    },
+    "fromCompetitor": {
+      "name": "From Competitor",
+      "script": "\"[COMPETITOR] is a good starting point, but a lot of companies outgrow it — especially around [LIMITATIONS]. [YOUR PRODUCT]'s [ADVANTAGE] is genuinely game-changing. We've helped several companies migrate, and the ROI is usually clear within months. Want to hear what that looks like?\""
+    },
+    "fromNothing": {
+      "name": "From No System",
+      "script": "\"Honestly, that's where a lot of growing companies are. You get by until suddenly you can't — [PAIN POINTS]. The smart move is getting on a proper platform before it becomes urgent. [PRODUCT] is the market leader for good reason, and with {COMPANY}'s approach, it's more affordable than most people think. Would it be useful to see what's actually involved?\""
+    }
+  }
+}

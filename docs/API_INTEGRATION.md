@@ -1,6 +1,6 @@
 # API Integration Guide
 
-This document covers the external API integrations used by the Fexle Sales Engine.
+This document covers the external API integrations used by the Outbound Sales Engine.
 
 ## Overview
 
@@ -50,7 +50,7 @@ Apollo.io provides access to a database of 250M+ business contacts. The integrat
 There are two ways to configure Apollo:
 
 **Option A — Direct API key (requires localhost):**
-1. Open Fexle Sales Engine
+1. Open Outbound Sales Engine
 2. Go to **Settings** (⚙️)
 3. Find **Apollo.io API Key**
 4. Paste your key
@@ -116,7 +116,7 @@ Apollo's API only allows cross-origin requests from `http://localhost`. This mea
 
 **Alternative:** Serve the app from localhost:
 ```bash
-cd fexle-sales-engine
+cd outbound-sales-engine
 python3 -m http.server 8000
 # Open http://localhost:8000
 ```
@@ -154,7 +154,7 @@ Claude AI powers the Research feature, providing:
 2. Create an account or sign in
 3. Navigate to **Settings → API Keys**
 4. Click **Create Key**
-5. Name it (e.g., "Fexle Sales Engine")
+5. Name it (e.g., "Outbound Sales Engine")
 6. Copy the key (starts with `sk-ant-`)
 
 ### Pricing
@@ -171,7 +171,7 @@ Claude uses pay-per-use pricing:
 
 ### Configuration
 
-1. Open Fexle Sales Engine
+1. Open Outbound Sales Engine
 2. Go to **Settings** (⚙️)
 3. Find **Anthropic API Key**
 4. Paste your key
@@ -238,7 +238,7 @@ API keys can be stored in two places:
 
 **Browser localStorage (direct mode):**
 ```javascript
-localStorage.getItem('fexle_sales_engine_data')
+localStorage.getItem('sales_engine_data')
 // Contains: { anthropicApiKey: '...', apolloApiKey: '...' }
 ```
 

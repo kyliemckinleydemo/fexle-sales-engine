@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide walks you through setting up the Fexle Sales Engine from scratch.
+This guide walks you through setting up the Outbound Sales Engine from scratch.
 
 ## Table of Contents
 
@@ -31,16 +31,16 @@ This guide walks you through setting up the Fexle Sales Engine from scratch.
 #### Option 2: Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/fexle-sales-engine.git
-cd fexle-sales-engine
+git clone https://github.com/YOUR_USERNAME/outbound-sales-engine.git
+cd outbound-sales-engine
 open index.html
 ```
 
 #### Option 3: Local Server (recommended for Apollo)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/fexle-sales-engine.git
-cd fexle-sales-engine
+git clone https://github.com/YOUR_USERNAME/outbound-sales-engine.git
+cd outbound-sales-engine
 python3 -m http.server 8000
 # Open http://localhost:8000
 ```
@@ -149,7 +149,7 @@ Google Sheets enables team collaboration and also serves as a **server-side prox
 ### Step 1: Create the Sheet
 
 1. Go to [sheets.new](https://sheets.new)
-2. Name your spreadsheet (e.g., "Fexle Sales Engine Data")
+2. Name your spreadsheet (e.g., "Outbound Sales Engine Data")
 3. Create two sheets (tabs) named exactly:
    - `Leads`
    - `Tasks`
@@ -180,7 +180,7 @@ This stores your API keys securely on Google's servers, not in the browser.
 2. Click the gear icon ⚙️
 3. Select **Web app**
 4. Configure:
-   - **Description**: "Fexle Sales Engine Backend"
+   - **Description**: "Outbound Sales Engine Backend"
    - **Execute as**: Me
    - **Who has access**: Anyone
 5. Click **Deploy**
@@ -192,7 +192,7 @@ This stores your API keys securely on Google's servers, not in the browser.
 
 ### Step 4: Connect in App
 
-1. Open Fexle Sales Engine
+1. Open Outbound Sales Engine
 2. Go to Settings (⚙️)
 3. Paste the Web App URL into **Google Apps Script URL**
 4. Apollo searches will now route through the proxy automatically
@@ -239,7 +239,7 @@ Host on any static site platform:
 git push origin main
 
 # Enable Pages in repo settings
-# Access at: https://username.github.io/fexle-sales-engine
+# Access at: https://username.github.io/outbound-sales-engine
 ```
 
 **Netlify:**

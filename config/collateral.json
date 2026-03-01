@@ -1,0 +1,71 @@
+{
+  "items": [],
+  "rules": [],
+  "triggers": {
+    "objection_timing": {
+      "id": "objection_timing",
+      "name": "Timing Objection",
+      "description": "When prospect says 'not now', 'call back later', 'not ready yet'"
+    },
+    "objection_vendor": {
+      "id": "objection_vendor",
+      "name": "Existing Vendor",
+      "description": "When prospect has an existing vendor/partner"
+    },
+    "objection_budget": {
+      "id": "objection_budget",
+      "name": "Budget Concerns",
+      "description": "When prospect mentions budget or cost concerns"
+    },
+    "close_soft": {
+      "id": "close_soft",
+      "name": "Soft Close",
+      "description": "Soft close when meeting not immediately possible"
+    },
+    "close_followup": {
+      "id": "close_followup",
+      "name": "Follow-up Close",
+      "description": "After call, during follow-up sequence"
+    },
+    "stage_discovery": {
+      "id": "stage_discovery",
+      "name": "Discovery Stage",
+      "description": "During discovery/qualification calls"
+    },
+    "stage_proposal": {
+      "id": "stage_proposal",
+      "name": "Proposal Stage",
+      "description": "When preparing or sending proposal"
+    },
+    "always": {
+      "id": "always",
+      "name": "Always Available",
+      "description": "Always offer this material when relevant"
+    }
+  },
+  "_example": {
+    "items": [
+      {
+        "id": "deck-001",
+        "name": "AI Implementation Deck",
+        "description": "Practical guide on implementing AI with real business impact",
+        "type": "pdf",
+        "fileUrl": "https://example.com/deck.pdf",
+        "thumbnail": null,
+        "tags": ["ai", "implementation", "technical"],
+        "active": true,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule-001",
+        "collateralId": "deck-001",
+        "trigger": "objection_timing",
+        "description": "Offer AI deck when prospect isn't ready yet",
+        "autoSuggest": true,
+        "priority": 1
+      }
+    ]
+  }
+}
