@@ -12760,12 +12760,17 @@ Return your response as valid JSON with this exact structure:
                           <label className="block text-xs font-medium text-gray-600 mb-1">Company Name</label>
                           <input
                             type="text"
-                            value={orgConfig?.company?.name || ''}
-                            onChange={(e) => {
-                              const newConfig = { company: { ...(orgConfig?.company || {}), name: e.target.value } };
-                              if (dataContext?.updateSettings) {
+                            defaultValue={orgConfig?.company?.name || COMPANY_INFO.name || ''}
+                            key={`company-name-${orgConfig?.company?.name || ''}`}
+                            onBlur={(e) => {
+                              const val = e.target.value;
+                              const newConfig = { company: { ...(orgConfig?.company || {}), name: val } };
+                              if (updateOrgConfig) {
+                                updateOrgConfig(newConfig);
+                              } else if (dataContext?.updateSettings) {
                                 dataContext.updateSettings(newConfig);
                               }
+                              showNotification('Company name updated');
                             }}
                             placeholder="Your Company Name"
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
@@ -12775,18 +12780,23 @@ Return your response as valid JSON with this exact structure:
                           <label className="block text-xs font-medium text-gray-600 mb-1">CEO/Host Name</label>
                           <input
                             type="text"
-                            value={orgConfig?.company?.ceoName || ''}
-                            onChange={(e) => {
-                              const newConfig = { company: { ...(orgConfig?.company || {}), ceoName: e.target.value } };
-                              if (dataContext?.updateSettings) {
+                            defaultValue={orgConfig?.company?.ceoName || ''}
+                            key={`ceo-name-${orgConfig?.company?.ceoName || ''}`}
+                            onBlur={(e) => {
+                              const val = e.target.value;
+                              const newConfig = { company: { ...(orgConfig?.company || {}), ceoName: val } };
+                              if (updateOrgConfig) {
+                                updateOrgConfig(newConfig);
+                              } else if (dataContext?.updateSettings) {
                                 dataContext.updateSettings(newConfig);
                               }
+                              showNotification('CEO name updated');
                             }}
                             placeholder="Meeting host name"
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
                           />
                         </div>
-                        <p className="text-xs text-gray-500">More settings available in config/app-config.js</p>
+                        <p className="text-xs text-gray-500">Company name is used in call scripts and emails. Changes take effect on next page load.</p>
                       </div>
                     </details>
 
