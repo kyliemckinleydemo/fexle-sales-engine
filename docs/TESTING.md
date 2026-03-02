@@ -58,9 +58,19 @@ outbound-sales-engine/
 │   │   ├── dates.test.js         # Date calculation tests
 │   │   ├── storage.test.js       # localStorage tests
 │   │   ├── transform.test.js     # Transform tests
-│   │   └── analytics.test.js     # Analytics calculation tests
+│   │   ├── analytics.test.js     # Analytics calculation tests
+│   │   └── scriptBuilder.browser.test.js  # Browser ScriptBuilder parity
 │   └── integration/
-│       └── workflow.test.js      # End-to-end workflows
+│       ├── workflow.test.js      # End-to-end workflows
+│       ├── scriptBuilder.test.js # Script Builder integration
+│       └── whiteLabel.capability.test.js  # White-label validation
+├── e2e/                          # Playwright E2E tests
+│   ├── auth.spec.js              # Auth & mode selection
+│   ├── componentStability.spec.js # React stability & Call Center
+│   ├── callCenterRedesign.spec.js # v2.2.0 Call Center redesign
+│   ├── scriptBuilder.spec.js     # AI Script Builder modal
+│   └── scriptCustomization.spec.js # White-label customization
+├── playwright.config.js          # Playwright configuration
 ├── vitest.config.js              # Vitest configuration
 └── package.json                  # npm scripts
 ```
@@ -658,8 +668,8 @@ Verify all these templates exist and load correctly:
 
 | Step | Action | Expected Result |
 |------|--------|-----------------|
-| 1 | Select a lead with phone number | Lead details shown |
-| 2 | Click "📞 Dial & Start Timer" button | Phone app opens, timer starts |
+| 1 | Select a lead with phone number | Compact lead header shown with "Call [Name]" button |
+| 2 | Click "📞 Call [Name]" button in the compact header | Twilio call initiates (or tel: link), timer starts, script auto-shows |
 | 3 | Check timer display | Red pulsing dot, MM:SS counting up |
 | 4 | Wait 10 seconds | Timer shows 0:10 |
 | 5 | Click "⏹️ Stop Timer" | Timer stops but duration preserved |
@@ -708,7 +718,7 @@ Verify all these templates exist and load correctly:
 | Step | Action | Expected Result |
 |------|--------|-----------------|
 | 1 | Make call using external phone | - |
-| 2 | Click "📞 Dial & Start Timer" | Timer starts (even if not dialing) |
+| 2 | Click "📞 Call [Name]" button | Twilio call initiates + timer starts; script shows inline |
 | 3 | Log call outcome | Duration recorded correctly |
 
 ---
@@ -762,6 +772,7 @@ Use this checklist when testing a new deployment:
 - [ ] Can change target action
 - [ ] Calendar modal opens
 - [ ] Email templates load
+- [ ] No Pro/Free plan gating anywhere (isPro always true)
 
 **Target Action Tests (10 min):**
 - [ ] Test 1.1: Switch preset
@@ -794,10 +805,16 @@ Use this checklist when testing a new deployment:
 - [ ] Test 6.3: Backup/restore
 
 **Call Timer Tests (5 min):**
-- [ ] Test 7.1: Start timer on dial
+- [ ] Test 7.1: Start timer on dial (uses "Call [Name]" button)
 - [ ] Test 7.2: Log call with duration
 - [ ] Test 7.3: Call history display
 - [ ] Test 7.4: Auto status update
+
+**Call Center v2.2.0 Tests (10 min):**
+- [ ] Test 12.2: Compact lead header, no old UI elements
+- [ ] Test 12.3: Call button uses makeTwilioCall + inline script
+- [ ] Test 12.4: Quick action pills
+- [ ] Test 12.5: Script auto-shows on lead select
 
 ---
 
@@ -959,6 +976,116 @@ Use this checklist when testing a new deployment:
 | 2 | Check callMetrics in response | Has total, connected, etc. |
 | 3 | Check conversionFunnel in response | Has new, qualified, etc. |
 | 4 | Check as non-member | Permission denied |
+
+---
+
+### 12. v2.2.0 Changes - Call Center Redesign & Plan Gating Removal
+
+**Purpose:** Verify v2.2.0 changes: removed free/pro gating, redesigned Call Center UX, LinkedIn-enhanced AI research, edge function org lookup fix, and makeTwilioCall inline script.
+
+#### Test 12.1: isPro() Always Returns True (No Plan Gating)
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Open Settings | Settings panel opens |
+| 2 | Check plan display | Should show "Pro" badge with "Active" label |
+| 3 | Verify no upgrade prompt | No "Upgrade to Pro" button or pricing should appear |
+| 4 | Open Call Center, select a lead | - |
+| 5 | Click "Research" quick action pill | AI Research runs without "Pro feature" error |
+| 6 | Open Playbooks tab | - |
+| 7 | Open Script Builder, reach Step 3 | "Generate Scripts with AI" should not show Pro gating (only requires API key) |
+
+#### Test 12.2: Redesigned Call Center - Compact Lead Header
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to Call Center | Call Center tab active |
+| 2 | Select a lead from the list | Lead detail panel appears on the right |
+| 3 | Check lead header | Should show compact header with lead name, title, company, score badge |
+| 4 | Check for old UI elements | "Show Playbook" toggle button should NOT exist |
+| 5 | Check for old UI elements | Large "Contact Info" card should NOT exist |
+| 6 | Check for old UI elements | "Activity Summary" section should NOT exist |
+| 7 | Check for old UI elements | Separate "Notes Button" panel should NOT exist |
+| 8 | Check for old UI elements | Guided workflow panel (Research > Call > Deck > Meeting steps) should NOT exist |
+
+#### Test 12.3: Call Center - Call Button Uses makeTwilioCall + Inline Script
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Select a lead with a phone number | Lead detail shows |
+| 2 | Check call button in header | Should show "Call [FirstName]" button (green, gradient) |
+| 3 | Click the call button | Call initiates via makeTwilioCall (or tel: link) AND call script auto-shows |
+| 4 | Verify no popup window | Should NOT open a separate playbook popup window |
+| 5 | Verify script is inline | Call script should appear directly in the Call Center panel |
+
+#### Test 12.4: Call Center - Quick Action Pills
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Select a lead in Call Center | Quick action pills row appears below the lead header |
+| 2 | Check for Email pill | "Email" action pill visible |
+| 3 | Check for Research pill | "Research" action pill visible |
+| 4 | Check for Meeting pill | "Meeting" action pill visible |
+| 5 | Check for Notes pill | "Notes" action pill visible (with count if notes exist) |
+| 6 | Check for Hide Script pill | "Hide Script" / "Show Script" toggle pill visible |
+| 7 | Click "Hide Script" | Call script section hides; pill text changes to "Show Script" |
+| 8 | Click "Show Script" | Call script section reappears |
+
+#### Test 12.5: Call Center - Script Auto-Shows on Lead Select
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Navigate to Call Center | No lead selected, no script visible |
+| 2 | Click on any lead in the list | Lead detail loads |
+| 3 | Check script visibility | Call script should be visible by default (no toggle needed) |
+| 4 | Select a different lead | Script updates to match new lead's vertical/context |
+
+#### Test 12.6: LinkedIn + Website in AI Research Prompt
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Select a lead with LinkedIn URL and website | Lead detail shows |
+| 2 | Trigger AI Research (Research pill or button) | Research request sent |
+| 3 | Check research output | Should include LinkedIn-sourced talking points (career background, recent posts) |
+| 4 | Check research output | Should include website-sourced context (company products, recent news) |
+| 5 | Select lead without LinkedIn/website | Research still works but uses available data only |
+
+#### Test 12.7: Edge Function Org Lookup Fix (Supabase Mode)
+
+| Step | Action | Expected Result |
+|------|--------|-----------------|
+| 1 | Log in to Supabase mode | Authenticated |
+| 2 | Select a lead | Lead detail shown |
+| 3 | Trigger AI Research | Request sent to ai-research edge function |
+| 4 | Check response | Should succeed (no "organization_id column not found" error) |
+| 5 | Verify org lookup | Edge function queries organization_members table (not profiles) |
+
+---
+
+### Test Execution Checklist (Updated for v2.2.0)
+
+Use this checklist when testing a new deployment:
+
+**Quick Smoke Test (5 min):**
+- [ ] App loads without errors
+- [ ] Can add a lead
+- [ ] Can change target action
+- [ ] Calendar modal opens
+- [ ] Email templates load
+- [ ] All features work without Pro gating (isPro always true)
+
+**Call Center v2.2.0 Tests (10 min):**
+- [ ] Test 12.2: Compact lead header (no old UI elements)
+- [ ] Test 12.3: Call button uses makeTwilioCall + inline script
+- [ ] Test 12.4: Quick action pills present and functional
+- [ ] Test 12.5: Script auto-shows on lead select
+- [ ] Test 12.6: LinkedIn + website in AI research output
+
+**Plan Gating Removal (5 min):**
+- [ ] Test 12.1: Settings shows Pro, no upgrade prompt
+- [ ] AI Research works without Pro gate
+- [ ] Apollo Search works without Pro gate
+- [ ] AI Script Generation only gated by API key presence
 
 ---
 
