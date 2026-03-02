@@ -7284,6 +7284,8 @@ COMPANY TO RESEARCH:
 - Location: ASSUME AUSTRALIA unless the company name clearly indicates otherwise (e.g., "UK", "USA" in name)
 - Phone: ${lead.phone || 'Not provided'}
 - Email: ${lead.email || 'Not provided'}
+- Website: ${lead.website || 'Not provided'}
+- LinkedIn Profile: ${lead.linkedinUrl || 'Not provided'}
 - Existing Notes: ${lead.notes || 'None'}
 
 CONTEXT - WHAT WE SELL:
@@ -7296,7 +7298,9 @@ BUYING TRIGGERS TO LOOK FOR:
 ${vertical.triggers.map(t => '- ' + t).join('\n')}
 
 YOUR TASK:
-Based on the company name and industry, provide a pre-call research brief with:
+Based on the company name, industry, website, and LinkedIn profile (if provided), provide a pre-call research brief. Use the LinkedIn URL to understand the contact's background, career history, and role — this helps personalize the opening and talking points.
+
+Provide:
 
 1. **Industry Classification** (REQUIRED): Based on what ${lead.company} actually does, classify them into ONE of these verticals. Return the exact key string:
    healthcare, professionalServices, manufacturing, financial, retail, education, nonprofit, government, realEstate, logistics, hospitality, telecom, energy, media, agriculture, construction, mining, automotive, general
@@ -7324,7 +7328,7 @@ Based on the company name and industry, provide a pre-call research brief with:
    - Support Cost Question: "Is reducing customer support costs on your priority list this year?"
    - Sales Performance Question: "Are you getting everything you need out of Salesforce right now?"
 
-9. **Personalized Talking Points** (3 bullet points): Specific things to mention that would resonate with this contact based on their role and industry.
+9. **Personalized Talking Points** (3 bullet points): Specific things to mention that would resonate with this contact based on their role, industry, and LinkedIn profile (if available — reference their background, previous companies, or expertise to build rapport).
 
 10. **Recent Major News** (OPTIONAL - only include if significant news exists): Search for major news stories about this company from the last 12 months (since ${new Date(Date.now() - 365*24*60*60*1000).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}). Include up to 3 stories that would be relevant conversation starters - things like:
    - Major announcements (funding, acquisitions, partnerships)
