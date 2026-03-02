@@ -4605,12 +4605,8 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const updateOrgConfig = dataContext?.updateConfig;
       const membership = dataContext?.membership;
 
-      // Pro plan check: local mode = always Pro (no billing), Supabase mode = check org.plan
-      const isPro = () => {
-        if (!isSupabaseMode) return true;
-        const plan = dataContext?.organization?.plan;
-        return plan === 'pro' || plan === 'trial';
-      };
+      // All users get full functionality (no free/pro gating)
+      const isPro = () => true;
 
       // Unified setLeads that works with both modes
       const setLeads = (newLeadsOrFn) => {

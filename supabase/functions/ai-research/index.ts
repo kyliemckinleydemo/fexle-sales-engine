@@ -86,35 +86,29 @@ serve(async (req) => {
       );
     }
 
-    // Get user's organization
-    const { data: profile } = await supabase
-      .from("profiles")
+    // Get user's organization (via organization_members junction table)
+    const { data: membership } = await supabase
+      .from("organization_members")
       .select("organization_id")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
+      .limit(1)
       .single();
 
-    if (!profile?.organization_id) {
+    if (!membership?.organization_id) {
       return new Response(
         JSON.stringify({ error: "User not associated with an organization" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const orgId = profile.organization_id;
+    const orgId = membership.organization_id;
 
-    // Check org plan - AI research is a Pro feature
+    // Get org config (for API keys)
     const { data: org } = await supabase
       .from("organizations")
-      .select("plan, config")
+      .select("config")
       .eq("id", orgId)
       .single();
-
-    if (org?.plan !== 'pro' && org?.plan !== 'trial') {
-      return new Response(
-        JSON.stringify({ error: "AI Research requires a Pro plan. Please upgrade." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Parse request body
     const body: AIResearchRequest = await req.json();
