@@ -12750,12 +12750,10 @@ Return your response as valid JSON with this exact structure:
                     </div>
                   </div>
 
-                  {/* Company Settings (Local Mode) */}
-                  {!isSupabaseMode && (
-                    <details className="pt-4 border-t border-gray-100">
+                  {/* Company Settings */}
+                  <details className="pt-4 border-t border-gray-100">
                       <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700 flex items-center gap-2">
                         <span>🏢</span> Company Settings
-                        <span className="text-xs font-normal text-gray-500">(white-label)</span>
                       </summary>
                       <div className="mt-3 space-y-3">
                         <div>
@@ -12791,7 +12789,6 @@ Return your response as valid JSON with this exact structure:
                         <p className="text-xs text-gray-500">More settings available in config/app-config.js</p>
                       </div>
                     </details>
-                  )}
 
                   {/* Call Scripts Setup */}
                   <details className="pt-4 border-t border-gray-100">
