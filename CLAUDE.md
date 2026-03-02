@@ -184,7 +184,7 @@ detectPhoneCountry(phone)           // → 'AU' | 'US' | 'CA' | 'UK' | null
 - Hot (80-100), Warm (60-79), Cool (40-59), Cold (0-39)
 
 ### Integrations
-- **Claude API**: Powers "Research" button for AI company intel
+- **Claude API**: Powers "Research" button for AI company intel (includes LinkedIn profile + website)
 - **Apollo.io**: Powers lead search with 8+ filters
 - **Twilio**: Browser-based VoIP calling + SMS via Edge Functions
 - **Google Sheets**: Optional sync via Apps Script
@@ -264,14 +264,11 @@ emailTemplates    // mergeConfig(defaultEmailTemplates, APP_CONFIG.emailTemplate
 - innerHTML in playbook popup escaped with `esc()` helper
 - API keys proxied server-side in Supabase mode (never in browser)
 
-### Billing (Stripe)
-- Free plan: lead management, dashboard, playbooks, analytics, CSV import/export
-- Pro plan ($49/mo): AI research, Apollo search, email sending, sequences, webhooks
-- `isPro()` helper: returns true in local mode, checks `org.plan` in Supabase mode
-- Stripe Checkout for upgrades, Billing Portal for management
-- Webhook handles: checkout.session.completed, subscription.updated/deleted, invoice.payment_failed
-- organizations table has: stripe_customer_id, stripe_subscription_id, stripe_subscription_status
-- plan column: 'free' (default), 'pro', 'trial', 'past_due'
+### Billing
+- No free/pro plan gating — all users get full functionality
+- `isPro()` helper: always returns true (no feature restrictions)
+- Users bring their own API keys (Anthropic, Apollo, etc.)
+- Stripe integration exists but billing gates are removed
 
 ### API Key Proxy
 - In Supabase mode, Anthropic and Apollo calls route through edge functions
@@ -289,13 +286,15 @@ emailTemplates    // mergeConfig(defaultEmailTemplates, APP_CONFIG.emailTemplate
 | `ANTHROPIC_API_KEY` | Platform fallback | ai-research |
 | `APOLLO_API_KEY` | Platform fallback | apollo-search |
 
-### UX Improvements (v2.1)
-Key UX changes to reduce overwhelm for new users:
+### UX Improvements (v2.2)
+Key UX changes for streamlined calling workflow:
 
-**Call Center Declutter:**
+**Call Center Redesign:**
+- Compact lead header with inline "Call [Name]" button
+- Quick action pills (Email, Research, Meeting, Notes, Hide Script)
+- Call script visible immediately on lead select (no scrolling)
+- Removed: old Activity Summary, large Contact Info card, Notes panel, toggle button
 - Milestones: Collapsible accordion (shows "2/6 complete" when collapsed)
-- Notes: Moved to slide-out panel (button shows count + preview)
-- Script panel: Hidden by default, toggle to show
 
 **Score Badges:**
 - Color-coded with labels: Hot (80+), Warm (60+), Cool (40+), Cold

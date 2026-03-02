@@ -71,7 +71,7 @@ supabase login
 supabase link --project-ref your-project-ref
 
 # Deploy all functions
-supabase functions deploy ai-research
+supabase functions deploy ai-research --no-verify-jwt
 supabase functions deploy apollo-search
 supabase functions deploy email-send
 supabase functions deploy sms-send

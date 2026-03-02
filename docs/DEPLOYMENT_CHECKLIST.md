@@ -60,7 +60,7 @@ supabase login
 supabase link --project-ref your-project-ref
 
 # Deploy all functions
-supabase functions deploy ai-research
+supabase functions deploy ai-research --no-verify-jwt
 supabase functions deploy apollo-search
 supabase functions deploy email-send
 supabase functions deploy sms-send
@@ -157,11 +157,7 @@ In the app, go to Settings → Email Configuration:
 ### 4.2 Add Anthropic Secret to Supabase
 - [ ] `ANTHROPIC_API_KEY` = `sk-ant-xxxxx`
 
-**Note:** This is the platform fallback key. Organizations can also add their own key in Settings for unlimited usage.
-
-**Usage Limits (Platform Key):**
-- 500 AI researches/month per org
-- 50 script generations/month per org
+**Note:** This is the platform fallback key. Organizations can also add their own key in Settings. There are no plan-based feature restrictions — all users get full functionality.
 
 ---
 
@@ -245,17 +241,17 @@ Edit `config/app-config.js` to customize branding.
 - [ ] After checkout, plan updates to Pro
 - [ ] "Manage Subscription" button works for Pro users
 
-### Test AI Features (Pro Required)
+### Test AI Features
 - [ ] AI Research button works on a lead
+- [ ] Research includes LinkedIn-informed talking points (when LinkedIn URL exists)
 - [ ] Script Builder generates custom scripts
-- [ ] Usage counter increments in Settings
 
-### Test Email (Pro Required)
+### Test Email
 - [ ] Can send email to a lead
 - [ ] Email arrives at recipient
 - [ ] Activity log shows email sent
 
-### Test Apollo Search (Pro Required)
+### Test Apollo Search
 - [ ] Can search for leads
 - [ ] Results display correctly
 - [ ] Can import leads from results

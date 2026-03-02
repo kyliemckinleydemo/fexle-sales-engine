@@ -5,6 +5,26 @@ All notable changes to the Outbound Sales Engine will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-03-02
+
+### Added
+- **LinkedIn-Enhanced AI Research** - Research prompt now includes lead's LinkedIn profile URL and website for more personalized talking points, career-based rapport building, and contact background analysis
+- **Redesigned Call Center UX** - Compact lead header with inline call button and quick action pills; call script shows immediately on lead select without scrolling
+- **Auto-Show Call Script** - Playbook appears automatically when a lead is selected in Call Center (toggle to hide)
+
+### Changed
+- **Removed Free/Pro Plan Gating** - All users get full functionality (AI research, Apollo search, email, sequences); users bring their own API keys
+- **Call Buttons Use Inline Script** - "Make Call", "Make First Call", and "Follow Up Call" buttons now show the inline script instead of opening a popup window
+- **isPro() Always Returns True** - No billing-based feature restrictions
+
+### Fixed
+- **ReferenceError: user is not defined** - Fixed two instances in App component where `user?.id` should have been `dataContext?.user?.id`
+- **Call Script Not Showing** - Added vertical fallback to 'general' when lead's vertical doesn't match any configured vertical
+- **Edge Function Org Lookup** - Fixed ai-research edge function to query `organization_members` table instead of `profiles` table (which has no `organization_id` column)
+- **ES256 JWT Compatibility** - Updated supabase-js to v2.49.1 and deployed edge functions with `--no-verify-jwt` for asymmetric JWT support
+
+---
+
 ## [2.1.0] - 2026-01-14
 
 ### Added
@@ -156,20 +176,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Roadmap
 
-### v2.1.0 (Planned)
+### v2.3.0 (Planned)
 - [ ] Slack integration for team notifications
 - [ ] Advanced reporting dashboard
-- [ ] Email sending via Gmail/Outlook API
 - [ ] Mobile-optimized view
-
-### v2.2.0 (Planned)
-- [ ] Multi-user authentication
-- [ ] Role-based permissions
-- [ ] Activity feed
 - [ ] Lead assignment workflows
 
 ### v3.0.0 (Future)
 - [ ] CRM integrations (Salesforce, HubSpot)
-- [ ] Phone system integration (click-to-dial)
 - [ ] AI-powered call transcription
 - [ ] Predictive lead scoring with ML

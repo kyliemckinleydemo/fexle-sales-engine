@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Browser-orange.svg)
 ![Tests](https://img.shields.io/badge/tests-vitest-green.svg)
@@ -43,8 +43,8 @@ Sales Engine is a purpose-built sales productivity platform designed for B2B col
 | **Today Dashboard** | AI-prioritized daily task list |
 | **Call Center** | Integrated calling interface with context-aware scripts |
 | **CEO Calendar** | Visual booking system with ICS file generation |
-| **Playbooks** | Industry-specific scripts for 11 verticals |
-| **AI Research** | Claude-powered company research and call prep |
+| **Playbooks** | Industry-specific scripts for 19 verticals |
+| **AI Research** | Claude-powered company research with LinkedIn profile integration |
 | **Email Templates** | 8 pre-built templates for every sales stage |
 
 ### Multi-User Features (Supabase Mode)
@@ -65,8 +65,8 @@ Sales Engine is a purpose-built sales productivity platform designed for B2B col
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/sales-engine.git
-cd sales-engine
+git clone https://github.com/kyliemckinleydemo/fexle-sales-engine.git
+cd fexle-sales-engine
 
 # Open in browser
 open index.html
@@ -310,6 +310,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built for B2B Sales Teams**
 
-[Report Bug](https://github.com/YOUR_USERNAME/sales-engine/issues) | [Request Feature](https://github.com/YOUR_USERNAME/sales-engine/issues)
+[Report Bug](https://github.com/kyliemckinleydemo/fexle-sales-engine/issues) | [Request Feature](https://github.com/kyliemckinleydemo/fexle-sales-engine/issues)
 
 </div>

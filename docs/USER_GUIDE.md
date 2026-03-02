@@ -1,6 +1,6 @@
 # Outbound Sales Engine - User Guide
 
-**Version 2.5** | Last Updated: January 2026
+**Version 2.6** | Last Updated: March 2026
 
 ---
 
@@ -403,33 +403,40 @@ Icons turn green with checkmarks as you complete each step. The checklist auto-u
 
 When a lead is selected, the right panel shows:
 
-#### Guided Workflow Panel
+#### Compact Lead Header
 
-A visual 4-step progress tracker at the top:
-- **Research → Call → Deck → Meeting**
-- Current step pulses/animates
-- Completed steps show green checkmarks
-- **Smart Next Action Button**: One prominent button showing your next step
+A streamlined header showing:
+- **Company name, contact, title** — at a glance
+- **Vertical badge** and **score badge** — color-coded
+- **"Call [Name]" button** — prominent green button to initiate call (Twilio or tel: fallback)
+- **Edit button** — quick access to edit lead details
 
-| Button | Color | When Shown |
-|--------|-------|------------|
-| 🔍 Research Company | Blue | Lead not yet researched |
-| 📞 Make First Call | Green | Researched, not yet called |
-| 🔄 Follow Up on Deck | Orange | Deck was sent |
-| 📞 Follow Up Call | Orange | Status is Follow Up or No Answer |
-| 📧 Send Deck / 📅 Book Meeting | Pink/Purple | Called, choose next action |
-| ✅ Meeting Booked! | Green | Workflow complete |
+#### Quick Actions Bar
+
+Below the header, a row of action pills:
+
+| Action | Description |
+|--------|-------------|
+| **Email** | Open email template selector |
+| **Research** | Run AI-powered company research |
+| **Meeting** | Open CEO Calendar booking |
+| **Notes** | Open notes slide-out panel |
+| **Hide/Show Script** | Toggle the call script visibility |
+
+#### Call Script (Auto-Visible)
+
+The call script appears **immediately** when you select a lead — no need to scroll or click a toggle. It includes:
+- **SF/Non-SF toggle** — switch between Existing Salesforce User and Non-SF Prospect scripts
+- **Opening scripts** — personalized with the lead's name
+- **Industry context** — vertical-specific pain points and Agentforce use cases
+- **Objection handling** — industry-specific responses
+- **Close options** — paths to next steps
 
 #### Other Panels
 
-- **Contact Info**: Phone, email, title
-- **Saved Research Panel**: If AI research exists, shows summary with talking points
-- **Quick Actions**: AI Research, Email Templates, Schedule CEO Meeting, Pop Out Scripts
-- **Call Script**: Context-aware suggested opening with SF/Non-SF toggle
-- **Call Prep Panel**: Expandable section with full AI research (if available)
-- **Notes**: All communication history (delete with 🗑️ icon, confirmation required)
-- **Log Call**: Record call outcomes
-- **Major Milestones**: Track lead progression through the sales cycle
+- **Milestones & Status** — collapsible milestone checkboxes and current status
+- **Call Prep: AI Research** — expandable panel with saved research (if available)
+- **Log Call** — record call outcomes with auto-generated follow-up tasks
 
 ### Major Milestones
 
@@ -773,15 +780,22 @@ Templates automatically replace:
 
 ### Requirements
 
-- Anthropic API key configured in Settings
+- Anthropic API key configured in Settings (or server-side in Supabase secrets)
 - Active internet connection
+
+### LinkedIn-Enhanced Research
+
+When a lead has a LinkedIn profile URL and/or website stored, the AI research automatically includes this information to generate:
+- **Career-based rapport points** — references the contact's previous roles and experience
+- **Company-specific insights** — uses the website for accurate company intelligence
+- **Personalized talking points** — tailored to the contact's background, not just their title
 
 ### Running Research
 
 1. Select a lead in Call Center
-2. Click **🔍 AI Research** button (or "Refresh Research" if already done)
+2. Click **🔍 Research** button in the quick actions bar
 3. Wait for Claude to analyze (15-30 seconds)
-4. Research modal displays results
+4. Research results appear in the expandable Call Prep panel
 
 ### Research Output
 
@@ -795,7 +809,7 @@ Templates automatically replace:
 | **Potential Pain Points** | Specific challenges to probe |
 | **Trigger Events** | Things to investigate or ask about |
 | **Recommended Opening** | Best opening line for this prospect |
-| **Talking Points** | Personalized discussion points |
+| **Talking Points** | Personalized discussion points (LinkedIn-informed when available) |
 
 ### Saved Research
 

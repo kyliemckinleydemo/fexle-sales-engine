@@ -200,16 +200,20 @@ Company: [Company Name]
 Contact: [Contact Name]
 Title: [Title]
 Industry: [Vertical]
+Website: [Website URL]
+LinkedIn Profile: [LinkedIn URL]
 Notes: [Any existing notes]
 
 Provide:
 1. Company overview
 2. Likely pain points related to Salesforce/CRM
 3. Assessment of Salesforce implementation likelihood
-4. Personalized talking points
+4. Personalized talking points (referencing LinkedIn background when available)
 5. Recommended opening line
-6. Priority rating (HIGH/MEDIUM/LOW)
+6. Priority rating (HIGH/MEDIUM/NURTURE)
 ```
+
+When a LinkedIn profile URL is available, Claude uses it to understand the contact's career history, previous companies, and expertise to generate more personalized rapport-building talking points.
 
 ### Rate Limits
 
