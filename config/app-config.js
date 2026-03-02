@@ -42,8 +42,12 @@
  * - For a complete example, see examples/sample-config/app-config.js
  */
 window.APP_CONFIG = {
-  // company: {
-  //   name: "Your Company",
+  company: {
+    name: "Fexle Australia",
+    tagline: "Salesforce Implementation & AI Solutions Partner",
+    keyProducts: ["Salesforce Implementation", "Agentforce AI", "Data Cloud", "Sales Cloud", "Service Cloud"],
+  },
+  // company (additional options): {
   //   tagline: "Your tagline here",
   //   size: "Team size description",
   //   locations: ["City 1", "City 2"],
