@@ -4724,7 +4724,7 @@ If it's useful, I'd love to connect you with our CEO for a 20-minute conversatio
       const [twilioStatus, setTwilioStatus] = useState('offline'); // offline, connecting, ready, on-call
       const [twilioMuted, setTwilioMuted] = useState(false);
       const [currentCallSid, setCurrentCallSid] = useState(null);
-      const [showScript, setShowScript] = useState(false);
+      const [showScript, setShowScript] = useState(true);
       const [scriptMode, setScriptMode] = useState('salesforce'); // 'salesforce' or 'nonSalesforce'
       const [showNotesPanel, setShowNotesPanel] = useState(false);
       const [searchQuery, setSearchQuery] = useState('');
@@ -5987,6 +5987,13 @@ P.S. This is genuinely no-strings-attached. If we're not the right fit, you'll s
           }));
         }
       }, [selectedLead, showMeetingModal, targetAction]);
+
+      // Auto-show playbook when a lead is selected in Call Center
+      useEffect(() => {
+        if (activeTab === 'callCenter' && selectedLead) {
+          setShowScript(true);
+        }
+      }, [selectedLead, activeTab]);
 
       // Scroll to top when Call Center tab opens
       useEffect(() => {
@@ -8500,7 +8507,7 @@ Return your response as valid JSON with this exact structure:
 
       // ==================== CALL CENTER CONTENT ====================
       const callCenterContent = (() => {
-        const vertical = selectedLead ? verticalData[selectedLead.vertical] : null;
+        const vertical = selectedLead ? (verticalData[selectedLead.vertical] || verticalData['general']) : null;
 
         const personalizeScript = (script) => {
           if (!selectedLead) return script;
@@ -9215,207 +9222,61 @@ Return your response as valid JSON with this exact structure:
             <div className="col-span-8 space-y-4">
               {selectedLead ? (
                 <>
-                  {/* Guided Workflow Panel */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                  {/* Compact Lead Header + Call Button */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        {/* Step 1: Research */}
-                        <div className={`flex items-center gap-1.5 ${selectedLead.research ? 'text-green-600' : 'text-blue-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.research ? 'bg-green-100 text-green-600' : 'bg-blue-600 text-white animate-pulse'}`}>
-                            {selectedLead.research ? '✓' : '1'}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <div className="min-w-0">
+                            <h2 className="text-xl font-bold text-gray-900 truncate">{selectedLead.company}</h2>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">{selectedLead.contact}</span>
+                              {selectedLead.title && <span className="text-gray-400"> · {selectedLead.title}</span>}
+                            </div>
                           </div>
-                          <span className="text-xs">Research</span>
-                        </div>
-                        <div className="w-6 h-0.5 bg-gray-300"></div>
-                        {/* Step 2: Call */}
-                        <div className={`flex items-center gap-1.5 ${selectedLead.lastContactDate ? 'text-green-600' : !selectedLead.research ? 'text-gray-400' : 'text-blue-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${selectedLead.lastContactDate ? 'bg-green-100 text-green-600' : !selectedLead.research ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white animate-pulse'}`}>
-                            {selectedLead.lastContactDate ? '✓' : '2'}
-                          </div>
-                          <span className="text-xs">Call</span>
-                        </div>
-                        <div className="w-6 h-0.5 bg-gray-300"></div>
-                        {/* Step 3: Send Deck */}
-                        <div className={`flex items-center gap-1.5 ${hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? 'text-green-600' : !selectedLead.lastContactDate ? 'text-gray-400' : 'text-pink-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-pink-500 text-white'}`}>
-                            {hasDeckSent(selectedLead) || hasMeetingBooked(selectedLead) ? '✓' : '3'}
-                          </div>
-                          <span className="text-xs">Deck</span>
-                        </div>
-                        <div className="w-6 h-0.5 bg-gray-300"></div>
-                        {/* Step 4: Book Meeting */}
-                        <div className={`flex items-center gap-1.5 ${hasMeetingBooked(selectedLead) ? 'text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'text-gray-400' : 'text-purple-600 font-medium'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${hasMeetingBooked(selectedLead) ? 'bg-green-100 text-green-600' : selectedLead.status !== 'Deck Sent' && !selectedLead.lastContactDate ? 'bg-gray-200 text-gray-400' : 'bg-purple-500 text-white'}`}>
-                            {hasMeetingBooked(selectedLead) ? '✓' : '4'}
-                          </div>
-                          <span className="text-xs">Meeting</span>
-                        </div>
-                      </div>
-                      {/* Smart Next Action Button */}
-                      <div>
-                        {(() => {
-                          // Determine next action based on lead state
-                          if (!selectedLead.research) {
+                          <span className={`px-2 py-0.5 rounded-full text-xs shrink-0 ${getVerticalColor(selectedLead.vertical)}`}>
+                            {vertical?.icon} {vertical?.name}
+                          </span>
+                          {(() => {
+                            const scoreInfo = getScoreInfo(selectedLead.score);
                             return (
-                              <button onClick={() => performResearch(selectedLead)} className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span className="text-lg">🔍</span> Research Company
-                              </button>
-                            );
-                          }
-                          if (!selectedLead.lastContactDate) {
-                            return (
-                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span className="text-lg">📞</span> Make First Call
-                              </button>
-                            );
-                          }
-                          if (hasDeckSent(selectedLead) && !hasMeetingBooked(selectedLead)) {
-                            // Deck was sent - next action is follow up
-                            return (
-                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span className="text-lg">🔄</span> Follow Up on Deck
-                              </button>
-                            );
-                          }
-                          if (selectedLead.status === 'Follow Up' || selectedLead.status === 'No Answer') {
-                            return (
-                              <button onClick={openPlaybookPopup} className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span className="text-lg">📞</span> Follow Up Call
-                              </button>
-                            );
-                          }
-                          if (hasMeetingBooked(selectedLead)) {
-                            return (
-                              <span className="px-5 py-2.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg text-sm font-semibold border border-green-200 flex items-center gap-2">
-                                <span className="text-lg">✅</span> Meeting Booked!
+                              <span onClick={() => setShowScoreBreakdown(selectedLead)} className={`px-2 py-1 rounded-full text-xs font-bold border cursor-help shrink-0 ${scoreInfo.color}`}>
+                                {selectedLead.score} {scoreInfo.label}
                               </span>
                             );
-                          }
-                          // Called but not Deck Sent and not Meeting Booked - offer choices
-                          return (
-                            <div className="flex items-center gap-2">
-                              <div className="relative">
-                                <button onClick={() => setShowDeckMenu(!showDeckMenu)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-pink-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                  <span>📧</span> Send Deck <span className="text-xs">▼</span>
-                                </button>
-                                {showDeckMenu && (
-                                  <div className="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[200px]">
-                                    <button onClick={() => { openDeckEmail('salesforce'); setShowDeckMenu(false); }} className="w-full px-4 py-3 text-left hover:bg-blue-50 rounded-t-lg border-b border-gray-100 transition-colors">
-                                      <div className="font-medium text-gray-900 text-sm">☁️ Agentforce Guide</div>
-                                      <div className="text-xs text-gray-500">For Salesforce leads</div>
-                                    </button>
-                                    <button onClick={() => { openDeckEmail('general'); setShowDeckMenu(false); }} className="w-full px-4 py-3 text-left hover:bg-purple-50 rounded-b-lg transition-colors">
-                                      <div className="font-medium text-gray-900 text-sm">🤖 AI Success Guide</div>
-                                      <div className="text-xs text-gray-500">For general AI leads</div>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-gray-400 text-xs">or</span>
-                              <button onClick={() => {
-                                setMeetingDetails(prev => ({
-                                  ...prev,
-                                  title: `${targetAction.shortLabel} - ${selectedLead.company}`,
-                                  description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
-                                }));
-                                setShowMeetingModal(true);
-                              }} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                                <span>{targetAction.icon}</span> Book Meeting
-                              </button>
-                            </div>
-                          );
-                        })()}
+                          })()}
+                        </div>
                       </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-4">
+                        {selectedLead.phone && (
+                          <button onClick={() => { makeTwilioCall(selectedLead.phone); setShowScript(true); }} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 shadow-md transition-all flex items-center gap-2">
+                            📞 Call {selectedLead.contact?.split(' ')[0]}
+                          </button>
+                        )}
+                        <button onClick={() => { setEditingLead({...selectedLead}); setShowEditLead(true); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit lead">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                    {/* Quick Actions Row */}
+                    <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <button onClick={() => { const suggested = getSuggestedEmailTemplate(selectedLead); setSelectedEmailTemplate(suggested); generateEmail(suggested); setShowEmailModal(true); }} className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-200 transition-colors">✉️ Email</button>
+                      <button onClick={() => performResearch(selectedLead)} className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors">🔍 {selectedLead.research ? 'Refresh' : 'Research'}</button>
+                      <button onClick={() => { setMeetingDetails({ startDate: '', startTime: '14:00', duration: targetAction.duration || 20, location: 'Video Call - Link to follow', title: `${targetAction.shortLabel} - ${selectedLead.company}`, description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.` }); setShowMeetingModal(true); }} className="px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200 transition-colors">{targetAction.icon} {targetAction.buttonText}</button>
+                      <button onClick={() => setShowNotesPanel(true)} className="px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-200 transition-colors">📝 Notes{selectedLead.notes ? ` (${selectedLead.notes.split('\n\n').filter(n => n.trim()).length})` : ''}</button>
+                      <button onClick={() => setShowScript(!showScript)} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors">{showScript ? '📋 Hide Script' : '📋 Show Script'}</button>
                     </div>
                   </div>
 
-                  {/* Quick Actions & Current State */}
+                  {/* Milestones & Status (compact) */}
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Quick Actions */}
                       <div>
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={openPlaybookPopup}
-                            className="px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all text-sm font-medium shadow-sm"
-                          >
-                            📞 Make Call
-                          </button>
-                          <button
-                            onClick={() => {
-                              const suggested = getSuggestedEmailTemplate(selectedLead);
-                              setSelectedEmailTemplate(suggested);
-                              generateEmail(suggested);
-                              setShowEmailModal(true);
-                            }}
-                            className="px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-medium shadow-sm"
-                          >
-                            ✉️ Email
-                          </button>
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => setShowDeckMenu(!showDeckMenu)}
-                              className="px-3 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all text-sm font-medium shadow-sm flex items-center gap-1"
-                            >
-                              📧 Send Deck <span className="text-xs">▼</span>
-                            </button>
-                            {showDeckMenu && (
-                              <div className="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[200px]">
-                                <button
-                                  onClick={() => { openDeckEmail('salesforce'); setShowDeckMenu(false); }}
-                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 rounded-t-lg border-b border-gray-100 transition-colors"
-                                >
-                                  <div className="font-medium text-gray-900 text-sm">☁️ Agentforce Guide</div>
-                                  <div className="text-xs text-gray-500">For Salesforce leads</div>
-                                </button>
-                                <button
-                                  onClick={() => { openDeckEmail('general'); setShowDeckMenu(false); }}
-                                  className="w-full px-4 py-3 text-left hover:bg-purple-50 rounded-b-lg transition-colors"
-                                >
-                                  <div className="font-medium text-gray-900 text-sm">🤖 AI Success Guide</div>
-                                  <div className="text-xs text-gray-500">For general AI leads</div>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => {
-                              setMeetingDetails({
-                                startDate: '',
-                                startTime: '14:00',
-                                duration: targetAction.duration || 20,
-                                location: 'Video Call - Link to follow',
-                                title: `${targetAction.shortLabel} - ${selectedLead.company}`,
-                                description: targetAction.description || `${targetAction.duration || 20}-minute ${targetAction.label.toLowerCase()}.`
-                              });
-                              setShowMeetingModal(true);
-                            }}
-                            className="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-medium shadow-sm"
-                          >
-                            {targetAction.icon} {targetAction.buttonText}
-                          </button>
-                          <button
-                            onClick={() => performResearch(selectedLead)}
-                            className="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all text-sm font-medium shadow-sm"
-                          >
-                            🔍 {selectedLead.research ? 'Refresh' : 'Research'}
-                          </button>
-                          <button
-                            onClick={openPlaybookPopup}
-                            className="px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all text-sm font-medium shadow-sm"
-                          >
-                            📋 Playbook
-                          </button>
-                          <button
-                            onClick={() => {
-                              document.getElementById('call-notes-input')?.focus();
-                              document.getElementById('call-notes-input')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }}
-                            className="px-3 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-lg hover:from-yellow-600 hover:to-amber-600 transition-all text-sm font-medium shadow-sm"
-                          >
-                            📝 Add Note
-                          </button>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Status</h3>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(selectedLead.status)}`}>{selectedLead.status}</span>
+                          <span className="text-gray-400">·</span>
+                          <span className="text-gray-500">{selectedLead.lastContact}</span>
                         </div>
                       </div>
 
@@ -9591,199 +9452,9 @@ Return your response as valid JSON with this exact structure:
                     </div>
                   </div>
 
-                  {/* Activity Summary */}
-                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-gray-600">📋</span>
-                      <h3 className="font-semibold text-gray-900 text-sm">Activity Summary</h3>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      {/* Source & Created */}
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <span className="text-gray-400">{LEAD_SOURCES[selectedLead.source]?.icon || '✏️'}</span>
-                        <span>{LEAD_SOURCES[selectedLead.source]?.name || 'Manual Entry'}{selectedLead.createdAt ? ` • ${new Date(selectedLead.createdAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}` : ''}</span>
-                      </div>
-                      {/* Research Status */}
-                      <div className={`flex items-center gap-2 ${selectedLead.research ? 'text-green-600' : 'text-gray-400'}`}>
-                        <span>🔍</span>
-                        <span>{selectedLead.research ? `Researched ${selectedLead.research.researchDate ? new Date(selectedLead.research.researchDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : ''}` : 'Not researched'}</span>
-                      </div>
-                      {/* Last Call */}
-                      <div className={`flex items-center gap-2 ${selectedLead.lastContactDate ? 'text-green-600' : 'text-gray-400'}`}>
-                        <span>📞</span>
-                        <span>{selectedLead.lastContactDate ? `Called ${new Date(selectedLead.lastContactDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} → ${selectedLead.status}` : 'Not called'}</span>
-                      </div>
-                      {/* CEO Meeting */}
-                      <div className={`flex items-center gap-2 ${bookedMeetings.find(m => m.leadId === selectedLead.id) ? 'text-purple-600 font-medium' : 'text-gray-400'}`}>
-                        <span>📅</span>
-                        {bookedMeetings.find(m => m.leadId === selectedLead.id) ? (
-                          <span>CEO: {new Date(bookedMeetings.find(m => m.leadId === selectedLead.id).date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} @ {bookedMeetings.find(m => m.leadId === selectedLead.id).time}</span>
-                        ) : (
-                          <span>No meeting</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notes Button - Opens Slide-out Panel */}
-                  <button
-                    onClick={() => setShowNotesPanel(true)}
-                    className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:bg-yellow-50 hover:border-yellow-200 transition-all text-left group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-yellow-600">📝</span>
-                        <span className="font-semibold text-gray-900 text-sm">Notes</span>
-                        {selectedLead.notes ? (
-                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">
-                            {selectedLead.notes.split('\n\n').filter(n => n.trim()).length}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">None yet</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {selectedLead.notes && (
-                          <span className="text-xs text-gray-400 truncate max-w-[150px]">
-                            {selectedLead.notes.split('\n\n')[0]?.substring(0, 30)}...
-                          </span>
-                        )}
-                        <svg className="w-5 h-5 text-gray-400 group-hover:text-yellow-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Contact Info - Prominent */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Primary Contact Info - Large & Prominent */}
-                    <div className="p-5 bg-gradient-to-r from-slate-50 to-gray-50">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          {/* Company Name - Very Large */}
-                          <h2 className="text-3xl font-bold text-gray-900 mb-1">{selectedLead.company}</h2>
-                          {/* Contact Name & Title - Large */}
-                          <div className="text-xl text-gray-700">
-                            <span className="font-semibold">{selectedLead.contact}</span>
-                            {selectedLead.title && <span className="text-gray-500 ml-2">• {selectedLead.title}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {(() => {
-                            const scoreInfo = getScoreInfo(selectedLead.score);
-                            return (
-                              <div
-                                onClick={() => setShowScoreBreakdown(selectedLead)}
-                                title={getScoreTooltip(selectedLead)}
-                                className={`px-4 py-2 rounded-xl flex items-center gap-2 border cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-blue-300 transition-all ${scoreInfo.color}`}
-                              >
-                                <span className="text-2xl font-bold">{selectedLead.score}</span>
-                                <span className="text-sm font-semibold">{scoreInfo.label}</span>
-                                <span className="text-xs opacity-60">ⓘ</span>
-                              </div>
-                            );
-                          })()}
-                          <button
-                            onClick={() => { setEditingLead({...selectedLead}); setShowEditLead(true); }}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit lead"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => deleteLead(selectedLead.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete lead"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Secondary info */}
-                      <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${getVerticalColor(selectedLead.vertical)}`}>
-                          {vertical?.icon} {vertical?.name}
-                        </span>
-                        <span>•</span>
-                        <span>{selectedLead.lastContact}</span>
-                      </div>
-                    </div>
-
-                    {/* Phone - Editable */}
-                    <div className="px-5 py-3 border-t border-gray-100 bg-white">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">📞</span>
-                        <input
-                          type="tel"
-                          defaultValue={selectedLead.phone || ''}
-                          key={`phone-${selectedLead.id}-${selectedLead.phone || ''}`}
-                          onBlur={(e) => updateLeadField('phone', e.target.value)}
-                          placeholder="Enter phone number..."
-                          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        />
-                        {selectedLead.phone && (
-                          <button onClick={openPlaybookPopup} className="px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2">
-                            📞 Call
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Email - Editable */}
-                    <div className="px-5 py-3 border-t border-gray-100 bg-white">
-                      <div className="flex items-center gap-3">
-                        <span className="text-gray-400">✉️</span>
-                        <input
-                          type="email"
-                          defaultValue={selectedLead.email || ''}
-                          key={`email-${selectedLead.id}-${selectedLead.email || ''}`}
-                          onBlur={(e) => updateLeadField('email', e.target.value)}
-                          placeholder="Enter email address..."
-                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {selectedLead.email && (
-                          <a href={`mailto:${selectedLead.email}`} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
-                            Send Email
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Secondary Info & Links */}
-                    <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <a href={`https://www.google.com/search?q=${encodeURIComponent(selectedLead.company + ' Sydney')}`} target="_blank" className="px-2.5 py-1 bg-white text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium border border-gray-200">
-                          🌐 Google
-                        </a>
-                        <a href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(selectedLead.company)}`} target="_blank" className="px-2.5 py-1 bg-white text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium border border-gray-200">
-                          💼 LinkedIn
-                        </a>
-                        {selectedLead.website && (
-                          <a href={selectedLead.website} target="_blank" className="px-2.5 py-1 bg-white text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-xs font-medium border border-gray-200">
-                            🔗 Website
-                          </a>
-                        )}
-                      </div>
-                                          </div>
-                  </div>
-
-                  {/* Call Script Toggle */}
-                  <button
-                    onClick={() => setShowScript(!showScript)}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-200"
-                  >
-                    {showScript ? '📋 Hide Playbook' : '📋 Show Playbook'}
-                  </button>
-
-                  {/* Call Script */}
+                  {/* Call Script - immediately visible */}
                   {showScript && vertical && (
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6 max-h-[600px] overflow-y-auto scrollbar-thin">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin">
 
                       {/* Prospect Type Toggle */}
                       <div className="flex items-center justify-center gap-2 p-2 bg-gray-100 rounded-lg">
@@ -13177,7 +12848,7 @@ Return your response as valid JSON with this exact structure:
                         <span className="text-xs font-normal text-gray-500">(automated summaries)</span>
                       </summary>
                       <div className="mt-3">
-                        <EmailReportsContent supabase={supabase} organizationId={dataContext?.organization?.id} userId={user?.id} isAdmin={isAdmin} showNotification={showNotification} />
+                        <EmailReportsContent supabase={supabase} organizationId={dataContext?.organization?.id} userId={dataContext?.user?.id} isAdmin={isAdmin} showNotification={showNotification} />
                       </div>
                     </details>
                   )}
@@ -15267,7 +14938,7 @@ Return your response as valid JSON with this exact structure:
                   <EmailSequencesContent
                     supabase={supabase}
                     organizationId={dataContext?.organization?.id}
-                    userId={user?.id}
+                    userId={dataContext?.user?.id}
                     showNotification={showNotification}
                   />
                 </div>
